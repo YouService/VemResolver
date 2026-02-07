@@ -57,7 +57,7 @@ Plataforma web para conectar clientes que precisam de serviços com prestadores 
 
 1. Configure o banco de dados PostgreSQL:
 ```sql
-CREATE DATABASE marketplace_db;
+CREATE DATABASE youservice_db;
 ```
 
 2. Configure as credenciais em `backend/src/main/resources/application.properties`:
