@@ -134,5 +134,5 @@ Este projeto está sob a licença MIT.
 
 ## 👨‍💻 Autor
 
-Felipe Almeida Lima
+Felipe Andrade Lima
 - GitHub: [@felipealima1984](https://github.com/felipealima1984)
