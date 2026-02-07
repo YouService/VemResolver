@@ -1,0 +1,90 @@
+════════════════════════════════════════════════
+  INSTALAR MAVEN - SUPER SIMPLES
+════════════════════════════════════════════════
+
+PASSO 1: DOWNLOAD
+═════════════════
+1. Abra: https://maven.apache.org/download.cgi
+2. Baixe: apache-maven-3.9.9-bin.zip
+
+   OU link direto:
+   https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip
+
+
+PASSO 2: EXTRAIR
+════════════════
+1. Extraia o ZIP baixado
+2. Copie a pasta para: C:\Program Files\
+3. Renomeie para: Maven
+
+   Resultado: C:\Program Files\Maven
+
+
+PASSO 3: CONFIGURAR VARIÁVEIS
+══════════════════════════════
+
+Windows + I → Pesquise "variáveis" → "Editar variáveis de ambiente"
+
+┌─────────────────────────────────────────┐
+│ VARIÁVEIS DO SISTEMA                    │
+├─────────────────────────────────────────┤
+│ [Novo...]                               │
+│   Nome: MAVEN_HOME                      │
+│   Valor: C:\Program Files\Maven        │
+│   [OK]                                  │
+│                                         │
+│ Depois:                                 │
+│ Selecione "Path" → [Editar...] → [Novo]│
+│   Adicione: %MAVEN_HOME%\bin           │
+│   [OK] [OK] [OK]                        │
+└─────────────────────────────────────────┘
+
+
+PASSO 4: TESTAR
+═══════════════
+1. FECHE todos os CMD/PowerShell
+2. ABRA um NOVO CMD
+3. Digite: mvn -version
+
+Deve aparecer:
+  Apache Maven 3.9.9
+  Maven home: C:\Program Files\Maven
+  Java version: 21.x.x
+
+✅ FUNCIONOU!
+
+
+PASSO 5: EXECUTAR O BACKEND
+════════════════════════════
+cd marketplace-servicos\backend
+run.bat
+
+
+════════════════════════════════════════════════
+  PROBLEMAS?
+════════════════════════════════════════════════
+
+⚠ mvn -version não funciona?
+  → FECHE e ABRA um NOVO terminal
+  → Ou reinicie o computador
+
+⚠ Java não encontrado?
+  → Instale Java 21: https://adoptium.net/
+
+⚠ Ainda com problemas?
+  → Use Docker: docker-compose up
+     (Funciona SEM instalar Maven!)
+
+
+════════════════════════════════════════════════
+  DOCKER: ALTERNATIVA MAIS SIMPLES
+════════════════════════════════════════════════
+
+Se tiver Docker instalado:
+
+cd marketplace-servicos
+docker-compose up
+
+Pronto! Funciona sem instalar Maven.
+
+════════════════════════════════════════════════

@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: marketplace-postgres
+    environment:
+      POSTGRES_DB: marketplace_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - marketplace-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: marketplace-backend
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/marketplace_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8080:8080"
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+
+  frontend:
+    image: node:22-alpine
+    container_name: marketplace-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend/marketplace-frontend:/app
+    command: sh -c "npm install && npm start"
+    ports:
+      - "4200:4200"
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  marketplace-network:
+    driver: bridge
