@@ -62,7 +62,7 @@ CREATE DATABASE marketplace_db;
 
 2. Configure as credenciais em `backend/src/main/resources/application.properties`:
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/marketplace_db
+spring.datasource.url=jdbc:postgresql://localhost:5432/youservice_db
 spring.datasource.username=postgres
 spring.datasource.password=postgres
 ```
