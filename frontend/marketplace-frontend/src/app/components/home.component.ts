@@ -14,7 +14,7 @@ import { Categoria } from '../models/models';
     <section class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
       <div class="container mx-auto px-4">
         <div class="max-w-3xl mx-auto text-center">
-          <h1 class="text-5xl font-bold mb-6">Encontre o profissional ideal para seu projeto</h1>
+          <h1 class="text-5xl font-bold mb-6">Encontre o profissional ideal para seu serviço</h1>
           <p class="text-xl mb-8">Milhares de prestadores qualificados prontos para atender você</p>
           
           <!-- Search Bar -->
@@ -62,7 +62,7 @@ import { Categoria } from '../models/models';
             <div class="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
               <span class="text-3xl">📝</span>
             </div>
-            <h3 class="text-xl font-semibold mb-3">1. Descreva seu projeto</h3>
+            <h3 class="text-xl font-semibold mb-3">1. Descreva seu serviço</h3>
             <p class="text-gray-600">Conte-nos o que você precisa em poucos minutos</p>
           </div>
 

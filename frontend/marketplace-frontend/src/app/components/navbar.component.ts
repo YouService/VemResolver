@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
           <!-- Logo -->
           <div class="flex items-center">
             <a routerLink="/" class="text-2xl font-bold text-blue-600 hover:text-blue-700 transition">
-              🛠️ Marketplace
+              🛠️ ResolveAí
             </a>
           </div>
 
@@ -40,36 +40,36 @@ import { Router } from '@angular/router';
                   <span class="hidden md:inline">Olá, </span>
                   <strong>{{ user.nome }}</strong>
                 </span>
-                
+
                 @if (authService.isCliente()) {
-                  <a 
+                  <a
                     routerLink="/cliente/dashboard"
                     class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-                    Meu Dashboard
+                    Meu Painel
                   </a>
                 }
-                
+
                 @if (authService.isPrestador()) {
-                  <a 
+                  <a
                     routerLink="/prestador/dashboard"
                     class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-                    Meu Dashboard
+                    Meu Painel
                   </a>
                 }
-                
-                <button 
+
+                <button
                   (click)="logout()"
                   class="text-gray-700 hover:text-red-600 transition font-medium">
                   Sair
                 </button>
               </div>
             } @else {
-              <a 
+              <a
                 routerLink="/login"
                 class="text-gray-700 hover:text-blue-600 transition font-medium">
                 Entrar
               </a>
-              <a 
+              <a
                 routerLink="/register"
                 class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
                 Cadastrar
@@ -78,7 +78,7 @@ import { Router } from '@angular/router';
           </div>
 
           <!-- Mobile Menu Button -->
-          <button 
+          <button
             (click)="toggleMobileMenu()"
             class="md:hidden text-gray-700 hover:text-blue-600 transition">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,7 +100,7 @@ import { Router } from '@angular/router';
               <a href="#categorias" class="text-gray-700 hover:text-blue-600 transition font-medium py-2">
                 Categorias
               </a>
-              
+
               @if (!(authService.currentUser$ | async)) {
                 <a routerLink="/login" class="text-gray-700 hover:text-blue-600 transition font-medium py-2">
                   Entrar

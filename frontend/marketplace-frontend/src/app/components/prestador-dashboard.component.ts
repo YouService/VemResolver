@@ -17,7 +17,7 @@ import { SolicitacaoServico, Prestador } from '../models/models';
         <div class="container mx-auto px-4 py-6">
           <div class="flex items-center justify-between">
             <div>
-              <h1 class="text-3xl font-bold text-gray-900">Dashboard do Prestador</h1>
+              <h1 class="text-3xl font-bold text-gray-900">Painel do Prestador</h1>
               <p class="text-gray-600 mt-1">Bem-vindo, {{ userName }}</p>
             </div>
             <button 
