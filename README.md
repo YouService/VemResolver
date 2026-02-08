@@ -64,7 +64,7 @@ CREATE DATABASE youservice_db;
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/youservice_db
 spring.datasource.username=postgres
-spring.datasource.password=postgres
+spring.datasource.password=123456
 ```
 
 3. Execute o backend:
