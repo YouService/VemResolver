@@ -38,6 +38,7 @@ public class AuthService {
         
         User user = new User();
         user.setNome(registerDTO.getNome());
+        user.setLogin(generateLogin(registerDTO.getEmail()));
         user.setEmail(registerDTO.getEmail());
         user.setSenha(passwordEncoder.encode(registerDTO.getSenha()));
         user.setTipo(registerDTO.getTipo());
@@ -48,6 +49,19 @@ public class AuthService {
         String token = jwtTokenProvider.generateToken(user);
         
         return new AuthResponseDTO(token, user.getId(), user.getNome(), user.getEmail(), user.getTipo());
+    }
+    
+    private String generateLogin(String email) {
+        String login = email.split("@")[0];
+        String baseLogin = login;
+        int counter = 1;
+        
+        while (userRepository.existsByLogin(login)) {
+            login = baseLogin + counter;
+            counter++;
+        }
+        
+        return login;
     }
     
     public AuthResponseDTO login(LoginDTO loginDTO) {
