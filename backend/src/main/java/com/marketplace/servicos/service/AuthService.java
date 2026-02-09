@@ -43,6 +43,9 @@ public class AuthService {
         user.setSenha(passwordEncoder.encode(registerDTO.getSenha()));
         user.setTipo(registerDTO.getTipo());
         user.setTelefone(registerDTO.getTelefone());
+        user.setCpf(registerDTO.getCpf());
+        user.setRg(registerDTO.getRg());
+        user.setDataExpedicao(registerDTO.getDataExpedicao());
         
         user = userRepository.save(user);
         

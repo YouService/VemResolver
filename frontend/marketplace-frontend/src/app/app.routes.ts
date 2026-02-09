@@ -6,6 +6,7 @@ import { ClienteDashboardComponent } from './components/cliente-dashboard.compon
 import { ClienteNovaSolicitacaoComponent } from './components/cliente-nova-solicitacao.component';
 import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
 import { PrestadorPerfilComponent } from './components/prestador-perfil.component';
+import { UserProfileComponent } from './components/user-profile.component';
 import { clienteGuard, prestadorGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -31,6 +32,11 @@ export const routes: Routes = [
     path: 'prestador/perfil', 
     component: PrestadorPerfilComponent,
     canActivate: [prestadorGuard]
+  },
+  { 
+    path: 'meu-perfil', 
+    component: UserProfileComponent,
+    canActivate: [clienteGuard, prestadorGuard]
   },
   { path: '**', redirectTo: '' }
 ];

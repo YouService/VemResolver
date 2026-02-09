@@ -41,6 +41,12 @@ public class User implements UserDetails {
     
     private String telefone;
     
+    private String cpf;
+    
+    private String rg;
+    
+    private String dataExpedicao;
+    
     @Column(nullable = false)
     private LocalDateTime dataCadastro;
     

@@ -48,4 +48,8 @@ export class SolicitacaoService {
     const params = new HttpParams().set('status', status);
     return this.http.patch<SolicitacaoServico>(`${this.apiUrl}/${id}/status`, null, { params });
   }
+
+  deletar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }
