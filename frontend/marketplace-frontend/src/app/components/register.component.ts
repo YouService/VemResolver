@@ -9,21 +9,26 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../services/auth.service';
+import { ViaCEPService } from '../services/viacep.service';
+import { MaskDirective } from '../directives/mask.directive';
+import { SeletorUfComponent } from './seletor-uf.component';
 import { TipoUsuario } from '../models/models';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [
-    CommonModule, 
-    ReactiveFormsModule, 
+    CommonModule,
+    ReactiveFormsModule,
     RouterModule,
-    MatCardModule, 
-    MatFormFieldModule, 
-    MatInputModule, 
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
     MatButtonModule,
     MatSelectModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MaskDirective,
+    SeletorUfComponent
   ],
   template: `
     <div class="flex items-center justify-center min-h-screen bg-gray-100 py-8">
@@ -47,7 +52,27 @@ import { TipoUsuario } from '../models/models';
 
           <mat-form-field class="w-full mb-4">
             <mat-label>Telefone</mat-label>
-            <input matInput formControlName="telefone">
+            <input matInput formControlName="telefone" appMask="(00) 00000-0000" maxlength="15">
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
+            <mat-label>CPF</mat-label>
+            <input matInput formControlName="cpf" appMask="000.000.000-00" maxlength="14">
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
+            <mat-label>RG</mat-label>
+            <input matInput formControlName="rg">
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
+            <mat-label>Órgão Expedidor</mat-label>
+            <input matInput formControlName="orgaoExpedidor" placeholder="Ex: SSP/SP">
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
+            <mat-label>Data de Expedição</mat-label>
+            <input matInput type="text" formControlName="dataExpedicaoRg" placeholder="DD/MM/AAAA" maxlength="10">
           </mat-form-field>
 
           <mat-form-field class="w-full mb-4">
@@ -78,6 +103,7 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private viaCEPService: ViaCEPService,
     private router: Router,
     private snackBar: MatSnackBar
   ) {
@@ -86,7 +112,36 @@ export class RegisterComponent {
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.required, Validators.minLength(6)]],
       telefone: [''],
+      cpf: [''],
+      rg: [''],
+      orgaoExpedidor: [''],
+      dataExpedicaoRg: [''],
       tipo: ['CLIENTE', [Validators.required]]
+    });
+
+    this.setupDataExpedicaoMask();
+  }
+
+  setupDataExpedicaoMask(): void {
+    this.registerForm.get('dataExpedicaoRg')?.valueChanges.subscribe(value => {
+      if (!value) return;
+
+      const v = value.replace(/\D/g, '');
+
+      if (v.length > 8) {
+        this.registerForm.get('dataExpedicaoRg')?.setValue(v.substring(0, 8), { emitEvent: false });
+        return;
+      }
+
+      let formatted = '';
+      for (let i = 0; i < v.length; i++) {
+        if (i === 2 || i === 4) {
+          formatted += '/';
+        }
+        formatted += v[i];
+      }
+
+      this.registerForm.get('dataExpedicaoRg')?.setValue(formatted, { emitEvent: false });
     });
   }
 

@@ -31,17 +31,42 @@ public class SolicitacaoServicoService {
     public SolicitacaoServicoDTO criar(SolicitacaoServicoDTO dto, Long clienteId) {
         User cliente = userRepository.findByIdAndTipo(clienteId, TipoUsuario.CLIENTE)
                 .orElseThrow(() -> new BusinessException("Apenas clientes podem criar solicitações"));
-        
+
         Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
-        
+
         SolicitacaoServico solicitacao = new SolicitacaoServico();
         solicitacao.setCliente(cliente);
         solicitacao.setCategoria(categoria);
         solicitacao.setDescricao(dto.getDescricao());
         solicitacao.setCidade(dto.getCidade());
         solicitacao.setEstado(dto.getEstado());
-        
+
+        solicitacao = solicitacaoRepository.save(solicitacao);
+        return toDTO(solicitacao);
+    }
+
+    @Transactional
+    public SolicitacaoServicoDTO atualizar(Long id, SolicitacaoServicoDTO dto, Long clienteId) {
+        SolicitacaoServico solicitacao = solicitacaoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
+
+        if (!solicitacao.getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Você não tem permissão para editar esta solicitação");
+        }
+
+        if (solicitacao.getStatus() != StatusSolicitacao.ABERTA) {
+            throw new BusinessException("Apenas solicitações abertas podem ser editadas");
+        }
+
+        Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
+
+        solicitacao.setCategoria(categoria);
+        solicitacao.setDescricao(dto.getDescricao());
+        solicitacao.setCidade(dto.getCidade());
+        solicitacao.setEstado(dto.getEstado());
+
         solicitacao = solicitacaoRepository.save(solicitacao);
         return toDTO(solicitacao);
     }
@@ -77,12 +102,28 @@ public class SolicitacaoServicoService {
     public SolicitacaoServicoDTO atualizarStatus(Long id, StatusSolicitacao novoStatus) {
         SolicitacaoServico solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
-        
+
         solicitacao.setStatus(novoStatus);
         solicitacao = solicitacaoRepository.save(solicitacao);
         return toDTO(solicitacao);
     }
-    
+
+    @Transactional
+    public void deletar(Long id, Long clienteId) {
+        SolicitacaoServico solicitacao = solicitacaoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
+
+        if (!solicitacao.getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Você não tem permissão para excluir esta solicitação");
+        }
+
+        if (solicitacao.getStatus() != StatusSolicitacao.ABERTA) {
+            throw new BusinessException("Apenas solicitações abertas podem ser excluídas");
+        }
+
+        solicitacaoRepository.delete(solicitacao);
+    }
+
     private SolicitacaoServicoDTO toDTO(SolicitacaoServico solicitacao) {
         SolicitacaoServicoDTO dto = new SolicitacaoServicoDTO();
         dto.setId(solicitacao.getId());

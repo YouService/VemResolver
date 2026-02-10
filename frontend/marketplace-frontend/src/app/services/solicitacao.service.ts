@@ -48,4 +48,12 @@ export class SolicitacaoService {
     const params = new HttpParams().set('status', status);
     return this.http.patch<SolicitacaoServico>(`${this.apiUrl}/${id}/status`, null, { params });
   }
+
+  atualizar(id: number, solicitacao: SolicitacaoServico): Observable<SolicitacaoServico> {
+    return this.http.put<SolicitacaoServico>(`${this.apiUrl}/${id}`, solicitacao);
+  }
+
+  deletar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }

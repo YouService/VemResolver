@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 public class AuthService {
     
@@ -32,21 +34,44 @@ public class AuthService {
     
     @Transactional
     public AuthResponseDTO register(RegisterDTO registerDTO) {
-        if (userRepository.existsByEmail(registerDTO.getEmail())) {
-            throw new BusinessException("Email já cadastrado");
+        if (userRepository.existsByEmailAndAtivoTrue(registerDTO.getEmail())) {
+            throw new BusinessException("Este email já está cadastrado em nosso sistema. Se você esqueceu sua senha, use a opção de recuperação de senha.");
         }
-        
+
+        Optional<User> existingUser = userRepository.findByEmail(registerDTO.getEmail());
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            if (!user.getAtivo()) {
+                user.setNome(registerDTO.getNome());
+                user.setSenha(passwordEncoder.encode(registerDTO.getSenha()));
+                user.setTipo(registerDTO.getTipo());
+                user.setTelefone(registerDTO.getTelefone());
+                user.setCpf(registerDTO.getCpf());
+                user.setRg(registerDTO.getRg());
+                user.setOrgaoExpedidor(registerDTO.getOrgaoExpedidor());
+                user.setDataExpedicaoRg(registerDTO.getDataExpedicaoRg());
+                user.setAtivo(true);
+
+                String token = jwtTokenProvider.generateToken(user);
+                return new AuthResponseDTO(token, user.getId(), user.getNome(), user.getEmail(), user.getTipo());
+            }
+        }
+
         User user = new User();
         user.setNome(registerDTO.getNome());
         user.setEmail(registerDTO.getEmail());
         user.setSenha(passwordEncoder.encode(registerDTO.getSenha()));
         user.setTipo(registerDTO.getTipo());
         user.setTelefone(registerDTO.getTelefone());
-        
+        user.setCpf(registerDTO.getCpf());
+        user.setRg(registerDTO.getRg());
+        user.setOrgaoExpedidor(registerDTO.getOrgaoExpedidor());
+        user.setDataExpedicaoRg(registerDTO.getDataExpedicaoRg());
+
         user = userRepository.save(user);
-        
+
         String token = jwtTokenProvider.generateToken(user);
-        
+
         return new AuthResponseDTO(token, user.getId(), user.getNome(), user.getEmail(), user.getTipo());
     }
     
@@ -59,5 +84,14 @@ public class AuthService {
         String token = jwtTokenProvider.generateToken(user);
         
         return new AuthResponseDTO(token, user.getId(), user.getNome(), user.getEmail(), user.getTipo());
+    }
+    
+    @Transactional
+    public void deletarConta(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+        
+        user.setAtivo(false);
+        userRepository.save(user);
     }
 }
