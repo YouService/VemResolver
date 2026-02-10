@@ -5,7 +5,7 @@ import { RegisterComponent } from './components/register.component';
 import { ClienteDashboardComponent } from './components/cliente-dashboard.component';
 import { ClienteNovaSolicitacaoComponent } from './components/cliente-nova-solicitacao.component';
 import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
-import { PrestadorPerfilComponent } from './components/prestador-perfil.component';
+import { PrestadorPerfilComponent } from './components/prestador-perfil/prestador-perfil.component';
 import { clienteGuard, prestadorGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
