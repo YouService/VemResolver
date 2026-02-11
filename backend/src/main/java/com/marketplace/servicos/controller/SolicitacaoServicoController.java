@@ -68,4 +68,13 @@ public class SolicitacaoServicoController {
             @RequestParam StatusSolicitacao status) {
         return ResponseEntity.ok(solicitacaoService.atualizarStatus(id, status));
     }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Cancelar solicitação")
+    public ResponseEntity<Void> deletar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        solicitacaoService.cancelar(id, user.getId());
+        return ResponseEntity.noContent().build();
+    }
 }

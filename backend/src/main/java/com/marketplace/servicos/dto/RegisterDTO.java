@@ -26,5 +26,15 @@ public class RegisterDTO {
     @NotNull(message = "Tipo de usuário é obrigatório")
     private TipoUsuario tipo;
     
+    @NotBlank(message = "Telefone é obrigatório")
     private String telefone;
+    
+    @NotBlank(message = "CPF é obrigatório")
+    private String cpf;
+    
+    @NotBlank(message = "RG é obrigatório")
+    private String rg;
+    
+    @NotBlank(message = "Data de expedição é obrigatória")
+    private String dataExpedicao;
 }

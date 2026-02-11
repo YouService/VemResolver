@@ -82,7 +82,24 @@ public class SolicitacaoServicoService {
         solicitacao = solicitacaoRepository.save(solicitacao);
         return toDTO(solicitacao);
     }
-    
+
+    @Transactional
+    public void cancelar(Long id, Long clienteId) {
+        SolicitacaoServico solicitacao = solicitacaoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
+
+        if (!solicitacao.getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Você não tem permissão para cancelar esta solicitação");
+        }
+
+        if (solicitacao.getStatus() != StatusSolicitacao.ABERTA) {
+            throw new BusinessException("Apenas solicitações abertas podem ser canceladas");
+        }
+
+        solicitacao.setStatus(StatusSolicitacao.CANCELADA);
+        solicitacaoRepository.save(solicitacao);
+    }
+
     private SolicitacaoServicoDTO toDTO(SolicitacaoServico solicitacao) {
         SolicitacaoServicoDTO dto = new SolicitacaoServicoDTO();
         dto.setId(solicitacao.getId());

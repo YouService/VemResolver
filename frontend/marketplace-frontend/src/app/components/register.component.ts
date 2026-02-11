@@ -46,8 +46,31 @@ import { TipoUsuario } from '../models/models';
           </mat-form-field>
 
           <mat-form-field class="w-full mb-4">
+            <mat-label>Confirmar Senha</mat-label>
+            <input matInput type="password" formControlName="confirmarSenha" required>
+            @if (registerForm.get('confirmarSenha')?.errors?.['mismatch']) {
+              <mat-error>As senhas não coincidem</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
             <mat-label>Telefone</mat-label>
-            <input matInput formControlName="telefone">
+            <input matInput formControlName="telefone" required>
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
+            <mat-label>CPF</mat-label>
+            <input matInput formControlName="cpf" required>
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
+            <mat-label>RG</mat-label>
+            <input matInput formControlName="rg" required>
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
+            <mat-label>Data de Expedição</mat-label>
+            <input matInput type="date" formControlName="dataExpedicao" required>
           </mat-form-field>
 
           <mat-form-field class="w-full mb-4">
@@ -85,9 +108,24 @@ export class RegisterComponent {
       nome: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.required, Validators.minLength(6)]],
-      telefone: [''],
+      confirmarSenha: ['', [Validators.required]],
+      telefone: ['', [Validators.required]],
+      cpf: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+      rg: ['', [Validators.required]],
+      dataExpedicao: ['', [Validators.required]],
       tipo: ['CLIENTE', [Validators.required]]
-    });
+    }, { validators: this.passwordMatchValidator });
+  }
+
+  passwordMatchValidator(form: FormGroup): { [key: string]: boolean } | null {
+    const password = form.get('senha');
+    const confirmPassword = form.get('confirmarSenha');
+
+    if (password && confirmPassword && password.value !== confirmPassword.value) {
+      confirmPassword.setErrors({ mismatch: true });
+      return { mismatch: true };
+    }
+    return null;
   }
 
   onSubmit(): void {

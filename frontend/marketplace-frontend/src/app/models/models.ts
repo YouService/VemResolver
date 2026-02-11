@@ -22,6 +22,9 @@ export interface User {
   email: string;
   tipo: TipoUsuario;
   telefone?: string;
+  cpf?: string;
+  rg?: string;
+  dataExpedicao?: string;
   dataCadastro: Date;
   ativo: boolean;
 }
@@ -44,8 +47,12 @@ export interface RegisterRequest {
   nome: string;
   email: string;
   senha: string;
+  confirmarSenha?: string;
   tipo: TipoUsuario;
   telefone?: string;
+  cpf?: string;
+  rg?: string;
+  dataExpedicao?: string;
 }
 
 export interface Categoria {
