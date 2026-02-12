@@ -3,11 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest, TipoUsuario, User, UpdatePerfilRequest, AlterarSenhaRequest } from '../models/models';
 
+import { environment } from '../../environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private apiUrl = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<AuthResponse | null>(this.getUserFromStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
 

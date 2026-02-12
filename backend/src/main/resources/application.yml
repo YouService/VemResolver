@@ -3,9 +3,9 @@ spring:
     name: VemResolver-servicos
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/dbcore001_d}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -25,5 +25,5 @@ springdoc:
     operations-sorter: method
 
 jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
+  secret: ${JWT_SECRET:MinhaChaveSuperSecretaExtremamenteLongaParaSegurancaDoMarketplace2026!@#$}
+  expiration: ${JWT_EXPIRATION:86400000}

@@ -8,12 +8,14 @@ import { ClienteEditarSolicitacaoComponent } from './components/cliente-editar-s
 import { ClientePerfilComponent } from './components/cliente-perfil.component';
 import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
 import { PrestadorPerfilComponent } from './components/prestador-perfil.component';
+import { VerifyAccountComponent } from './components/verify-account.component';
 import { clienteGuard, prestadorGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'verificar-conta', component: VerifyAccountComponent },
   {
     path: 'cliente/dashboard',
     component: ClienteDashboardComponent,

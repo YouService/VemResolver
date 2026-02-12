@@ -39,6 +39,13 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
     
+    @GetMapping("/verify")
+    @Operation(summary = "Verificar conta por email")
+    public ResponseEntity<String> verifyAccount(@RequestParam("token") String token) {
+        authService.verifyAccount(token);
+        return ResponseEntity.ok("Conta verificada com sucesso! Você já pode fazer login.");
+    }
+
     @DeleteMapping("/conta")
     @Operation(summary = "Excluir conta do usuário")
     public ResponseEntity<Void> deletarConta(@AuthenticationPrincipal User user) {

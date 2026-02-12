@@ -13,6 +13,7 @@ import { ViaCEPService } from '../services/viacep.service';
 import { MaskDirective } from '../directives/mask.directive';
 import { SeletorUfComponent } from './seletor-uf.component';
 import { TipoUsuario } from '../models/models';
+import { CustomValidators } from '../validators/custom.validators';
 
 @Component({
   selector: 'app-register',
@@ -38,16 +39,28 @@ import { TipoUsuario } from '../models/models';
           <mat-form-field class="w-full mb-4">
             <mat-label>Nome</mat-label>
             <input matInput formControlName="nome" required>
+            <mat-error *ngIf="registerForm.get('nome')?.hasError('required')">Nome é obrigatório</mat-error>
           </mat-form-field>
 
           <mat-form-field class="w-full mb-4">
             <mat-label>Email</mat-label>
             <input matInput type="email" formControlName="email" required>
+            <mat-error *ngIf="registerForm.get('email')?.hasError('required')">Email é obrigatório</mat-error>
+            <mat-error *ngIf="registerForm.get('email')?.hasError('email')">Email inválido</mat-error>
           </mat-form-field>
 
           <mat-form-field class="w-full mb-4">
             <mat-label>Senha</mat-label>
             <input matInput type="password" formControlName="senha" required>
+            <mat-error *ngIf="registerForm.get('senha')?.hasError('required')">Senha é obrigatória</mat-error>
+            <mat-error *ngIf="registerForm.get('senha')?.hasError('minlength')">Senha deve ter no mínimo 6 caracteres</mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
+            <mat-label>Confirmar Senha</mat-label>
+            <input matInput type="password" formControlName="confirmarSenha" required>
+            <mat-error *ngIf="registerForm.get('confirmarSenha')?.hasError('required')">Confirmação de senha é obrigatória</mat-error>
+            <mat-error *ngIf="registerForm.get('confirmarSenha')?.hasError('passwordMismatch')">As senhas não conferem</mat-error>
           </mat-form-field>
 
           <mat-form-field class="w-full mb-4">
@@ -58,6 +71,7 @@ import { TipoUsuario } from '../models/models';
           <mat-form-field class="w-full mb-4">
             <mat-label>CPF</mat-label>
             <input matInput formControlName="cpf" appMask="000.000.000-00" maxlength="14">
+            <mat-error *ngIf="registerForm.get('cpf')?.hasError('invalidCpf')">CPF inválido</mat-error>
           </mat-form-field>
 
           <mat-form-field class="w-full mb-4">
@@ -111,13 +125,14 @@ export class RegisterComponent {
       nome: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.required, Validators.minLength(6)]],
+      confirmarSenha: ['', [Validators.required]],
       telefone: [''],
-      cpf: [''],
+      cpf: ['', [CustomValidators.cpf]],
       rg: [''],
       orgaoExpedidor: [''],
       dataExpedicaoRg: [''],
       tipo: ['CLIENTE', [Validators.required]]
-    });
+    }, { validators: CustomValidators.passwordMatch('senha', 'confirmarSenha') });
 
     this.setupDataExpedicaoMask();
   }
@@ -148,17 +163,17 @@ export class RegisterComponent {
   onSubmit(): void {
     if (this.registerForm.valid) {
       this.loading = true;
-      this.authService.register(this.registerForm.value).subscribe({
+      // Remove confirmarSenha antes de enviar
+      const { confirmarSenha, ...dadosCadastro } = this.registerForm.value;
+      
+      this.authService.register(dadosCadastro).subscribe({
         next: (response) => {
-          this.snackBar.open('Cadastro realizado com sucesso!', 'Fechar', { duration: 3000 });
-          if (response.tipoUsuario === TipoUsuario.CLIENTE) {
-            this.router.navigate(['/cliente/dashboard']);
-          } else {
-            this.router.navigate(['/prestador/dashboard']);
-          }
+          this.snackBar.open('Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.', 'Entendi', { duration: 8000 });
+          this.router.navigate(['/login']);
         },
         error: (error) => {
-          this.snackBar.open('Erro ao cadastrar. Tente novamente.', 'Fechar', { duration: 3000 });
+          const msg = error.error?.message || 'Erro ao cadastrar. Verifique os dados e tente novamente.';
+          this.snackBar.open(msg, 'Fechar', { duration: 5000 });
           this.loading = false;
         }
       });
