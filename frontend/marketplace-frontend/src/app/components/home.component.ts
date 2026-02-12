@@ -36,7 +36,7 @@ import { Categoria } from '../models/models';
     </section>
 
     <!-- Categorias Populares -->
-    <section class="py-16 bg-gray-50">
+    <section id="categorias" class="py-16 bg-gray-50">
       <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold text-center mb-12">Categorias Populares</h2>
         
@@ -53,7 +53,7 @@ import { Categoria } from '../models/models';
     </section>
 
     <!-- Como Funciona -->
-    <section class="py-16">
+    <section id="como-funciona" class="py-16">
       <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold text-center mb-12">Como Funciona</h2>
         
