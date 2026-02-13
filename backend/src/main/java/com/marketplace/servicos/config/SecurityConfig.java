@@ -43,6 +43,10 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .headers(headers -> headers
+                .frameOptions(frameOptions -> frameOptions.deny()) // Previne Clickjacking
+                .xssProtection(xss -> xss.disable()) // Desabilita header antigo em favor de padrões modernos
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/categorias/**").permitAll()

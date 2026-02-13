@@ -53,7 +53,8 @@ import { CustomValidators } from '../validators/custom.validators';
             <mat-label>Senha</mat-label>
             <input matInput type="password" formControlName="senha" required>
             <mat-error *ngIf="registerForm.get('senha')?.hasError('required')">Senha é obrigatória</mat-error>
-            <mat-error *ngIf="registerForm.get('senha')?.hasError('minlength')">Senha deve ter no mínimo 6 caracteres</mat-error>
+            <mat-error *ngIf="registerForm.get('senha')?.hasError('minlength')">Senha deve ter no mínimo 8 caracteres</mat-error>
+            <mat-error *ngIf="registerForm.get('senha')?.hasError('pattern')">Deve conter letras maiúsculas, minúsculas e números</mat-error>
           </mat-form-field>
 
           <mat-form-field class="w-full mb-4">
@@ -124,7 +125,7 @@ export class RegisterComponent {
     this.registerForm = this.fb.group({
       nome: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
-      senha: ['', [Validators.required, Validators.minLength(6)]],
+      senha: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$/)]],
       confirmarSenha: ['', [Validators.required]],
       telefone: [''],
       cpf: ['', [CustomValidators.cpf]],

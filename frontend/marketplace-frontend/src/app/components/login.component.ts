@@ -42,8 +42,15 @@ import { AuthService } from '../services/auth.service';
             {{ loading ? 'Entrando...' : 'Entrar' }}
           </button>
 
-          <div class="text-center">
+          <div class="text-center mb-6">
             <a routerLink="/register" class="text-blue-600">Não tem conta? Cadastre-se</a>
+          </div>
+
+          <div class="mt-4 pt-6 border-t border-gray-100 text-center">
+            <p class="text-sm text-gray-600 mb-2">Você é um profissional?</p>
+            <a routerLink="/seja-um-profissional" class="text-blue-600 font-bold hover:underline">
+              Cadastre-se para conseguir clientes
+            </a>
           </div>
         </form>
       </mat-card>

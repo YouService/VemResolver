@@ -14,7 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
     <nav class="bg-white shadow-md sticky top-0 z-50">
       <!-- Main Header -->
       <div class="border-b bg-white">
-        <div class="container mx-auto px-4">
+        <div class="container max-w-6xl mx-auto px-4">
           <div class="flex items-center justify-between h-16">
             <!-- Logo -->
             <div class="flex items-center">
@@ -83,8 +83,8 @@ import { MatIconModule } from '@angular/material/icon';
       </div>
 
       <!-- Categories Mega Menu (Desktop) -->
-      <div class="hidden md:block border-b bg-white relative">
-        <div class="container mx-auto px-4">
+      <div class="hidden md:block border-b bg-white">
+        <div class="container max-w-6xl mx-auto px-4 relative">
           <ul class="flex justify-between items-stretch">
             @for (category of menuData; track category.id) {
               <li class="group static">
@@ -94,8 +94,8 @@ import { MatIconModule } from '@angular/material/icon';
                 </a>
                 
                 <!-- Mega Menu Dropdown -->
-                <div class="absolute left-0 w-full bg-white shadow-xl border-t border-gray-100 hidden group-hover:block z-50 animate-fade-in top-full pb-8 pt-6">
-                   <div class="container mx-auto px-4">
+                <div class="absolute left-0 w-full bg-white shadow-xl border border-gray-100 hidden group-hover:block z-50 animate-fade-in top-full pb-8 pt-6 rounded-b-xl">
+                   <div class="px-8">
                       <div class="flex mb-6 border-b pb-4 items-center">
                         <img [src]="category.image" class="w-12 h-12 mr-4 object-contain">
                         <h2 class="text-2xl font-bold text-gray-800">{{ category.label }}</h2>
