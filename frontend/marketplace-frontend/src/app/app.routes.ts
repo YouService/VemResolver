@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './components/home.component';
 import { LoginComponent } from './components/login.component';
-import { RegisterComponent } from './components/register.component';
 import { ClienteDashboardComponent } from './components/cliente-dashboard.component';
 import { ClienteNovaSolicitacaoComponent } from './components/cliente-nova-solicitacao.component';
 import { ClienteEditarSolicitacaoComponent } from './components/cliente-editar-solicitacao.component';
@@ -13,6 +12,7 @@ import { SejaProfissionalComponent } from './components/seja-profissional.compon
 import { TermosUsoComponent } from './components/termos-uso.component';
 import { VerifyAccountComponent } from './components/verify-account.component';
 import { clienteGuard, prestadorGuard } from './guards/auth.guard';
+import { RegisterComponent } from './components/register/register.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
