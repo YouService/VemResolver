@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
-import { AuthResponse, LoginRequest, RegisterRequest, TipoUsuario } from '../models/models';
+import { AuthResponse, LoginRequest, RegisterRequest, TipoUsuario, User, UpdatePerfilRequest, AlterarSenhaRequest } from '../models/models';
+
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private apiUrl = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<AuthResponse | null>(this.getUserFromStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -70,5 +72,21 @@ export class AuthService {
 
   isPrestador(): boolean {
     return this.currentUserSubject.value?.tipoUsuario === TipoUsuario.PRESTADOR;
+  }
+
+  buscarPerfil(): Observable<User> {
+    return this.http.get<User>(`http://localhost:8080/api/perfil`);
+  }
+
+  atualizarPerfil(data: UpdatePerfilRequest): Observable<User> {
+    return this.http.put<User>(`http://localhost:8080/api/perfil`, data);
+  }
+
+  alterarSenha(data: AlterarSenhaRequest): Observable<void> {
+    return this.http.put<void>(`http://localhost:8080/api/perfil/senha`, data);
+  }
+
+  deletarConta(): Observable<void> {
+    return this.http.delete<void>(`http://localhost:8080/api/auth/conta`);
   }
 }

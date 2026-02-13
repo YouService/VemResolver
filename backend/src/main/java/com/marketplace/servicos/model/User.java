@@ -25,25 +25,42 @@ public class User implements UserDetails {
     
     @Column(nullable = false)
     private String nome;
-    
+
     @Column(nullable = false, unique = true)
     private String login;
-    
+
     @Column(nullable = false, unique = true)
     private String email;
-    
+
     @Column(nullable = false)
     private String senha;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoUsuario tipo;
-    
+
     private String telefone;
-    
+
+    private String cpf;
+
+    private String rg;
+
+    private String orgaoExpedidor;
+
+    @Column(name = "data_expedicao_rg")
+    private String dataExpedicaoRg;
+
+    private String cep;
+
+    private String endereco;
+
+    private String cidade;
+
+    private String estado;
+
     @Column(nullable = false)
     private LocalDateTime dataCadastro;
-    
+
     @Column(nullable = false)
     private Boolean ativo = true;
     
