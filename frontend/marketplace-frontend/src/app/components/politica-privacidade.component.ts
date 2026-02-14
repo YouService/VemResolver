@@ -8,25 +8,17 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="min-h-screen flex flex-col bg-white font-sans">
-      <!-- Header com Logo -->
-      <header class="bg-white py-6 border-b border-gray-100">
-        <div class="container mx-auto px-4">
-          <a routerLink="/" class="text-3xl font-extrabold text-blue-600 tracking-tight cursor-pointer no-underline flex items-center gap-2">
-            <span class="text-3xl">🛠️</span> VemResolver
-          </a>
-        </div>
-      </header>
-
+      
       <!-- Faixa de Título (Padrão Azul) -->
       <div class="bg-blue-600 py-20">
-        <div class="container mx-auto px-4">
+        <div class="container max-w-6xl mx-auto px-4">
           <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Política de Privacidade</h1>
           <p class="text-blue-100 text-lg">Entenda como cuidamos dos seus dados no VemResolver</p>
         </div>
       </div>
 
       <!-- Conteúdo do Texto -->
-      <main class="flex-grow container mx-auto px-4 py-16 max-w-5xl">
+      <main class="flex-grow container max-w-6xl mx-auto px-4 py-16">
         <div class="prose prose-lg max-w-none text-gray-700 text-justify leading-relaxed">
           <p>
             <strong>VEMRESOLVER LTDA (“VemResolver”)</strong>, sociedade limitada, inscrita no CNPJ/MF sob o nº [AGUARDANDO REGISTRO], é uma pessoa jurídica de direito privado prestadora de serviços de anúncios online, realizados entre promitentes contratantes (“Contratante”) e promitentes Anunciantes de serviço (“Anunciantes”), por meio do aplicativo e do site VemResolver (“Plataforma”).
@@ -121,9 +113,9 @@ import { RouterModule } from '@angular/router';
 
       <!-- Footer Minimalista -->
       <footer class="bg-white py-10 border-t border-gray-100">
-        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-            VemResolver
+        <div class="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="flex items-center gap-2">
+             <img src="assets/logo.png" alt="VemResolver" class="h-8 w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition">
           </div>
           <div class="text-sm text-gray-500 text-center md:text-right max-w-xl">
             &copy; 2026 VemResolver LTDA. Todos os direitos reservados.

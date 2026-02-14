@@ -115,7 +115,7 @@ import { MaskDirective } from '../directives/mask.directive';
       <div class="container max-w-6xl mx-auto px-4 relative group/slider">
         <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Categorias Populares</h2>
         
-        <div class="relative max-w-7xl mx-auto">
+        <div class="relative w-full mx-auto">
           <!-- Botão Esquerdo -->
           <button 
             (click)="scrollLeft()"
@@ -369,32 +369,21 @@ import { MaskDirective } from '../directives/mask.directive';
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8">
-      <div class="container max-w-6xl mx-auto px-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <h3 class="font-bold text-lg mb-4">Marketplace de Serviços</h3>
-            <p class="text-gray-400">Conectando pessoas aos melhores profissionais</p>
-          </div>
-          <div>
-            <h3 class="font-bold text-lg mb-4">Links Rápidos</h3>
-            <ul class="space-y-2 text-gray-400">
-              <li><a href="#" class="hover:text-white">Sobre nós</a></li>
-              <li><a href="#" class="hover:text-white">Como funciona</a></li>
-              <li><a routerLink="/termos-uso" target="_blank" class="hover:text-white cursor-pointer">Termos de uso</a></li>
-              <li><a routerLink="/politica-privacidade" target="_blank" class="hover:text-white cursor-pointer">Política de Privacidade</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 class="font-bold text-lg mb-4">Contato</h3>
-            <ul class="space-y-2 text-gray-400">
-              <li>contato&#64;marketplace.com</li>
-              <li>(11) 9999-9999</li>
-            </ul>
-          </div>
+    <footer class="bg-white py-10 border-t border-gray-100">
+      <div class="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-2">
+           <img src="assets/logo.png" alt="VemResolver" class="h-8 w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition">
         </div>
-        <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2026 Marketplace de Serviços. Todos os direitos reservados.</p>
+        <div class="flex flex-col md:flex-row gap-6 items-center">
+          <div class="flex gap-4 text-sm font-medium text-gray-500">
+            <a routerLink="/sobre-nos" class="hover:text-blue-600 transition cursor-pointer">Sobre nós</a>
+            <a routerLink="/seguranca" class="hover:text-blue-600 transition cursor-pointer">Segurança</a>
+            <a routerLink="/termos-uso" class="hover:text-blue-600 transition cursor-pointer">Termos de uso</a>
+            <a routerLink="/politica-privacidade" class="hover:text-blue-600 transition cursor-pointer">Política de Privacidade</a>
+          </div>
+          <div class="text-sm text-gray-400 text-center md:text-right">
+            &copy; 2026 VemResolver LTDA.
+          </div>
         </div>
       </div>
     </footer>

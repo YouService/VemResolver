@@ -18,8 +18,8 @@ import { MatIconModule } from '@angular/material/icon';
           <div class="flex items-center justify-between h-16">
             <!-- Logo -->
             <div class="flex items-center">
-              <a routerLink="/" class="text-2xl font-bold text-blue-600 hover:text-blue-700 transition flex items-center gap-2">
-                <span class="text-3xl">🛠️</span> VemResolver
+              <a routerLink="/" class="flex items-center gap-2">
+                <img src="assets/logo.png" alt="VemResolver" class="w-[200px] h-[45px] object-contain">
               </a>
             </div>
 
@@ -33,13 +33,13 @@ import { MatIconModule } from '@angular/material/icon';
                   </div>
 
                   @if (authService.isCliente()) {
-                    <a routerLink="/cliente/dashboard" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium text-sm shadow-sm">
+                    <a routerLink="/cliente/dashboard" class="bg-brand-blue text-white px-4 py-2 rounded-lg hover:brightness-110 transition font-medium text-sm shadow-sm">
                       Meu Painel
                     </a>
                   }
 
                   @if (authService.isPrestador()) {
-                    <a routerLink="/prestador/dashboard" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium text-sm shadow-sm">
+                    <a routerLink="/prestador/dashboard" class="bg-brand-blue text-white px-4 py-2 rounded-lg hover:brightness-110 transition font-medium text-sm shadow-sm">
                       Meu Painel
                     </a>
                   }
@@ -54,19 +54,19 @@ import { MatIconModule } from '@angular/material/icon';
               } @else {
                 <!-- Menu Visitante (Igual à imagem) -->
                 <div class="hidden md:flex items-center space-x-6">
-                  <a routerLink="/register" class="bg-gray-100 text-blue-600 px-6 py-2.5 rounded-lg hover:bg-gray-200 transition font-bold text-sm">
+                  <a routerLink="/register" class="bg-gray-100 text-brand-blue px-6 py-2.5 rounded-lg hover:bg-gray-200 transition font-bold text-sm">
                     Seja um profissional
                   </a>
                   
-                  <a href="#como-funciona" class="text-blue-600 hover:text-blue-800 transition font-medium text-sm">
+                  <a href="#como-funciona" class="text-brand-blue hover:text-blue-800 transition font-medium text-sm">
                     Como funciona?
                   </a>
                   
-                  <a href="#" class="text-blue-600 hover:text-blue-800 transition font-medium text-sm">
+                  <a routerLink="/seguranca" class="text-brand-blue hover:text-blue-800 transition font-medium text-sm cursor-pointer">
                     Segurança
                   </a>
                   
-                  <a routerLink="/login" class="flex items-center text-blue-600 hover:text-blue-800 transition font-medium text-sm gap-1">
+                  <a routerLink="/login" class="flex items-center text-brand-blue hover:text-blue-800 transition font-medium text-sm gap-1">
                     <mat-icon class="text-lg h-5 w-5 leading-none flex items-center">person_outline</mat-icon>
                     Entrar
                   </a>
@@ -88,7 +88,7 @@ import { MatIconModule } from '@angular/material/icon';
           <ul class="flex justify-between items-stretch">
             @for (category of menuData; track category.id) {
               <li class="group static">
-                <a routerLink="/" fragment="categorias" class="flex flex-col items-center justify-center px-2 py-4 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition border-b-2 border-transparent group-hover:border-blue-600 h-full w-full min-w-[90px] cursor-pointer">
+                <a routerLink="/" fragment="categorias" class="flex flex-col items-center justify-center px-2 py-4 text-brand-gray hover:text-brand-blue hover:bg-blue-50 transition border-b-2 border-transparent group-hover:border-brand-blue h-full w-full min-w-[90px] cursor-pointer">
                   <img [src]="category.image" [alt]="category.label" class="w-10 h-10 mb-2 object-contain group-hover:scale-110 transition-transform duration-200 drop-shadow-sm">
                   <span class="text-[11px] font-semibold text-center uppercase tracking-wide leading-tight">{{ category.label }}</span>
                 </a>
@@ -98,17 +98,17 @@ import { MatIconModule } from '@angular/material/icon';
                    <div class="px-8">
                       <div class="flex mb-6 border-b pb-4 items-center">
                         <img [src]="category.image" class="w-12 h-12 mr-4 object-contain">
-                        <h2 class="text-2xl font-bold text-gray-800">{{ category.label }}</h2>
+                        <h2 class="text-2xl font-bold text-brand-blue">{{ category.label }}</h2>
                       </div>
                       <div class="grid grid-cols-4 gap-x-8 gap-y-8">
                         @for (subGroup of category.subcategories; track subGroup.title) {
                           <div>
-                            <h3 class="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider border-l-4 border-blue-500 pl-3">{{ subGroup.title }}</h3>
+                            <h3 class="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider border-l-4 border-brand-blue pl-3">{{ subGroup.title }}</h3>
                             <ul class="space-y-2.5">
                               @for (item of subGroup.items; track item) {
                                 <li>
-                                  <a href="javascript:void(0)" class="text-gray-500 hover:text-blue-600 text-sm hover:underline block py-0.5 transition-colors flex items-center group/item">
-                                    <span class="w-1.5 h-1.5 bg-gray-300 rounded-full mr-2 group-hover/item:bg-blue-500 transition-colors"></span>
+                                  <a href="javascript:void(0)" class="text-gray-500 hover:text-brand-blue text-sm hover:underline block py-0.5 transition-colors flex items-center group/item">
+                                    <span class="w-1.5 h-1.5 bg-gray-300 rounded-full mr-2 group-hover/item:bg-brand-blue transition-colors"></span>
                                     {{ item }}
                                   </a>
                                 </li>
