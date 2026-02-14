@@ -2,7 +2,6 @@ package com.marketplace.servicos.service;
 
 import org.springframework.stereotype.Service;
 
-@Service
 public class ConsoleEmailService implements EmailService {
     @Override
     public void sendVerificationEmail(String to, String token) {

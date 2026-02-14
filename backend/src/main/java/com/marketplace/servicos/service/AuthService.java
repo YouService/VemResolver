@@ -89,8 +89,12 @@ public class AuthService {
 
         // Gerar token de verificação
         String tokenUuid = UUID.randomUUID().toString();
+        System.out.println("=== DEBUG REGISTRO ===");
+        System.out.println("Token gerado: " + tokenUuid);
         VerificationToken verificationToken = new VerificationToken(tokenUuid, user);
         verificationTokenRepository.save(verificationToken);
+        System.out.println("Token salvo no banco");
+        System.out.println("======================");
 
         // Enviar email
         emailService.sendVerificationEmail(user.getEmail(), tokenUuid);
@@ -101,10 +105,18 @@ public class AuthService {
     
     @Transactional
     public void verifyAccount(String token) {
+        System.out.println("=== DEBUG VERIFICAÇÃO ===");
+        System.out.println("Token recebido: " + token);
+        
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
+        System.out.println("Token encontrado no banco: " + (verificationToken != null ? "SIM" : "NÃO"));
+        
         if (verificationToken == null) {
             throw new BusinessException("Token de verificação inválido.");
         }
+        
+        System.out.println("Data de expiração: " + verificationToken.getExpiryDate());
+        System.out.println("Data atual: " + LocalDateTime.now());
         
         if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
              throw new BusinessException("O link de verificação expirou. Solicite um novo.");
@@ -115,6 +127,8 @@ public class AuthService {
         userRepository.save(user);
         
         verificationTokenRepository.delete(verificationToken);
+        System.out.println("Conta verificada com sucesso!");
+        System.out.println("=========================");
     }
     
     public AuthResponseDTO login(LoginDTO loginDTO) {
