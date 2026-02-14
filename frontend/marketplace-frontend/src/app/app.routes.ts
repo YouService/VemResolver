@@ -8,7 +8,9 @@ import { ClientePerfilComponent } from './components/cliente-perfil.component';
 import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
 import { PoliticaPrivacidadeComponent } from './components/politica-privacidade.component';
 import { PrestadorPerfilComponent } from './components/prestador-perfil/prestador-perfil.component';
+import { SegurancaComponent } from './components/seguranca.component';
 import { SejaProfissionalComponent } from './components/seja-profissional.component';
+import { SobreNosComponent } from './components/sobre-nos.component';
 import { TermosUsoComponent } from './components/termos-uso.component';
 import { VerifyAccountComponent } from './components/verify-account.component';
 import { clienteGuard, prestadorGuard } from './guards/auth.guard';
@@ -22,6 +24,8 @@ export const routes: Routes = [
   { path: 'termos-uso', component: TermosUsoComponent },
   { path: 'politica-privacidade', component: PoliticaPrivacidadeComponent },
   { path: 'seja-um-profissional', component: SejaProfissionalComponent },
+  { path: 'seguranca', component: SegurancaComponent },
+  { path: 'sobre-nos', component: SobreNosComponent },
   {
     path: 'cliente/dashboard',
     component: ClienteDashboardComponent,
