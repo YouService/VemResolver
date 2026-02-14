@@ -18,7 +18,7 @@ export class AppComponent {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      const hiddenRoutes = ['/termos-uso', '/politica-privacidade', '/seja-um-profissional'];
+      const hiddenRoutes = ['/termos-uso', '/politica-privacidade', '/seja-um-profissional', '/seguranca', '/sobre-nos'];
       this.showNavbar = !hiddenRoutes.some(route => event.url.includes(route));
     });
   }
