@@ -30,6 +30,8 @@ export interface User {
   endereco?: string;
   cidade?: string;
   estado?: string;
+  numero?: string;
+  complemento?: string;
   dataCadastro: Date;
   ativo: boolean;
 }
@@ -58,6 +60,13 @@ export interface RegisterRequest {
   rg?: string;
   orgaoExpedidor?: string;
   dataExpedicaoRg?: string;
+  cep?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  numero?: string;
+  complemento?: string;
+  dataCadastro: Date;
 }
 
 export interface UpdatePerfilRequest {

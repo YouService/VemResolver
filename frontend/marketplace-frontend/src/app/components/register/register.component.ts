@@ -1,20 +1,22 @@
-import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select';
+import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatStepperModule } from '@angular/material/stepper';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatStepperModule } from '@angular/material/stepper';
+import { Router, RouterModule } from '@angular/router';
+import { MaskDirective } from '../../directives/mask.directive';
+import { UppercaseDirective } from '../../directives/uppercase.directive';
 import { AuthService } from '../../services/auth.service';
 import { ViaCEPService } from '../../services/viacep.service';
-import { MaskDirective } from '../../directives/mask.directive';
 import { CustomValidators } from '../../validators/custom.validators';
+import { AlertComponent } from '../alert.component';
 
 @Component({
   selector: 'app-register',
@@ -32,7 +34,9 @@ import { CustomValidators } from '../../validators/custom.validators';
     MatStepperModule,
     MatIconModule,
     MatSnackBarModule,
-    MaskDirective
+    MaskDirective,
+    UppercaseDirective,
+    AlertComponent
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
@@ -43,6 +47,11 @@ export class RegisterComponent {
   step3Form: FormGroup;
   loading = false;
   loadingCep = false;
+
+  // Error messages
+  step1Error = '';
+  step2Error = '';
+  step3Error = '';
 
   constructor(
     private fb: FormBuilder,
@@ -105,13 +114,15 @@ export class RegisterComponent {
 
   buscarCep(): void {
     const cep = this.step3Form.get('cep')?.value?.replace(/\D/g, '');
-    
+
     if (cep && cep.length === 8) {
       this.loadingCep = true;
+      this.step3Error = '';
+
       this.viaCEPService.buscarCEP(cep).subscribe({
         next: (data) => {
           if (data.erro) {
-            this.snackBar.open('CEP não encontrado. Preencha os campos manualmente.', 'Fechar', { duration: 3000 });
+            this.step3Error = 'CEP não encontrado. Preencha os campos manualmente.';
             this.habilitarCamposEndereco();
           } else {
             this.step3Form.patchValue({
@@ -124,7 +135,7 @@ export class RegisterComponent {
           this.loadingCep = false;
         },
         error: () => {
-          this.snackBar.open('Erro ao buscar CEP. Preencha os campos manualmente.', 'Fechar', { duration: 3000 });
+          this.step3Error = 'Erro ao buscar CEP. Preencha os campos manualmente.';
           this.habilitarCamposEndereco();
           this.loadingCep = false;
         }
@@ -147,6 +158,9 @@ export class RegisterComponent {
   onSubmit(): void {
     if (this.step1Form.valid && this.step2Form.valid && this.step3Form.valid) {
       this.loading = true;
+      this.step1Error = '';
+      this.step2Error = '';
+      this.step3Error = '';
 
       const dadosCadastro = {
         ...this.step1Form.getRawValue(),
@@ -159,12 +173,25 @@ export class RegisterComponent {
 
       this.authService.register(dadosCadastro).subscribe({
         next: (response) => {
-          this.snackBar.open('Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.', 'Entendi', { duration: 8000 });
-          this.router.navigate(['/login']);
+          this.snackBar.open('✓ Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.', 'Fechar', {
+            duration: 6000,
+            horizontalPosition: 'center',
+            verticalPosition: 'top',
+            panelClass: ['success-snackbar']
+          });
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 2000);
         },
         error: (error) => {
           const msg = error.error?.message || 'Erro ao cadastrar. Verifique os dados e tente novamente.';
-          this.snackBar.open(msg, 'Fechar', { duration: 5000 });
+          this.step2Error = msg;
+          this.snackBar.open('✕ ' + msg, 'Fechar', {
+            duration: 5000,
+            horizontalPosition: 'center',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar']
+          });
           this.loading = false;
         }
       });
