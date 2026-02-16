@@ -70,7 +70,7 @@ public class User implements UserDetails {
     
     @PrePersist
     protected void onCreate() {
-        dataCadastro = LocalDateTime.now();
+        dataCadastro = LocalDateTime.now().withNano(0);
         if (ativo == null) {
             ativo = true;
         }

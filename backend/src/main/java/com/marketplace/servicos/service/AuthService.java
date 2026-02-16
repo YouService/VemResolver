@@ -71,8 +71,7 @@ public class AuthService {
             }
         } else {
             // Novo cadastro
-            user = new User();
-            user.setDataCadastro(LocalDateTime.now().withNano(0));
+            user = new User();            
             user.setNome(registerDTO.getNome());
             user.setEmail(registerDTO.getEmail());
             user.setLogin(registerDTO.getEmail());
