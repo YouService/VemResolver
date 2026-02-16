@@ -58,7 +58,11 @@ public class User implements UserDetails {
 
     private String estado;
 
-    @Column(nullable = false)
+    private String numero;
+
+    private String complemento;
+
+    @Column(name = "data_cadastro", columnDefinition = "TIMESTAMP(0)")
     private LocalDateTime dataCadastro;
 
     @Column(nullable = false)

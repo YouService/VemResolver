@@ -105,7 +105,7 @@ export class RegisterComponent {
 
   buscarCep(): void {
     const cep = this.step3Form.get('cep')?.value?.replace(/\D/g, '');
-    
+
     if (cep && cep.length === 8) {
       this.loadingCep = true;
       this.viaCEPService.buscarCEP(cep).subscribe({

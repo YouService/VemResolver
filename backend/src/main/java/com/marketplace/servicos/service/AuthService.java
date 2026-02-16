@@ -9,6 +9,8 @@ import com.marketplace.servicos.model.VerificationToken;
 import com.marketplace.servicos.repository.UserRepository;
 import com.marketplace.servicos.repository.VerificationTokenRepository;
 import com.marketplace.servicos.security.JwtTokenProvider;
+import com.marketplace.servicos.utils.DocumentUtils;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -58,13 +60,11 @@ public class AuthService {
                 user.setLogin(registerDTO.getEmail());
                 user.setSenha(passwordEncoder.encode(registerDTO.getSenha()));
                 user.setTipo(registerDTO.getTipo());
-                user.setTelefone(registerDTO.getTelefone());
-                user.setCpf(registerDTO.getCpf());
+                user.setTelefone(registerDTO.getTelefone());                
+                user.setCpf(DocumentUtils.somenteNumeroCpf(registerDTO.getCpf()));
                 user.setRg(registerDTO.getRg());
                 user.setOrgaoExpedidor(registerDTO.getOrgaoExpedidor());
-                user.setDataExpedicaoRg(registerDTO.getDataExpedicaoRg());
-                // user.setAtivo(true); // NÃO ATIVA DIRETAMENTE
-                // Mantém ativo=false até verificar email novamente
+                user.setDataExpedicaoRg(registerDTO.getDataExpedicaoRg());            
             } else {
                  // Caso raro onde existsByEmailAndAtivoTrue falhou ou concorrência
                  throw new BusinessException("Usuário já existe.");
@@ -72,16 +72,23 @@ public class AuthService {
         } else {
             // Novo cadastro
             user = new User();
+            user.setDataCadastro(LocalDateTime.now().withNano(0));
             user.setNome(registerDTO.getNome());
             user.setEmail(registerDTO.getEmail());
             user.setLogin(registerDTO.getEmail());
             user.setSenha(passwordEncoder.encode(registerDTO.getSenha()));
             user.setTipo(registerDTO.getTipo());
             user.setTelefone(registerDTO.getTelefone());
-            user.setCpf(registerDTO.getCpf());
+            user.setCpf(DocumentUtils.somenteNumeroCpf(registerDTO.getCpf()));
             user.setRg(registerDTO.getRg());
             user.setOrgaoExpedidor(registerDTO.getOrgaoExpedidor());
-            user.setDataExpedicaoRg(registerDTO.getDataExpedicaoRg());
+            user.setDataExpedicaoRg(registerDTO.getDataExpedicaoRg());       
+            user.setCep(registerDTO.getCep());
+            user.setEndereco(registerDTO.getEndereco());
+            user.setCidade(registerDTO.getCidade());
+            user.setEstado(registerDTO.getEstado());    
+            user.setNumero(registerDTO.getNumero());
+            user.setComplemento(registerDTO.getComplemento());       
             user.setAtivo(false); // Inativo até confirmar email
         }
 
