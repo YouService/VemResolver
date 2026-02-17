@@ -55,7 +55,7 @@ public class AuthService {
         if (existingUser.isPresent()) {
             user = existingUser.get();
             if (!user.getAtivo()) {
-                // Reativação de conta: atualiza dados e envia email de verificação
+                // Reativação de conta
                 user.setNome(registerDTO.getNome());
                 user.setLogin(registerDTO.getEmail());
                 user.setSenha(passwordEncoder.encode(registerDTO.getSenha()));
@@ -66,7 +66,6 @@ public class AuthService {
                 user.setOrgaoExpedidor(registerDTO.getOrgaoExpedidor());
                 user.setDataExpedicaoRg(registerDTO.getDataExpedicaoRg());            
             } else {
-                 // Caso raro onde existsByEmailAndAtivoTrue falhou ou concorrência
                  throw new BusinessException("Usuário já existe.");
             }
         } else {
@@ -88,24 +87,28 @@ public class AuthService {
             user.setEstado(registerDTO.getEstado());    
             user.setNumero(registerDTO.getNumero());
             user.setComplemento(registerDTO.getComplemento());       
-            user.setAtivo(false); // Inativo até confirmar email
+            user.setAtivo(false); 
         }
 
         user = userRepository.save(user);
 
         // Gerar token de verificação
         String tokenUuid = UUID.randomUUID().toString();
-        System.out.println("=== DEBUG REGISTRO ===");
-        System.out.println("Token gerado: " + tokenUuid);
         VerificationToken verificationToken = new VerificationToken(tokenUuid, user);
         verificationTokenRepository.save(verificationToken);
-        System.out.println("Token salvo no banco");
-        System.out.println("======================");
 
-        // Enviar email
-        emailService.sendVerificationEmail(user.getEmail(), tokenUuid);
+        // --- CORREÇÃO AQUI: Bloco try-catch para e-mail ---
+        try {
+            System.out.println("Tentando enviar e-mail de verificação para: " + user.getEmail());
+            emailService.sendVerificationEmail(user.getEmail(), tokenUuid);
+            System.out.println("E-mail enviado com sucesso!");
+        } catch (Exception e) {
+            // Loga o erro mas NÃO interrompe a execução (o Transactional não fará rollback)
+            System.err.println("ALERTA: Falha ao enviar e-mail de verificação: " + e.getMessage());
+            System.err.println("O usuário foi salvo, mas o e-mail não foi enviado.");
+        }
+        // -------------------------------------------------
 
-        // Retorna null no token para indicar que precisa verificar email
         return new AuthResponseDTO(null, user.getId(), user.getNome(), user.getEmail(), user.getTipo());
     }
     

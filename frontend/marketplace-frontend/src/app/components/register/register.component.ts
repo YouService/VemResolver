@@ -48,7 +48,7 @@ export class RegisterComponent {
   loadingCep = false;
   mobileMenuOpen = false;
 
-  // Error messages
+  // Mensagens de erro para exibição no template
   step1Error = '';
   step2Error = '';
   step3Error = '';
@@ -98,37 +98,29 @@ export class RegisterComponent {
   setupDataExpedicaoMask(): void {
     this.step2Form.get('dataExpedicaoRg')?.valueChanges.subscribe(value => {
       if (!value) return;
-
       const v = value.replace(/\D/g, '');
-
       if (v.length > 8) {
         this.step2Form.get('dataExpedicaoRg')?.setValue(v.substring(0, 8), { emitEvent: false });
         return;
       }
-
       let formatted = '';
       for (let i = 0; i < v.length; i++) {
-        if (i === 2 || i === 4) {
-          formatted += '/';
-        }
+        if (i === 2 || i === 4) formatted += '/';
         formatted += v[i];
       }
-
       this.step2Form.get('dataExpedicaoRg')?.setValue(formatted, { emitEvent: false });
     });
   }
 
   buscarCep(): void {
     const cep = this.step3Form.get('cep')?.value?.replace(/\D/g, '');
-
     if (cep && cep.length === 8) {
       this.loadingCep = true;
       this.step3Error = '';
-
       this.viaCEPService.buscarCEP(cep).subscribe({
         next: (data) => {
           if (data.erro) {
-            this.step3Error = 'CEP não encontrado. Preencha os campos manualmente.';
+            this.step3Error = 'CEP não encontrado. Preencha manualmente.';
             this.snackService.open(this.step3Error, 'Erro CEP', 'error');
             this.habilitarCamposEndereco();
           } else {
@@ -142,7 +134,7 @@ export class RegisterComponent {
           this.loadingCep = false;
         },
         error: () => {
-          this.step3Error = 'Erro ao buscar CEP. Preencha os campos manualmente.';
+          this.step3Error = 'Erro ao buscar CEP. Preencha manualmente.';
           this.snackService.open(this.step3Error, 'Erro CEP', 'error');
           this.habilitarCamposEndereco();
           this.loadingCep = false;
@@ -181,19 +173,30 @@ export class RegisterComponent {
 
       this.authService.register(dadosCadastro).subscribe({
         next: (response) => {
-          this.snackService.open('✓ Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.', 'Sucesso', 'success', 6000);
-          this.logout();
+          this.loading = false;
+          // Feedback visual positivo para o usuário
+          this.snackService.open('✓ Cadastro realizado! Verifique seu email para ativar a conta.', 'Sucesso', 'success', 8000);
+          
+          // Reset dos formulários
+          this.step1Form.reset();
+          this.step2Form.reset();
+          this.step3Form.reset();
+
+          // Redirecionamento após um pequeno delay para o usuário ler a snackbar
           setTimeout(() => {
             this.router.navigate(['/login']);
-          }, 2000);
+          }, 3000);
         },
         error: (error) => {
-          const msg = error.error?.message || 'Erro ao cadastrar. Verifique os dados e tente novamente.';
-          this.step2Error = msg;
-          this.snackService.open('✕ ' + msg, 'Erro', 'error', 5000);
           this.loading = false;
+          // Se o backend enviar uma mensagem de negócio (ex: email duplicado), exibimos ela
+          const msg = error.error?.message || 'Erro interno ao processar cadastro. Tente novamente em instantes.';
+          this.step2Error = msg;
+          this.snackService.open('✕ ' + msg, 'Erro', 'error', 6000);
         }
       });
+    } else {
+      this.snackService.open('Por favor, preencha todos os campos obrigatórios corretamente.', 'Aviso', 'warning');
     }
   }
 }
