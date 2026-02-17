@@ -46,6 +46,7 @@ export class RegisterComponent {
   step3Form: FormGroup;
   loading = false;
   loadingCep = false;
+  mobileMenuOpen = false;
 
   // Error messages
   step1Error = '';
@@ -86,6 +87,12 @@ export class RegisterComponent {
     });
 
     this.setupDataExpedicaoMask();
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/']);
+    this.mobileMenuOpen = false;
   }
 
   setupDataExpedicaoMask(): void {
@@ -175,6 +182,7 @@ export class RegisterComponent {
       this.authService.register(dadosCadastro).subscribe({
         next: (response) => {
           this.snackService.open('✓ Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.', 'Sucesso', 'success', 6000);
+          this.logout();
           setTimeout(() => {
             this.router.navigate(['/login']);
           }, 2000);
