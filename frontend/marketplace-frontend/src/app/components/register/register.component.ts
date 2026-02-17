@@ -8,7 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
 import { Router, RouterModule } from '@angular/router';
 import { MaskDirective } from '../../directives/mask.directive';
@@ -16,7 +16,7 @@ import { UppercaseDirective } from '../../directives/uppercase.directive';
 import { AuthService } from '../../services/auth.service';
 import { ViaCEPService } from '../../services/viacep.service';
 import { CustomValidators } from '../../validators/custom.validators';
-import { AlertComponent } from '../alert.component';
+import { SnackService } from '../../services/snack.service';
 
 @Component({
   selector: 'app-register',
@@ -35,8 +35,7 @@ import { AlertComponent } from '../alert.component';
     MatIconModule,
     MatSnackBarModule,
     MaskDirective,
-    UppercaseDirective,
-    AlertComponent
+    UppercaseDirective
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
@@ -47,6 +46,7 @@ export class RegisterComponent {
   step3Form: FormGroup;
   loading = false;
   loadingCep = false;
+  mobileMenuOpen = false;
 
   // Error messages
   step1Error = '';
@@ -58,7 +58,7 @@ export class RegisterComponent {
     private authService: AuthService,
     private viaCEPService: ViaCEPService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackService: SnackService
   ) {
     this.step1Form = this.fb.group({
       cpf: ['', [Validators.required, CustomValidators.cpf]],
@@ -87,6 +87,12 @@ export class RegisterComponent {
     });
 
     this.setupDataExpedicaoMask();
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/']);
+    this.mobileMenuOpen = false;
   }
 
   setupDataExpedicaoMask(): void {
@@ -123,6 +129,7 @@ export class RegisterComponent {
         next: (data) => {
           if (data.erro) {
             this.step3Error = 'CEP não encontrado. Preencha os campos manualmente.';
+            this.snackService.open(this.step3Error, 'Erro CEP', 'error');
             this.habilitarCamposEndereco();
           } else {
             this.step3Form.patchValue({
@@ -136,6 +143,7 @@ export class RegisterComponent {
         },
         error: () => {
           this.step3Error = 'Erro ao buscar CEP. Preencha os campos manualmente.';
+          this.snackService.open(this.step3Error, 'Erro CEP', 'error');
           this.habilitarCamposEndereco();
           this.loadingCep = false;
         }
@@ -173,12 +181,8 @@ export class RegisterComponent {
 
       this.authService.register(dadosCadastro).subscribe({
         next: (response) => {
-          this.snackBar.open('✓ Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.', 'Fechar', {
-            duration: 6000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-            panelClass: ['success-snackbar']
-          });
+          this.snackService.open('✓ Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.', 'Sucesso', 'success', 6000);
+          this.logout();
           setTimeout(() => {
             this.router.navigate(['/login']);
           }, 2000);
@@ -186,12 +190,7 @@ export class RegisterComponent {
         error: (error) => {
           const msg = error.error?.message || 'Erro ao cadastrar. Verifique os dados e tente novamente.';
           this.step2Error = msg;
-          this.snackBar.open('✕ ' + msg, 'Fechar', {
-            duration: 5000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-            panelClass: ['error-snackbar']
-          });
+          this.snackService.open('✕ ' + msg, 'Erro', 'error', 5000);
           this.loading = false;
         }
       });
