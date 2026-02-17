@@ -1,0 +1,2 @@
+ALTER TABLE usuarios ADD COLUMN numero VARCHAR(20), ADD COLUMN complemento VARCHAR(100);
+ALTER TABLE usuarios ALTER COLUMN data_cadastro TYPE TIMESTAMP(0);
