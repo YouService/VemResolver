@@ -35,3 +35,26 @@ html {
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out forwards;
 }
+
+/* Global snack-bar panel styles */
+.global-snack-bar-panel {
+  @apply rounded-lg px-4 py-3 shadow-lg bg-gradient-to-r from-brand-orange to-brand-blue text-white;
+  max-width: 440px;
+  margin: 12px;
+}
+
+.global-snack-success {
+  @apply from-green-500 to-green-600;
+}
+
+.global-snack-error {
+  @apply from-red-500 to-red-600;
+}
+
+.global-snack-warning {
+  @apply from-yellow-400 to-yellow-500;
+}
+
+.global-snack-info {
+  @apply from-brand-orange to-brand-blue;
+}

@@ -1,0 +1,7 @@
+<div class="flex items-start space-x-3 text-white">
+  <mat-icon *ngIf="data?.type" class="mt-1">info</mat-icon>
+  <div class="flex-1">
+    <div *ngIf="data?.title" class="font-semibold">{{ data.title }}</div>
+    <div class="text-sm">{{ data.message }}</div>
+  </div>
+</div>
