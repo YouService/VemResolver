@@ -1,20 +1,21 @@
 import { Routes } from '@angular/router';
+import { ClienteDashboardComponent } from './components/cliente-dashboard.component';
+import { ClienteEditarSolicitacaoComponent } from './components/cliente-editar-solicitacao.component';
+import { ClienteNovaSolicitacaoComponent } from './components/cliente-nova-solicitacao.component';
+import { ClientePerfilComponent } from './components/cliente-perfil.component';
 import { HomeComponent } from './components/home.component';
 import { LoginComponent } from './components/login.component';
-import { ClienteDashboardComponent } from './components/cliente-dashboard.component';
-import { ClienteNovaSolicitacaoComponent } from './components/cliente-nova-solicitacao.component';
-import { ClienteEditarSolicitacaoComponent } from './components/cliente-editar-solicitacao.component';
-import { ClientePerfilComponent } from './components/cliente-perfil.component';
-import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
+import { NotificationDemoComponent } from './components/notification-demo/notification-demo.component';
 import { PoliticaPrivacidadeComponent } from './components/politica-privacidade.component';
+import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
 import { PrestadorPerfilComponent } from './components/prestador-perfil/prestador-perfil.component';
+import { RegisterComponent } from './components/register/register.component';
 import { SegurancaComponent } from './components/seguranca.component';
 import { SejaProfissionalComponent } from './components/seja-profissional.component';
 import { SobreNosComponent } from './components/sobre-nos.component';
 import { TermosUsoComponent } from './components/termos-uso.component';
 import { VerifyAccountComponent } from './components/verify-account.component';
 import { clienteGuard, prestadorGuard } from './guards/auth.guard';
-import { RegisterComponent } from './components/register/register.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -56,5 +57,6 @@ export const routes: Routes = [
     component: PrestadorPerfilComponent,
     canActivate: [prestadorGuard]
   },
+  { path: 'notification-demo', component: NotificationDemoComponent },
   { path: '**', redirectTo: '' }
 ];

@@ -1,16 +1,17 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
-import { NavbarComponent } from './components/navbar.component';
-import { CookieBannerComponent } from './components/cookie-banner.component';
-import { filter } from 'rxjs/operators';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { CookieBannerComponent } from './components/cookie-banner.component';
 import { GlobalSnackBarComponent } from './components/global-snack-bar/global-snack-bar.component';
+import { NavbarComponent } from './components/navbar.component';
+import { NotificationContainerComponent } from './components/notification-container/notification-container.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, CookieBannerComponent, MatSnackBarModule, MatIconModule, GlobalSnackBarComponent],
+  imports: [RouterOutlet, NavbarComponent, CookieBannerComponent, MatSnackBarModule, MatIconModule, GlobalSnackBarComponent, NotificationContainerComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })

@@ -14,9 +14,9 @@ import { Router, RouterModule } from '@angular/router';
 import { MaskDirective } from '../../directives/mask.directive';
 import { UppercaseDirective } from '../../directives/uppercase.directive';
 import { AuthService } from '../../services/auth.service';
+import { NotificationService } from '../../services/notification.service';
 import { ViaCEPService } from '../../services/viacep.service';
 import { CustomValidators } from '../../validators/custom.validators';
-import { SnackService } from '../../services/snack.service';
 
 @Component({
   selector: 'app-register',
@@ -58,7 +58,7 @@ export class RegisterComponent {
     private authService: AuthService,
     private viaCEPService: ViaCEPService,
     private router: Router,
-    private snackService: SnackService
+    private notificationService: NotificationService
   ) {
     this.step1Form = this.fb.group({
       cpf: ['', [Validators.required, CustomValidators.cpf]],
@@ -129,7 +129,7 @@ export class RegisterComponent {
         next: (data) => {
           if (data.erro) {
             this.step3Error = 'CEP não encontrado. Preencha os campos manualmente.';
-            this.snackService.open(this.step3Error, 'Erro CEP', 'error');
+            this.notificationService.error(this.step3Error, 'Erro ao buscar CEP');
             this.habilitarCamposEndereco();
           } else {
             this.step3Form.patchValue({
@@ -143,7 +143,7 @@ export class RegisterComponent {
         },
         error: () => {
           this.step3Error = 'Erro ao buscar CEP. Preencha os campos manualmente.';
-          this.snackService.open(this.step3Error, 'Erro CEP', 'error');
+          this.notificationService.error(this.step3Error, 'Erro ao buscar CEP');
           this.habilitarCamposEndereco();
           this.loadingCep = false;
         }
@@ -181,7 +181,7 @@ export class RegisterComponent {
 
       this.authService.register(dadosCadastro).subscribe({
         next: (response) => {
-          this.snackService.open('✓ Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.', 'Sucesso', 'success', 6000);
+          this.notificationService.success('Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.');
           this.logout();
           setTimeout(() => {
             this.router.navigate(['/login']);
@@ -190,7 +190,7 @@ export class RegisterComponent {
         error: (error) => {
           const msg = error.error?.message || 'Erro ao cadastrar. Verifique os dados e tente novamente.';
           this.step2Error = msg;
-          this.snackService.open('✕ ' + msg, 'Erro', 'error', 5000);
+          this.notificationService.error(msg);
           this.loading = false;
         }
       });
