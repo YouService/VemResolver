@@ -48,7 +48,7 @@ export class RegisterComponent {
   loadingCep = false;
   mobileMenuOpen = false;
 
-  // Error messages
+  // Mensagens de erro para exibição no template
   step1Error = '';
   step2Error = '';
   step3Error = '';
@@ -98,33 +98,25 @@ export class RegisterComponent {
   setupDataExpedicaoMask(): void {
     this.step2Form.get('dataExpedicaoRg')?.valueChanges.subscribe(value => {
       if (!value) return;
-
       const v = value.replace(/\D/g, '');
-
       if (v.length > 8) {
         this.step2Form.get('dataExpedicaoRg')?.setValue(v.substring(0, 8), { emitEvent: false });
         return;
       }
-
       let formatted = '';
       for (let i = 0; i < v.length; i++) {
-        if (i === 2 || i === 4) {
-          formatted += '/';
-        }
+        if (i === 2 || i === 4) formatted += '/';
         formatted += v[i];
       }
-
       this.step2Form.get('dataExpedicaoRg')?.setValue(formatted, { emitEvent: false });
     });
   }
 
   buscarCep(): void {
     const cep = this.step3Form.get('cep')?.value?.replace(/\D/g, '');
-
     if (cep && cep.length === 8) {
       this.loadingCep = true;
       this.step3Error = '';
-
       this.viaCEPService.buscarCEP(cep).subscribe({
         next: (data) => {
           if (data.erro) {
@@ -185,7 +177,7 @@ export class RegisterComponent {
           this.logout();
           setTimeout(() => {
             this.router.navigate(['/login']);
-          }, 2000);
+          }, 3000);
         },
         error: (error) => {
           const msg = error.error?.message || 'Erro ao cadastrar. Verifique os dados e tente novamente.';
@@ -194,6 +186,8 @@ export class RegisterComponent {
           this.loading = false;
         }
       });
+    } else {
+      this.notificationService.warning('Por favor, preencha todos os campos obrigatórios corretamente.');
     }
   }
 }

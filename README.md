@@ -57,14 +57,14 @@ Plataforma web para conectar clientes que precisam de serviços com prestadores 
 
 1. Configure o banco de dados PostgreSQL:
 ```sql
-CREATE DATABASE youservice_db;
+CREATE DATABASE dbcore001_d;
 ```
 
 2. Configure as credenciais em `backend/src/main/resources/application.properties`:
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/youservice_db
+spring.datasource.url=jdbc:postgresql://localhost:5432/dbcore001_d
 spring.datasource.username=postgres
-spring.datasource.password=123456
+spring.datasource.password=postgres
 ```
 
 3. Execute o backend:
