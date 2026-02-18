@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 public class RegisterDTO {
     
@@ -20,6 +22,7 @@ public class RegisterDTO {
     @Size(min = 8, message = "A senha deve ter no mínimo 8 caracteres")
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$", 
              message = "A senha deve conter pelo menos uma letra maiúscula, uma minúscula e um número")
+    @JsonProperty(access = Access.WRITE_ONLY)
     private String senha;
     
     @NotNull(message = "Tipo de usuário é obrigatório")
@@ -196,21 +199,21 @@ public class RegisterDTO {
     @Override
     public String toString() {
         return "RegisterDTO [getNome()=" + getNome()  + 
-                         ", getEmail()=" + getEmail() + 
-                         ", getSenha()=" + getSenha() + 
-                         ", getTipo()=" + getTipo() + 
-                         ", getTelefone()=" + getTelefone() + 
-                         ", getCpf()=" + getCpf() + 
-                         ", getRg()=" + getRg() + 
-                         ", getOrgaoExpedidor()=" + getOrgaoExpedidor() + 
-                         ", getDataExpedicaoRg()=" + getDataExpedicaoRg() + 
-                         ", getCep()=" + getCep() + 
-                         ", getEndereco()=" + getEndereco() + 
-                         ", getCidade()=" + getCidade() + 
-                         ", getEstado()=" + getEstado() + 
-                         ", getNumero()=" + getNumero() + 
-                         ", getComplemento()=" + getComplemento() + 
-                         "]";
+                 ", getEmail()=" + getEmail() + 
+                 ", getSenha()=" + "[PROTECTED]" + 
+                 ", getTipo()=" + getTipo() + 
+                 ", getTelefone()=" + getTelefone() + 
+                 ", getCpf()=" + getCpf() + 
+                 ", getRg()=" + getRg() + 
+                 ", getOrgaoExpedidor()=" + getOrgaoExpedidor() + 
+                 ", getDataExpedicaoRg()=" + getDataExpedicaoRg() + 
+                 ", getCep()=" + getCep() + 
+                 ", getEndereco()=" + getEndereco() + 
+                 ", getCidade()=" + getCidade() + 
+                 ", getEstado()=" + getEstado() + 
+                 ", getNumero()=" + getNumero() + 
+                 ", getComplemento()=" + getComplemento() + 
+                 "]";
     }
 
 }

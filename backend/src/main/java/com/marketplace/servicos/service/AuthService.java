@@ -31,6 +31,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+
+    private String senhaRegister = null; // Senha padrão para reativação de contas inativas
     
     public AuthService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository,
                       EmailService emailService, PasswordEncoder passwordEncoder,
@@ -52,13 +54,17 @@ public class AuthService {
         Optional<User> existingUser = userRepository.findByEmail(registerDTO.getEmail());
         User user;
 
+        // removendo a senha do payload. Ela será tratada separadamente para evitar que seja exposta em logs ou em qualquer resposta acidentalmente.
+        senhaRegister = registerDTO.getSenha();
+        registerDTO.setSenha(null); 
+
         if (existingUser.isPresent()) {
             user = existingUser.get();
             if (!user.getAtivo()) {
                 // Reativação de conta
                 user.setNome(registerDTO.getNome());
                 user.setLogin(registerDTO.getEmail());
-                user.setSenha(passwordEncoder.encode(registerDTO.getSenha()));
+                user.setSenha(passwordEncoder.encode(senhaRegister));
                 user.setTipo(registerDTO.getTipo());
                 user.setTelefone(registerDTO.getTelefone());                
                 user.setCpf(DocumentUtils.somenteNumeroCpf(registerDTO.getCpf()));
@@ -74,7 +80,7 @@ public class AuthService {
             user.setNome(registerDTO.getNome());
             user.setEmail(registerDTO.getEmail());
             user.setLogin(registerDTO.getEmail());
-            user.setSenha(passwordEncoder.encode(registerDTO.getSenha()));
+            user.setSenha(passwordEncoder.encode(senhaRegister));
             user.setTipo(registerDTO.getTipo());
             user.setTelefone(registerDTO.getTelefone());
             user.setCpf(DocumentUtils.somenteNumeroCpf(registerDTO.getCpf()));

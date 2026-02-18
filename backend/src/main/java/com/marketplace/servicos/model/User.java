@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,6 +36,8 @@ public class User implements UserDetails {
     private String email;
 
     @Column(nullable = false)
+    @ToString.Exclude
+    @JsonProperty(access = Access.WRITE_ONLY)
     private String senha;
 
     @Enumerated(EnumType.STRING)

@@ -168,6 +168,9 @@ export class RegisterComponent {
         ...this.step3Form.getRawValue()
       };
 
+      const senhaForm = this.step2Form.get('senha')?.value;
+
+     // delete dadosCadastro.senha;
       delete dadosCadastro.confirmarSenha;
       delete dadosCadastro.termsAccepted;
 
@@ -177,7 +180,7 @@ export class RegisterComponent {
           this.logout();
           setTimeout(() => {
             this.router.navigate(['/login']);
-          }, 3000);
+          }, 100);
         },
         error: (error) => {
           const msg = error.error?.message || 'Erro ao cadastrar. Verifique os dados e tente novamente.';
