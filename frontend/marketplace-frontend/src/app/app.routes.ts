@@ -5,8 +5,6 @@ import { ClienteDashboardComponent } from './components/cliente-dashboard.compon
 import { ClienteEditarSolicitacaoComponent } from './components/cliente-editar-solicitacao.component';
 import { ClienteNovaSolicitacaoComponent } from './components/cliente-nova-solicitacao.component';
 import { ClientePerfilComponent } from './components/cliente-perfil.component';
-import { HomeComponent } from './components/home.component';
-import { LoginComponent } from './components/login.component';
 import { NotificationDemoComponent } from './components/notification-demo/notification-demo.component';
 import { PoliticaPrivacidadeComponent } from './components/politica-privacidade.component';
 import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
