@@ -3,9 +3,9 @@ spring:
     name: VemResolver-servicos
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/dbcore001_d}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -19,10 +19,10 @@ spring:
 
   spring:
   mail:
-    host: ${MAIL_HOST:smtp.mailersend.net}
-    port: ${MAIL_PORT:2525}
-    username: ${MAIL_USERNAME:MS_tLwX09@test-z0vklo6zy2xl7qrx.mlsender.net}
-    password: ${MAIL_PASSWORD:mssp.yZbDWJr.z3m5jgr2o8zldpyo.gCIFsfi}
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -44,8 +44,8 @@ springdoc:
 
 app:
   frontend:
-    url: ${FRONTEND_URL:http://localhost:4200}
+    url: ${FRONTEND_URL}
 
 jwt:
-  secret: ${JWT_SECRET:MinhaChaveSuperSecretaExtremamenteLongaParaSegurancaDoVemResolver2026!}
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
