@@ -41,9 +41,9 @@ import { CustomValidators } from '../../validators/custom.validators';
   styleUrl: './register.component.scss'
 })
 export class RegisterComponent {
-  step1Form: FormGroup;
-  step2Form: FormGroup;
-  step3Form: FormGroup;
+  step1Form!: FormGroup;
+  step2Form!: FormGroup;
+  step3Form!: FormGroup;
   loading = false;
   loadingCep = false;
   mobileMenuOpen = false;
@@ -156,41 +156,96 @@ export class RegisterComponent {
   }
 
   onSubmit(): void {
+    // Validar todos os steps
+    if (!this.step1Form.valid || !this.step2Form.valid || !this.step3Form.valid) {
+      this.notificationService.warning(
+        'Atenção',
+        'Preencha todos os campos obrigatórios.'
+      );
+      return;
+    }
+
     if (this.step1Form.valid && this.step2Form.valid && this.step3Form.valid) {
       this.loading = true;
-      this.step1Error = '';
-      this.step2Error = '';
-      this.step3Error = '';
+      this.clearErrors();
 
-      const dadosCadastro = {
-        ...this.step1Form.getRawValue(),
-        ...this.step2Form.value,
-        ...this.step3Form.getRawValue()
-      };
+      // Criar payload
+      const payload = this.createPayload();
 
-      const senhaForm = this.step2Form.get('senha')?.value;
-
-     // delete dadosCadastro.senha;
-      delete dadosCadastro.confirmarSenha;
-      delete dadosCadastro.termsAccepted;
-
-      this.authService.register(dadosCadastro).subscribe({
-        next: (response) => {
-          this.notificationService.success('Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.');
-          this.logout();
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 100);
-        },
-        error: (error) => {
-          const msg = error.error?.message || 'Erro ao cadastrar. Verifique os dados e tente novamente.';
-          this.step2Error = msg;
-          this.notificationService.error(msg);
-          this.loading = false;
-        }
+      // Enviar para API
+      this.authService.register(payload).subscribe({
+        next: (response) => this.handleSuccess(response, payload),
+        error: (error) => this.handleError(error, payload)
       });
-    } else {
-      this.notificationService.warning('Por favor, preencha todos os campos obrigatórios corretamente.');
     }
+  }
+
+  private clearAllForms(): void {
+    this.step1Form.reset();
+    this.step2Form.reset();
+    this.step3Form.reset();
+    this.clearErrors();
+    this.loading = false;
+  }
+
+  private clearErrors(): void {
+    this.step1Error = '';
+    this.step2Error = '';
+    this.step3Error = '';
+  }
+
+  private createPayload(): any {
+    const payload = {
+      ...this.step1Form.getRawValue(),
+      ...this.step2Form.value,
+      ...this.step3Form.getRawValue()
+    };
+
+    // Remover campos desnecessários
+    delete payload.confirmarSenha;
+    delete payload.termsAccepted;
+
+    return payload;
+  }
+
+  private handleSuccess(response: any, payload: any): void {
+    // ============================================
+    // SEGURANÇA: Limpar dados sensíveis
+    // ============================================
+    this.clearAllForms();
+
+    // retirar a senha do payload para evitar exposição acidental.
+    delete payload.senha;
+
+    // Notificar
+    this.notificationService.success(
+      'Cadastro realizado com sucesso!',
+      'Verifique seu email para ativar sua conta.'
+    );
+
+    // Logout e redirecionar
+    this.logout();
+    setTimeout(() => {
+      this.router.navigate(['/login']);
+    }, 100);
+  }
+
+  private handleError(error: any, payload: any): void {
+    // ============================================
+    // SEGURANÇA: Limpar senha mesmo em erro
+    // ============================================
+    delete payload.senha;
+    this.step2Form.patchValue({
+      senha: '',
+      confirmarSenha: ''
+    });
+
+    // Tratar erro
+    const msg = error.error?.message ||
+                'Erro ao cadastrar. Tente novamente.';
+
+    this.step2Error = msg;
+    this.notificationService.error('Erro no cadastro', msg);
+    this.loading = false;
   }
 }
