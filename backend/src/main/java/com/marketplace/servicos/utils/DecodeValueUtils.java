@@ -1,6 +1,5 @@
 package com.marketplace.servicos.utils;
 
-import java.util.Base64;
 
 public class DecodeValueUtils {
 
