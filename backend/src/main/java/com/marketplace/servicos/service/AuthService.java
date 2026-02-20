@@ -49,6 +49,19 @@ public class AuthService {
     
     @Transactional
     public AuthResponseDTO register(RegisterDTO registerDTO) {
+
+        if (registerDTO.getCpf() == null) {
+            throw new BusinessException("É necessário fornecer o identificador: CPF.");
+        }
+
+        if (registerDTO.getEmail() == null) {
+            throw new BusinessException("É necessário fornecer o identificador: Email.");
+        }
+
+        if (registerDTO.getCpf() != null && userRepository.existsByCpfAndAtivoTrue(DocumentUtils.somenteNumeroCpf(registerDTO.getCpf()))) {
+            throw new BusinessException("Este CPF já está cadastrado em nosso sistema. Se você esqueceu sua senha, use a opção de recuperação de senha.");
+        }
+
         if (userRepository.existsByEmailAndAtivoTrue(registerDTO.getEmail())) {
             throw new BusinessException("Este email já está cadastrado em nosso sistema. Se você esqueceu sua senha, use a opção de recuperação de senha.");
         }
