@@ -22,6 +22,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.marketplace.servicos.utils.DecodeValueUtils;
+
 @Service
 public class AuthService {
     
@@ -55,8 +57,7 @@ public class AuthService {
         User user;
 
         // removendo a senha do payload. Ela será tratada separadamente para evitar que seja exposta em logs ou em qualquer resposta acidentalmente.
-        senhaRegister = registerDTO.getSenha();
-        registerDTO.setSenha(null); 
+        senhaRegister = DecodeValueUtils.decodeBase64(registerDTO.getSenha());        
 
         if (existingUser.isPresent()) {
             user = existingUser.get();

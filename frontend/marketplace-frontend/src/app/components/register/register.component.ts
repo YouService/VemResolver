@@ -143,6 +143,10 @@ export class RegisterComponent {
     }
   }
 
+  codificar(valor: string): string {
+    return btoa(valor);
+  }
+
   habilitarCamposEndereco(): void {
     this.step3Form.get('endereco')?.enable();
     this.step3Form.get('cidade')?.enable();
@@ -201,23 +205,20 @@ export class RegisterComponent {
       ...this.step3Form.getRawValue()
     };
 
+    const senhaCodificada = this.codificar(this.step2Form.value.senha);
+
     // Remover campos desnecessários
     delete payload.confirmarSenha;
     delete payload.termsAccepted;
+    payload.senha = senhaCodificada;
 
     return payload;
   }
 
   private handleSuccess(response: any, payload: any): void {
-    // ============================================
-    // SEGURANÇA: Limpar dados sensíveis
-    // ============================================
     this.clearAllForms();
-
-    // retirar a senha do payload para evitar exposição acidental.
     delete payload.senha;
 
-    // Notificar
     this.notificationService.success(
       'Cadastro realizado com sucesso!',
       'Verifique seu email para ativar sua conta.'
@@ -231,9 +232,6 @@ export class RegisterComponent {
   }
 
   private handleError(error: any, payload: any): void {
-    // ============================================
-    // SEGURANÇA: Limpar senha mesmo em erro
-    // ============================================
     delete payload.senha;
     this.step2Form.patchValue({
       senha: '',
