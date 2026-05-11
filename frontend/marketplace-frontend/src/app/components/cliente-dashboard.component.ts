@@ -136,12 +136,19 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                     <div class="flex items-center text-sm text-gray-600">
                       <span class="mr-4">📍 {{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
                     </div>
-                    
-                    <button 
-                      (click)="verDetalhes(solicitacao.id!)"
-                      class="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition font-medium">
-                      Ver Detalhes
-                    </button>
+
+                    <div class="flex gap-2">
+                      <a
+                        [routerLink]="['/cliente/solicitacao', solicitacao.id, 'propostas']"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm">
+                        Ver Propostas
+                      </a>
+                      <button
+                        (click)="verDetalhes(solicitacao.id!)"
+                        class="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition font-medium text-sm">
+                        Detalhes
+                      </button>
+                    </div>
                   </div>
                 </div>
               }
@@ -188,17 +195,27 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                   <p class="text-gray-700">{{ solicitacaoSelecionada.descricao }}</p>
                 </div>
 
+                <!-- Propostas -->
+                <div class="border-t pt-4 mt-4">
+                  <a
+                    [routerLink]="['/cliente/solicitacao', solicitacaoSelecionada.id, 'propostas']"
+                    (click)="fecharModal()"
+                    class="w-full block text-center py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                    Ver Propostas Recebidas
+                  </a>
+                </div>
+
                 <!-- Ações -->
                 @if (podeEditarOuExcluir()) {
                   <div class="border-t pt-4 mt-4">
                     <h3 class="font-semibold text-gray-900 mb-3">Ações</h3>
                     <div class="flex gap-3">
-                      <button 
+                      <button
                         (click)="editarSolicitacao()"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
                         ✏️ Editar
                       </button>
-                      <button 
+                      <button
                         (click)="confirmarExclusao()"
                         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
                         🗑️ Cancelar

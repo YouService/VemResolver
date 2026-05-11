@@ -4,6 +4,7 @@ import { LoginComponent } from './components/login.component';
 import { RegisterComponent } from './components/register.component';
 import { ClienteDashboardComponent } from './components/cliente-dashboard.component';
 import { ClienteNovaSolicitacaoComponent } from './components/cliente-nova-solicitacao.component';
+import { ClientePropostasRecebidasComponent } from './components/cliente-propostas-recebidas.component';
 import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
 import { PrestadorPerfilComponent } from './components/prestador-perfil.component';
 import { UserProfileComponent } from './components/user-profile.component';
@@ -18,9 +19,14 @@ export const routes: Routes = [
     component: ClienteDashboardComponent,
     canActivate: [clienteGuard]
   },
-  { 
-    path: 'cliente/nova-solicitacao', 
+  {
+    path: 'cliente/nova-solicitacao',
     component: ClienteNovaSolicitacaoComponent,
+    canActivate: [clienteGuard]
+  },
+  {
+    path: 'cliente/solicitacao/:id/propostas',
+    component: ClientePropostasRecebidasComponent,
     canActivate: [clienteGuard]
   },
   { 
