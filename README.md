@@ -1,138 +1,259 @@
-# Marketplace de Serviços
+# VemResolver — Marketplace de Serviços
 
-Plataforma web para conectar clientes que precisam de serviços com prestadores qualificados.
+Plataforma web que conecta clientes a prestadores de serviços autônomos. O fluxo central é: cliente abre uma solicitação → prestadores enviam propostas → cliente aceita → serviço é executado → cliente avalia.
 
-## 🚀 Tecnologias
+---
 
-### Backend
-- Java 17
+## Stack tecnológica
+
+**Backend**
+- Java 21
 - Spring Boot 3.2.1
-- Spring Security + JWT
-- PostgreSQL
-- Maven
+- Spring Security + JJWT 0.12.3 (autenticação JWT stateless)
+- Spring Data JPA + Hibernate
+- PostgreSQL 16
+- Springdoc OpenAPI 2.3.0 (Swagger)
+- Maven 3.9+
 
-### Frontend
-- Angular 18
-- TypeScript
-- Tailwind CSS
-- RxJS
+**Frontend**
+- Angular 19.2
+- TypeScript 5.7
+- Tailwind CSS 3.4
+- Angular Material 19.2
+- RxJS 7.8
 
-## 📋 Funcionalidades
+**Infraestrutura**
+- Docker + Docker Compose (ambiente completo em um comando)
 
-### Para Clientes
-- ✅ Cadastro e autenticação
-- ✅ Criar solicitações de serviço
-- ✅ Visualizar propostas de prestadores
-- ✅ Dashboard com estatísticas
-- ✅ Filtrar solicitações por status
+---
 
-### Para Prestadores
-- ✅ Cadastro e autenticação
-- ✅ Completar perfil profissional
-- ✅ Selecionar categorias de atuação
-- ✅ Visualizar solicitações abertas
-- ✅ Dashboard com métricas
+## Pré-requisitos para desenvolvimento local
 
-### Categorias Disponíveis
-- Eletricista
-- Encanador
-- Pintor
-- Pedreiro
-- Marceneiro
-- Jardineiro
-- Diarista
-- Professor Particular
-- Mecânico
-- Desenvolvedor
+Você precisa de **uma** das duas opções abaixo:
 
-## 🛠️ Instalação e Configuração
+**Opção A — Docker (recomendada):** apenas Docker Desktop instalado e em execução.
 
-### Pré-requisitos
-- Java 17+
-- Node.js 18+
-- PostgreSQL 16+
-- Maven 3.6+
+**Opção B — Manual:** Java 21 LTS, Maven 3.9+, Node.js 22 LTS, Angular CLI 19, PostgreSQL 16.
+
+---
+
+## Subindo o ambiente com Docker
+
+Esta é a forma mais rápida. Sobe o banco, o backend e o frontend juntos.
+
+**1. Clone o repositório:**
+
+```bash
+git clone https://github.com/YouService/youservice.git
+cd youservice
+```
+
+**2. Suba os containers:**
+
+```bash
+docker-compose up
+```
+
+Na primeira execução, o Docker irá baixar as imagens e compilar o backend. O processo leva entre 3 e 10 minutos dependendo da conexão.
+
+**3. Aguarde os logs de inicialização:**
+
+O backend está pronto quando você ver:
+
+```
+marketplace-backend | Started MarketplaceServicosApplication in XX seconds
+```
+
+O frontend está pronto quando você ver:
+
+```
+marketplace-frontend | Application bundle generation complete.
+marketplace-frontend |   ➜  Local: http://localhost:4200/
+```
+
+**4. Acesse a aplicação:**
+
+- Frontend: `http://localhost:4200`
+- API Backend: `http://localhost:8080`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+
+**Para parar os containers:**
+
+```bash
+docker-compose down
+```
+
+**Para parar e apagar os dados do banco:**
+
+```bash
+docker-compose down -v
+```
+
+---
+
+## Subindo manualmente (sem Docker)
 
 ### Backend
 
-1. Configure o banco de dados PostgreSQL:
+**1. Configure o banco PostgreSQL:**
+
+Crie um banco de dados chamado `marketplace_db`:
+
 ```sql
-CREATE DATABASE youservice_db;
+CREATE DATABASE marketplace_db;
 ```
 
-2. Configure as credenciais em `backend/src/main/resources/application.properties`:
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/youservice_db
-spring.datasource.username=postgres
-spring.datasource.password=123456
+**2. Configure as variáveis de ambiente:**
+
+Crie o arquivo `backend/.env.dev` com o conteúdo abaixo, substituindo os valores conforme seu ambiente:
+
+```env
+DB_URL=jdbc:postgresql://localhost:5432/marketplace_db
+DB_USERNAME=postgres
+DB_PASSWORD=sua_senha_aqui
+JWT_SECRET=bWFya2V0cGxhY2UtZGV2LXNlY3JldC1rZXktbWluaW11bS0yNTZiaXRzLWxlbmd0aC1vaw==
+JWT_EXPIRATION=86400000
 ```
 
-3. Execute o backend:
+> O `JWT_SECRET` deve ser uma string codificada em Base64 com no mínimo 256 bits. O valor acima é adequado apenas para desenvolvimento local.
+
+**3. Execute o backend:**
+
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-O backend estará disponível em `http://localhost:8080`
+O servidor sobe na porta `8080`.
 
 ### Frontend
 
-1. Instale as dependências:
+**1. Instale as dependências:**
+
 ```bash
 cd frontend/marketplace-frontend
 npm install
 ```
 
-2. Execute o frontend:
+**2. Configure a URL da API:**
+
+Edite `src/environments/environment.ts`:
+
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8080'
+};
+```
+
+**3. Execute o servidor de desenvolvimento:**
+
 ```bash
 npm start
 ```
 
-O frontend estará disponível em `http://localhost:4200`
+O frontend sobe na porta `4200` com hot-reload ativo.
 
-## 🔐 Usuários de Teste
+---
 
-Após iniciar o backend, serão criados automaticamente:
+## Usuários de teste
 
-**Cliente:**
-- Email: joao@cliente.com
-- Senha: 123456
+O `DataSeeder` cria automaticamente dois usuários na primeira inicialização:
 
-**Prestador:**
-- Email: maria@prestador.com
-- Senha: 123456
+| Papel | Email | Senha |
+|-------|-------|-------|
+| Cliente | `joao@cliente.com` | `123456` |
+| Prestador | `maria@prestador.com` | `123456` |
 
-## 📚 API Endpoints
+> Esses usuários existem apenas para fins de desenvolvimento. Em produção, o `DataSeeder` deve ser desabilitado via Spring Profile.
 
-### Autenticação
-- `POST /api/auth/register` - Cadastro de usuário
-- `POST /api/auth/login` - Login
+---
 
-### Categorias
-- `GET /api/categorias` - Listar categorias
+## Variáveis de ambiente
 
-### Solicitações
-- `POST /api/solicitacoes` - Criar solicitação
-- `GET /api/solicitacoes/minhas` - Listar minhas solicitações
-- `GET /api/solicitacoes/abertas` - Listar solicitações abertas
+### Backend (obrigatórias)
 
-### Prestadores
-- `POST /api/prestadores` - Criar/atualizar perfil
-- `GET /api/prestadores/usuario/{id}` - Buscar por usuário
-- `GET /api/prestadores` - Buscar prestadores
+| Variável | Descrição | Exemplo |
+|----------|-----------|---------|
+| `DB_URL` | JDBC URL do PostgreSQL | `jdbc:postgresql://localhost:5432/marketplace_db` |
+| `DB_USERNAME` | Usuário do banco | `postgres` |
+| `DB_PASSWORD` | Senha do banco | `postgres` |
+| `JWT_SECRET` | Secret JWT em Base64 (mín. 256 bits) | ver exemplo acima |
+| `JWT_EXPIRATION` | Tempo de expiração do token em milissegundos | `86400000` (24h) |
 
-## 🐳 Docker (Opcional)
+### Frontend
 
-Execute com Docker Compose:
-```bash
-docker-compose up -d
+As URLs e configurações de ambiente são centralizadas em:
+
+- `src/environments/environment.ts` — desenvolvimento
+- `src/environments/environment.prod.ts` — produção
+
+Nunca altere URLs diretamente nos services Angular.
+
+---
+
+## Estrutura do repositório
+
+```
+vemresolver/
+├── backend/                    # Spring Boot
+│   ├── src/main/java/
+│   │   └── com/marketplace/servicos/
+│   ├── src/main/resources/
+│   │   └── application.yml
+│   └── Dockerfile
+├── frontend/
+│   └── marketplace-frontend/   # Angular 19
+│       ├── src/app/
+│       └── package.json
+├── docs/                       # Documentação técnica
+│   ├── DAS.md                  # Documento de Arquitetura
+│   ├── REGRAS-DE-NEGOCIO.md   # Regras de negócio
+│   ├── API.md                  # Documentação de API
+│   └── LEVANTAMENTO.md         # Levantamento técnico completo
+├── docker-compose.yml
+└── README.md
 ```
 
-## 📝 Licença
+---
 
-Este projeto está sob a licença MIT.
+## Executando os testes
 
-## 👨‍💻 Autor
+### Backend
 
-Felipe Andrade Lima
-- GitHub: [@felipealima1984](https://github.com/felipealima1984)
+```bash
+cd backend
+mvn test
+```
+
+### Frontend
+
+```bash
+cd frontend/marketplace-frontend
+npm test
+```
+
+---
+
+## Documentação técnica adicional
+
+Todos os documentos técnicos estão na pasta `docs/`:
+
+- [`docs/DAS.md`](docs/DAS.md) — Documento de Arquitetura de Software
+- [`docs/REGRAS-DE-NEGOCIO.md`](docs/REGRAS-DE-NEGOCIO.md) — Especificação completa das regras de negócio
+- [`docs/API.md`](docs/API.md) — Documentação de API com exemplos e YAML OpenAPI
+- [`docs/LEVANTAMENTO.md`](docs/LEVANTAMENTO.md) — Levantamento técnico completo: estado atual, débitos e plano de ação
+
+---
+
+## Contribuindo
+
+- Crie uma branch a partir de `develop` seguindo o padrão: `feature/nome-da-feature`, `fix/nome-do-bug` ou `docs/nome-do-documento`
+- Faça merge de volta para `develop` e, após validação, para `main`
+- Compile e teste localmente antes de abrir pull request
+
+---
+
+## Autor
+
+Felipe Andrade Lima — [GitHub](https://github.com/felipealima1984)
