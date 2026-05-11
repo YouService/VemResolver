@@ -200,15 +200,12 @@ export class PrestadorDashboardComponent implements OnInit {
   }
 
   carregarPerfil() {
-    const userId = this.authService.getCurrentUserId();
-    if (!userId) return;
-
-    this.prestadorService.buscarPorUsuario(userId).subscribe({
+    this.prestadorService.buscarMeuPerfil().subscribe({
       next: (prestador: Prestador) => {
         this.prestador = prestador;
       },
-      error: (error: any) => {
-        console.log('Perfil não encontrado');
+      error: () => {
+        // perfil ainda não criado
       }
     });
   }
