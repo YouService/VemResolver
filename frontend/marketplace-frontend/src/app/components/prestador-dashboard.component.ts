@@ -168,10 +168,11 @@ import { SolicitacaoServico, Prestador } from '../models/models';
                     </div>
                   </div>
                   
-                  <button 
-                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-medium">
+                  <a
+                    [routerLink]="['/prestador/solicitacao', solicitacao.id]"
+                    class="w-full block text-center bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-medium">
                     Ver Detalhes e Enviar Proposta
-                  </button>
+                  </a>
                 </div>
               }
             </div>

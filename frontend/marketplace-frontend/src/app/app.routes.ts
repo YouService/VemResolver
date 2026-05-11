@@ -8,7 +8,9 @@ import { ClientePerfilComponent } from './components/cliente-perfil.component';
 import { NotificationDemoComponent } from './components/notification-demo/notification-demo.component';
 import { PoliticaPrivacidadeComponent } from './components/politica-privacidade.component';
 import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
+import { PrestadorEnviarPropostaComponent } from './components/prestador-enviar-proposta.component';
 import { PrestadorPerfilComponent } from './components/prestador-perfil/prestador-perfil.component';
+import { ClientePropostasRecebidasComponent } from './components/cliente-propostas-recebidas.component';
 import { RegisterComponent } from './components/register/register.component';
 import { SegurancaComponent } from './components/seguranca.component';
 import { SejaProfissionalComponent } from './components/seja-profissional.component';
@@ -56,6 +58,16 @@ export const routes: Routes = [
     path: 'prestador/perfil',
     component: PrestadorPerfilComponent,
     canActivate: [prestadorGuard]
+  },
+  {
+    path: 'prestador/solicitacao/:id',
+    component: PrestadorEnviarPropostaComponent,
+    canActivate: [prestadorGuard]
+  },
+  {
+    path: 'cliente/solicitacao/:id/propostas',
+    component: ClientePropostasRecebidasComponent,
+    canActivate: [clienteGuard]
   },
   { path: 'notification-demo', component: NotificationDemoComponent },
   { path: '**', redirectTo: '' }
