@@ -103,9 +103,13 @@ public class SolicitacaoServicoService {
     }
     
     @Transactional
-    public SolicitacaoServicoDTO atualizarStatus(Long id, StatusSolicitacao novoStatus) {
+    public SolicitacaoServicoDTO atualizarStatus(Long id, StatusSolicitacao novoStatus, Long clienteId) {
         SolicitacaoServico solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
+
+        if (!solicitacao.getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Você não tem permissão para alterar o status desta solicitação");
+        }
 
         solicitacao.setStatus(novoStatus);
         solicitacao = solicitacaoRepository.save(solicitacao);

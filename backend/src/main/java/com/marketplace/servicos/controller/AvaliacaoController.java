@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/avaliacoes")
 @Tag(name = "Avaliações", description = "Gerenciamento de avaliações bidirecionais")
-@CrossOrigin(origins = "http://localhost:4200")
 public class AvaliacaoController {
 
     private final AvaliacaoService avaliacaoService;

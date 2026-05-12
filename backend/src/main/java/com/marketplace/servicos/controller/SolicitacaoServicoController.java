@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/solicitacoes")
 @SecurityRequirement(name = "bearer-jwt")
 @Tag(name = "Solicitações de Serviço", description = "Gerenciamento de solicitações de serviço")
-@CrossOrigin(origins = "http://localhost:4200")
 public class SolicitacaoServicoController {
     
     private final SolicitacaoServicoService solicitacaoService;
@@ -75,8 +74,9 @@ public class SolicitacaoServicoController {
     @Operation(summary = "Atualizar status da solicitação")
     public ResponseEntity<SolicitacaoServicoDTO> atualizarStatus(
             @PathVariable Long id,
-            @RequestParam StatusSolicitacao status) {
-        return ResponseEntity.ok(solicitacaoService.atualizarStatus(id, status));
+            @RequestParam StatusSolicitacao status,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(solicitacaoService.atualizarStatus(id, status, user.getId()));
     }
 
     @PatchMapping("/{id}/concluir")

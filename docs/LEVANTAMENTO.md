@@ -373,9 +373,9 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | # | Problema | Arquivo | Status |
 |---|----------|---------|--------|
 | C1 | `UserController` retorna entidade `User` diretamente (sem DTO) | `UserController.java` | ⚠️ **Parcial** — `senha` tem `@JsonProperty(WRITE_ONLY)` e não é serializada, mas arquitetura ainda viola separação de camadas |
-| C2 | `PATCH /api/propostas/{id}/aceitar` e `/recusar` sem verificação de ownership | `PropostaController.java` | ❌ **Pendente** |
-| C3 | `PATCH /api/solicitacoes/{id}/status` sem verificação de ownership | `SolicitacaoServicoController.java` | ❌ **Pendente** — `/concluir` foi corrigido, mas `/status` genérico ainda está aberto |
-| C4 | `DataSeeder` sem profile guard — cria usuários com senha `123456` em todos os ambientes | `DataSeeder.java` | ❌ **Pendente** |
+| C2 | `PATCH /api/propostas/{id}/aceitar` e `/recusar` sem verificação de ownership | `PropostaController.java` | ✅ **Resolvido** em 2026-05-12 — verifica clienteId do dono da solicitação |
+| C3 | `PATCH /api/solicitacoes/{id}/status` sem verificação de ownership | `SolicitacaoServicoController.java` | ✅ **Resolvido** em 2026-05-12 — verifica ownership antes de mudar status |
+| C4 | `DataSeeder` sem profile guard — cria usuários com senha `123456` em todos os ambientes | `DataSeeder.java` | ✅ **Resolvido** em 2026-05-12 — `@Profile("!prod")` |
 | C5 | Cadastro de usuário retornava 400 — `@Size`/`@Pattern` em `RegisterDTO.senha` validavam a string Base64 | `RegisterDTO.java` | ✅ **Resolvido** em 2026-05-12 |
 
 ### ALTO
@@ -384,7 +384,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 |---|----------|---------|--------|
 | A1 | CORS hardcoded em `http://localhost:4200` | `SecurityConfig.java` + `PerfilController.java` | ✅ **Resolvido** em 2026-05-12 — lê `${app.frontend.url}` |
 | A2 | URL do backend hardcoded `http://localhost:8080` em todos os services Angular | Todos `services/*.ts` | ✅ **Resolvido** em 2026-05-12 — centralizado em `environment.apiUrl` |
-| A3 | Swagger exposto publicamente sem restrição | `SecurityConfig.java` | ❌ **Pendente** |
+| A3 | Swagger exposto publicamente sem restrição | `SecurityConfig.java` | ✅ **Resolvido** em 2026-05-12 — `application-prod.yml` desabilita Swagger no perfil prod |
 | A4 | Endpoints de categoria sem restrição de role ADMIN | `CategoriaController.java` | ❌ **Pendente** |
 | A5 | `POST /api/prestadores` sem verificação de tipo — CLIENTE pode criar perfil de PRESTADOR | `PrestadorController.java` | ❌ **Pendente** |
 | A6 | `PUT /api/users/me` aceita entidade `User` no body — permite alterar `tipo`, `login` etc. | `UserController.java` | ❌ **Pendente** — `PUT /api/perfil` mais seguro existe, mas `/api/users/me` ainda está ativo |
@@ -460,6 +460,10 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | ~~P~~ | ~~Centralizar URL do backend em `environment.ts` (Bug #6)~~ | ✅ Resolvido |
 | ~~P~~ | ~~CORS via variável de ambiente (Bug #7)~~ | ✅ Resolvido |
 | ~~P~~ | ~~Interceptor Angular para 401 (Bug #8)~~ | ✅ Resolvido |
+| ~~P~~ | ~~Ownership em aceitar/recusar proposta (C2)~~ | ✅ Resolvido |
+| ~~P~~ | ~~Ownership em PATCH /solicitacoes/status (C3)~~ | ✅ Resolvido |
+| ~~P~~ | ~~DataSeeder com @Profile("!prod") (C4)~~ | ✅ Resolvido |
+| ~~P~~ | ~~Swagger restrito ao profile dev (A3)~~ | ✅ Resolvido |
 | P | Ownership checks em `PATCH /propostas/:id/aceitar` e `/recusar` | Pequeno |
 | P | Ownership checks em `PATCH /solicitacoes/:id/status` | Pequeno |
 | P | `DataSeeder` com `@Profile("dev")` — não rodar em produção | Pequeno |
