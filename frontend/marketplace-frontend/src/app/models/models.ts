@@ -127,6 +127,13 @@ export interface Proposta {
   mensagem?: string;
   status?: StatusProposta;
   dataEnvio?: Date;
+  solicitacaoDescricao?: string;
+  solicitacaoStatus?: StatusSolicitacao;
+  clienteNome?: string;
+  clienteId?: number;
+  cidade?: string;
+  estado?: string;
+  categoriaNome?: string;
 }
 
 export interface Avaliacao {

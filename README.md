@@ -156,6 +156,13 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
 **Bug corrigido**
 - `fix/cors-patch-method` — `PATCH` ausente em `setAllowedMethods` no `SecurityConfig.java` causava 403 no preflight CORS de todas as ações de aceitar/recusar proposta e marcar serviço como concluído
 
+**Funcionalidade entregue**
+- `feature/prestador-contratos-andamento` — Painel do prestador agora reflete propostas aceitas:
+  - `PropostaDTO` enriquecido com dados da solicitação (descrição, status, cliente, localização, categoria)
+  - Seção "Contratos em Andamento" com cards destacados para propostas aceitas pelo cliente
+  - Seção "Propostas Aguardando Resposta" para propostas ainda pendentes
+  - Stats reais: oportunidades abertas, aguardando resposta, em andamento, concluídos (antes todos hardcoded em 0)
+
 ---
 
 ## O que fazer a seguir
