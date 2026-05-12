@@ -82,7 +82,7 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── StatusProposta.java      (enum: ENVIADA, ACEITA, RECUSADA)
 │   ├── StatusSolicitacao.java   (enum: ABERTA, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
 │   ├── TipoAvaliacao.java       (novo — CLIENTE_AVALIA_PRESTADOR, PRESTADOR_AVALIA_CLIENTE)
-│   ├── TipoUsuario.java         (enum: CLIENTE, PRESTADOR)
+│   ├── TipoUsuario.java         (enum: CLIENTE, PRESTADOR, ADMIN)
 │   ├── User.java                (enriquecido: endereço, avaliacaoMedia, totalAvaliacoes)
 │   └── VerificationToken.java   (novo — token de verificação de e-mail)
 ├── repository/
@@ -149,7 +149,7 @@ frontend/marketplace-frontend/src/app/
 ├── guards/
 │   └── auth.guard.ts                          (authGuard, clienteGuard, prestadorGuard)
 ├── interceptors/
-│   └── auth.interceptor.ts                    (adiciona JWT no header — sem interceptor de 401)
+│   └── auth.interceptor.ts                    (adiciona JWT no header + trata 401 → redireciona para /login)
 ├── models/
 │   └── models.ts
 ├── services/
@@ -281,7 +281,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | GET | `/api/prestadores` | Pública | Lista prestadores com filtros (paginado) | — |
 | GET | `/api/prestadores/{id}` | Pública | Busca prestador por ID | — |
 | GET | `/api/prestadores/me` | JWT | Perfil do prestador logado | — |
-| POST | `/api/prestadores` | JWT | Cria ou atualiza perfil de prestador | ⚠️ Sem verificação de que o usuário é PRESTADOR |
+| POST | `/api/prestadores` | JWT (`ROLE_PRESTADOR`) | Cria ou atualiza perfil de prestador | ✅ Exige `ROLE_PRESTADOR` via `SecurityFilterChain` + `@PreAuthorize` |
 | PUT | `/api/prestadores/{id}` | JWT | Atualiza perfil | — |
 
 ### `/api/solicitacoes`
@@ -318,9 +318,9 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 |--------|------|------|-----------|-------------|
 | GET | `/api/categorias` | Pública | Lista categorias (paginado) | — |
 | GET | `/api/categorias/{id}` | Pública | Busca por ID | — |
-| POST | `/api/categorias` | Qualquer autenticado | Cria categoria | ⚠️ Deveria exigir ADMIN |
-| PUT | `/api/categorias/{id}` | Qualquer autenticado | Atualiza | ⚠️ Mesmo problema |
-| DELETE | `/api/categorias/{id}` | Qualquer autenticado | Deleta | ⚠️ Mesmo problema |
+| POST | `/api/categorias` | JWT (`ROLE_ADMIN`) | Cria categoria | ✅ Exige `ROLE_ADMIN` via `SecurityFilterChain` + `@PreAuthorize` |
+| PUT | `/api/categorias/{id}` | JWT (`ROLE_ADMIN`) | Atualiza | ✅ Mesmo controle |
+| DELETE | `/api/categorias/{id}` | JWT (`ROLE_ADMIN`) | Deleta | ✅ Mesmo controle |
 
 ---
 
@@ -354,13 +354,13 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 
 | Service | Base URL | Status |
 |---------|----------|--------|
-| `AuthService` | `http://localhost:8080/api/auth` | ⚠️ URL hardcoded |
-| `CategoriaService` | `http://localhost:8080/api/categorias` | ⚠️ URL hardcoded |
-| `SolicitacaoService` | `http://localhost:8080/api/solicitacoes` | ⚠️ URL hardcoded |
-| `PrestadorService` | `http://localhost:8080/api/prestadores` | ⚠️ URL hardcoded |
-| `PropostaService` | `http://localhost:8080/api/propostas` | ⚠️ URL hardcoded |
-| `AvaliacaoService` | `http://localhost:8080/api/avaliacoes` | ⚠️ URL hardcoded |
-| `UserService` | `http://localhost:8080/api/users` | ⚠️ URL hardcoded |
+| `AuthService` | `environment.apiUrl/auth` | ✅ Centralizado em `environment.ts` |
+| `CategoriaService` | `environment.apiUrl/categorias` | ✅ Centralizado em `environment.ts` |
+| `SolicitacaoService` | `environment.apiUrl/solicitacoes` | ✅ Centralizado em `environment.ts` |
+| `PrestadorService` | `environment.apiUrl/prestadores` | ✅ Centralizado em `environment.ts` |
+| `PropostaService` | `environment.apiUrl/propostas` | ✅ Centralizado em `environment.ts` |
+| `AvaliacaoService` | `environment.apiUrl/avaliacoes` | ✅ Centralizado em `environment.ts` |
+| `UserService` | `environment.apiUrl/users` | ✅ Centralizado em `environment.ts` |
 | `ViaCEPService` | `https://viacep.com.br` | ✅ Busca endereço por CEP |
 | `NotificationService` | — | ✅ Toasts e notificações em-tela |
 
@@ -454,78 +454,80 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 
 ## 8. O QUE FALTA IMPLEMENTAR
 
-### P1 — Segurança e deploy (obrigatório antes de qualquer produção)
+### Prioridade 1 — Qualidade e segurança (recomendado antes de produção)
 
-| # | Tarefa | Esforço |
-|---|--------|---------|
-| ~~P~~ | ~~Centralizar URL do backend em `environment.ts` (Bug #6)~~ | ✅ Resolvido |
-| ~~P~~ | ~~CORS via variável de ambiente (Bug #7)~~ | ✅ Resolvido |
-| ~~P~~ | ~~Interceptor Angular para 401 (Bug #8)~~ | ✅ Resolvido |
-| ~~P~~ | ~~Ownership em aceitar/recusar proposta (C2)~~ | ✅ Resolvido |
-| ~~P~~ | ~~Ownership em PATCH /solicitacoes/status (C3)~~ | ✅ Resolvido |
-| ~~P~~ | ~~DataSeeder com @Profile("!prod") (C4)~~ | ✅ Resolvido |
-| ~~P~~ | ~~Swagger restrito ao profile dev (A3)~~ | ✅ Resolvido |
-| P | Ownership checks em `PATCH /propostas/:id/aceitar` e `/recusar` | Pequeno |
-| P | Ownership checks em `PATCH /solicitacoes/:id/status` | Pequeno |
-| P | `DataSeeder` com `@Profile("dev")` — não rodar em produção | Pequeno |
-| P | Swagger restrito ao profile `dev` | Pequeno |
-| M | Role ADMIN — proteger endpoints de categoria | Médio |
+| # | Tarefa | Arquivo | Esforço |
+|---|--------|---------|---------|
+| M1 | Mover lógica de `PropostaController` para `PropostaService` — remover `PrestadorRepository` injetado diretamente no controller | `PropostaController.java` | Pequeno |
+| M4 | Implementar refresh token — JWT atual expira em 24h sem renovação automática | `JwtTokenProvider.java` | Médio |
+| M5 | `isAuthenticated()` no Angular só verifica presença do token no `localStorage`, não a expiração | `auth.service.ts` | Pequeno |
+| M10 | Substituir `ddl-auto: update` por Flyway ou Liquibase — controle seguro de migrações de schema | `application.yml` | Médio |
+| M11 | Adicionar campo `dataCriacao` na entidade `Avaliacao` — impossível ordenar avaliações cronologicamente | `Avaliacao.java` | Pequeno |
 
-### P2 — Qualidade de código
+### Prioridade 2 — Melhorias de UX (próximas iterações)
 
-| # | Tarefa | Esforço |
-|---|--------|---------|
-| P | Criar `UserResponseDTO` e usar em `UserController` — remover retorno de entidade | Pequeno |
-| P | Mover lógica de `PropostaController` para `PropostaService` (remover `PrestadorRepository` do controller) | Pequeno |
-| P | Migrar `PUT /api/users/me` para usar DTO em vez de entidade `User` | Pequeno |
-| M | Flyway ou Liquibase para controle de migrações de schema | Médio |
-| M | Adicionar `dataCriacao` em `Avaliacao` | Pequeno |
+| # | Tarefa | Arquivo | Esforço |
+|---|--------|---------|---------|
+| M9 | Botão "Editar" na modal do dashboard do cliente apenas fecha o modal — deveria navegar para tela de edição | `cliente-dashboard.component.ts` | Pequeno |
+| B3 | Busca por categoria e barra de pesquisa na home fazem apenas `console.log` sem filtrar nada | `home.component.ts` | Médio |
+| B4 | Paginação visível em todas as listagens do frontend (backend já pagina, frontend não exibe controles) | Todos os dashboards | Médio |
+| B5 | Erros de HTTP nos componentes legados usam `console.error` sem feedback visual ao usuário | Múltiplos componentes | Pequeno |
+| B1 | Sem rate limiting em `POST /api/auth/login` — vulnerável a força bruta | `SecurityConfig.java` | Pequeno |
 
-### P3 — UX e produto
+### Prioridade 3 — Evolução do produto (maior esforço)
 
-| # | Tarefa | Esforço |
-|---|--------|---------|
-| P | Implementar `editarSolicitacao()` no dashboard do cliente (atualmente só fecha o modal) | Pequeno |
-| P | Busca por categoria e barra de pesquisa na home (atualmente só `console.log`) | Médio |
-| M | Paginação visível no frontend para todas as listagens | Médio |
-| M | Refresh token — renovar JWT antes de expirar | Médio |
-| G | Sistema de notificações (polling ou WebSocket) | Grande |
-| G | Painel administrativo básico | Grande |
+| Tarefa | Área | Esforço |
+|--------|------|---------|
+| Migrar templates HTML inline dos componentes legados para arquivos `.html` separados | Frontend | Médio |
+| Sistema de notificações em tempo real (polling ou WebSocket) | Full-stack | Grande |
+| Painel administrativo para gerenciar usuários, categorias e denúncias | Full-stack | Grande |
+| Busca geolocalizada de prestadores por raio de distância | Full-stack | Grande |
 
 ---
 
-## 9. PLANO DE AÇÃO SUGERIDO
+## 9. ITENS CONCLUÍDOS
 
-### Fase 1 — Preparação para produção (~1 semana)
-```
-[A2] environment.ts com URL do backend
-[A1] CORS via variável de ambiente
-[A7] Interceptor 401
-[C2] Ownership em aceitar/recusar proposta
-[C3] Ownership em PATCH /status
-[C4] DataSeeder com @Profile("dev")
-[A3] Swagger restrito ao profile dev
-[A4] Endpoints de categoria com role ADMIN
-```
+### Fluxo central do marketplace
 
-### Fase 2 — Qualidade de código (~1 semana)
-```
-[C1] UserResponseDTO em UserController
-[A6] PUT /users/me com DTO adequado
-[M1] Remover PrestadorRepository do PropostaController
-[M10] Flyway para controle de migrações
-[M11] dataCriacao em Avaliacao
-```
+| Feature | Branch | Data |
+|---------|--------|------|
+| Infraestrutura Docker corrigida (variáveis de ambiente) | — | 2026-05-11 |
+| Tela de envio de proposta (prestador) | `feature/envio-proposta-prestador` | 2026-05-11 |
+| Propostas recebidas + aceitar/recusar com confirmação (cliente) | `feature/propostas-recebidas-cliente` | 2026-05-11 |
+| Marcar serviço como CONCLUÍDO — endpoint `/concluir` com ownership | `feature/marcar-servico-concluido` | 2026-05-12 |
+| Avaliação do prestador pelo cliente — estrelas 1–5, comentário | `feature/tela-avaliacao` | 2026-05-12 |
+| Avaliação bidirecional — prestador avalia cliente; notas nos perfis | `feature/avaliacao-bidirecional` | 2026-05-12 |
+| Painel do prestador com contratos em andamento e estatísticas reais | `feature/prestador-contratos-andamento` | 2026-05-12 |
 
-### Fase 3 — UX e produto (~2 semanas)
-```
-[M9] editarSolicitacao() no dashboard do cliente
-[B3] Busca por categoria na home
-[B4] Paginação no frontend
-[M4] Refresh token
-[B1] Rate limiting no login
-```
+### Segurança e infraestrutura
+
+| Item | Branch | Data |
+|------|--------|------|
+| CORS via variável de ambiente `${FRONTEND_URL}` | `fix/bug7-cors-bug8-interceptor-401` | 2026-05-12 |
+| URLs da API Angular centralizadas em `environment.ts` | `fix/bug6-environment-urls` | 2026-05-12 |
+| Interceptor Angular de 401 — redireciona para `/login` | `fix/bug7-cors-bug8-interceptor-401` | 2026-05-12 |
+| Swagger desabilitado em produção (`application-prod.yml`) | `fix/seguranca-ownership-dataseed-swagger` | 2026-05-12 |
+| `DataSeeder` restrito ao perfil `!prod` | `fix/seguranca-ownership-dataseed-swagger` | 2026-05-12 |
+| Ownership em aceitar/recusar propostas e alterar status | `fix/seguranca-ownership-dataseed-swagger` | 2026-05-12 |
+| Endpoints de categoria restritos a `ROLE_ADMIN` | `fix/seguranca-a4-a5-a6` | 2026-05-12 |
+| Criação de perfil de prestador restrita a `ROLE_PRESTADOR` | `fix/seguranca-a4-a5-a6` | 2026-05-12 |
+| `UserController` removido — substituído por `PerfilController` com DTOs seguros | `fix/seguranca-a4-a5-a6` | 2026-05-12 |
+| Rodapé padronizado em todas as páginas públicas | `fix/footer-padronizacao` | 2026-05-12 |
+
+### Bugs corrigidos
+
+| Bug | Branch | Data |
+|-----|--------|------|
+| Banner "complete seu perfil" não desaparecia após salvar | `fix/perfil-prestador-banner` | 2026-05-11 |
+| `PATCH` ausente no CORS — 403 em preflight de aceitar/recusar/concluir | `fix/cors-patch-method` | 2026-05-12 |
+| Unicidade de avaliação e badges "Avaliado ✓" nos dashboards | `fix/avaliacao-regras-visibilidade` | 2026-05-12 |
+| Formulário do prestador nunca pré-prenchia — `buscarPorUsuario` → `buscarMeuPerfil` | — | 2026-05-12 |
+| Overflow horizontal nos painéis do cliente e do prestador | — | 2026-05-12 |
+| Painel do cliente mais largo que o navbar em telas grandes | `fix/dashboard-max-width` | 2026-05-12 |
+| Botão "Ver Propostas" exibido indevidamente em serviços concluídos/cancelados | — | 2026-05-12 |
+| Cadastro de novos usuários retornava 400 (validação Base64 em `RegisterDTO.senha`) | `fix/bug5-cadastro-400-datas` | 2026-05-12 |
+| Campo data de expedição com `type="date"` exigia formato `YYYY-MM-DD` | `fix/bug5-cadastro-400-datas` | 2026-05-12 |
 
 ---
 
-*Atualizado em 2026-05-12 com base na leitura direta de todos os arquivos do projeto.*
+*Atualizado em 2026-05-12 — sincronizado com README.md.*

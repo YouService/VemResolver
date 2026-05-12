@@ -1,6 +1,6 @@
 # VemResolver — Marketplace de Serviços
 
-Plataforma web que conecta clientes a prestadores de serviços autônomos. O fluxo central é: cliente abre uma solicitação → prestadores enviam propostas → cliente aceita → serviço é executado → cliente avalia.
+Plataforma web que conecta clientes a prestadores de serviços autônomos. O fluxo central é: cliente abre uma solicitação → prestadores enviam propostas → cliente aceita → serviço é executado → cliente e prestador avaliam-se mutuamente.
 
 ---
 
@@ -91,12 +91,13 @@ npm start
 
 ## Usuários de teste
 
-Criados automaticamente pelo `DataSeeder` na primeira inicialização:
+Criados automaticamente pelo `DataSeeder` apenas nos perfis `dev` / padrão (nunca em `prod`):
 
 | Papel | Email | Senha |
 |-------|-------|-------|
 | Cliente | `joao@cliente.com` | `123456` |
 | Prestador | `maria@prestador.com` | `123456` |
+| Admin | `admin@vemresolver.com` | `Admin@2025` |
 
 ---
 
@@ -108,222 +109,6 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
 | [`docs/REGRAS-DE-NEGOCIO.md`](docs/REGRAS-DE-NEGOCIO.md) | Fluxo completo do marketplace, estados, autorizações |
 | [`docs/API.md`](docs/API.md) | Contratos OpenAPI dos endpoints principais |
 | [`docs/LEVANTAMENTO.md`](docs/LEVANTAMENTO.md) | Levantamento técnico — estado atual, débitos e plano de ação |
-
----
-
-## Histórico de Desenvolvimento
-
-### 2026-05-11 — Felipe Lima
-
-**Infraestrutura / ambiente**
-- Corrigidos os nomes das variáveis de ambiente no `docker-compose.yml` (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`) que estavam errados e impediam o backend de subir
-- Adicionado `--host 0.0.0.0 --poll 1000` ao `ng serve` para o frontend funcionar dentro do Docker no Windows
-
-**Bug corrigido**
-- `fix/perfil-prestador-banner` — Banner "complete seu perfil" no painel do prestador não desaparecia após salvar o perfil. Causa: `carregarPerfil()` chamava `buscarPorUsuario(userId)` mapeado para `/api/prestadores/usuario/:id`, endpoint que não existe. Corrigido para `buscarMeuPerfil()` → `GET /api/prestadores/me`
-
-**Funcionalidades entregues**
-- `feature/envio-proposta-prestador` — Tela completa de envio de proposta para o prestador em `/prestador/solicitacao/:id`:
-  - Exibe todos os detalhes da solicitação (descrição, cliente, local, categoria)
-  - Formulário com valor (R$) e mensagem, com validações
-  - Estado de sucesso após envio e tratamento de erro da API (ex: proposta duplicada)
-  - Botão "Ver Detalhes e Enviar Proposta" no dashboard do prestador agora navega para esta tela
-
-- `feature/propostas-recebidas-cliente` — Tela de propostas recebidas para o cliente em `/cliente/solicitacao/:id/propostas`:
-  - Lista todas as propostas: nome do prestador, valor em destaque, mensagem, data, status
-  - Aceitar proposta: confirmação inline antes de executar (informa que a solicitação vai para Em Andamento)
-  - Recusar proposta: executa direto
-  - Ações visíveis apenas para propostas `ENVIADA` com solicitação `ABERTA`
-  - Banner de sucesso pós-aceite
-  - Botão "Ver Propostas" adicionado nos cards e no modal de detalhes do dashboard do cliente
-
-**Documentação gerada**
-- `docs/DAS.md`, `docs/REGRAS-DE-NEGOCIO.md`, `docs/API.md`, `docs/LEVANTAMENTO.md`
-
-### 2026-05-12 — Felipe Lima
-
-**Funcionalidade entregue**
-- `feature/marcar-servico-concluido` — Ação de marcar serviço como Concluído:
-  - Endpoint dedicado `PATCH /api/solicitacoes/{id}/concluir` com validação: apenas o cliente dono pode chamar, e somente quando a solicitação está em `EM_ANDAMENTO`
-  - Botão "Marcar como Concluído" visível nos cards do dashboard e no modal de detalhes, exclusivamente para solicitações `EM_ANDAMENTO`
-  - Modal de confirmação antes de executar a ação
-  - Toast de sucesso com auto-dismiss em 5s: "Serviço marcado como concluído! Você já pode avaliar o prestador."
-  - Testes: 5 unit tests Mockito (`SolicitacaoServicoServiceTest`), spec Angular com 6 casos (`ClienteDashboardComponent.spec`), e fluxo de integração estendido com envio de proposta + aceite + conclusão
-
-**Infraestrutura**
-- `docker-compose.yml` corrigido: adicionadas variáveis `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` e `FRONTEND_URL` que estavam faltando e impediam o rebuild da imagem de subir
-
-**Bug corrigido**
-- `fix/cors-patch-method` — `PATCH` ausente em `setAllowedMethods` no `SecurityConfig.java` causava 403 no preflight CORS de todas as ações de aceitar/recusar proposta e marcar serviço como concluído
-
-**Funcionalidade entregue (2)**
-- `feature/prestador-contratos-andamento` — Painel do prestador agora reflete propostas aceitas:
-  - `PropostaDTO` enriquecido com dados da solicitação (descrição, status, cliente, localização, categoria)
-  - Seção "Contratos em Andamento" com cards destacados para propostas aceitas pelo cliente
-  - Seção "Propostas Aguardando Resposta" para propostas ainda pendentes
-  - Stats reais: oportunidades abertas, aguardando resposta, em andamento, concluídos (antes todos hardcoded em 0)
-
-**Funcionalidade entregue (3)**
-- `feature/tela-avaliacao` — Tela de avaliação do prestador em `/cliente/solicitacao/:id/avaliacao`:
-  - Estrelas interativas 1–5 com hover, texto descritivo da nota e validação
-  - Exibe nome do prestador (buscado da proposta aceita) e dados da solicitação
-  - Campo de comentário opcional com contador de caracteres (máx. 500)
-  - Estados: carregando, formulário, enviando, sucesso, erro (incluindo "já avaliado")
-  - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
-  - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
-
-### 2026-05-12 — Felipe Lima (continuação 10)
-
-**Padronização de rodapés entregue**
-- `fix/footer-padronizacao`:
-  - Rodapé unificado em 4 páginas: **home**, **register**, **segurança** e **seja profissional**
-  - Padrão: logo (`assets/logo.png`) com efeito grayscale/opacity no hover + links para Sobre nós, Termos de uso e Política de Privacidade + copyright
-  - Removido link "Segurança" do rodapé do cadastro (fora do conjunto padrão)
-  - Páginas de destino dos links (`politica-privacidade`, `termos-uso`, `sobre-nos`) mantidas sem alteração (B8 ✅)
-
----
-
-### 2026-05-12 — Felipe Lima (continuação 9)
-
-**Fixes de segurança entregues**
-- `fix/seguranca-a4-a5-a6`:
-  - **A4** — `POST/PUT/DELETE /api/categorias` agora exigem `ROLE_ADMIN`: regras adicionadas ao `SecurityFilterChain` e `@PreAuthorize("hasRole('ADMIN')")` nos métodos do controller (defesa em profundidade); `ADMIN` adicionado ao enum `TipoUsuario`; usuário admin criado no `DataSeeder` (apenas `!prod`)
-  - **A5** — `POST /api/prestadores` agora exige `ROLE_PRESTADOR`: regra no `SecurityFilterChain` + `@PreAuthorize("hasRole('PRESTADOR')")` impede que um CLIENTE crie perfil de prestador
-  - **A6 + C1** — `UserController` removido: todos os endpoints eram cobertos por alternativas mais seguras (`GET/PUT /api/perfil` usa `UpdatePerfilDTO`; `DELETE /api/auth/conta` cobre a exclusão de conta)
-  - **Testes**: `CategoriaSecurityTest` (6 casos `@WebMvcTest` verificando que GET é público, POST/PUT/DELETE retornam 403 para CLIENTE/PRESTADOR); `PrestadorServiceTest` (5 casos cobrindo criação com PRESTADOR válido, rejeição de CLIENTE, categoria inexistente e busca); `SolicitacaoServicoServiceTest` corrigido (mock faltante de `AvaliacaoRepository` adicionado); `AuthServiceTest` corrigido (CPF obrigatório no `register` adicionado ao teste)
-
----
-
-### 2026-05-12 — Felipe Lima (continuação 8)
-
-**Fixes de segurança entregues**
-- `fix/seguranca-ownership-dataseed-swagger`:
-  - **C2** — `aceitarProposta` e `recusarProposta` em `PropostaService` agora verificam que o usuário autenticado é o dono da solicitação; antes qualquer usuário logado podia aceitar/recusar proposta de outro
-  - **C3** — `atualizarStatus` em `SolicitacaoServicoService` agora verifica ownership; antes qualquer usuário logado podia mudar o status de qualquer solicitação
-  - **C4** — `DataSeeder` anotado com `@Profile("!prod")`: usuários e categorias de teste não são criados quando `spring.profiles.active=prod`
-  - **A3** — `application-prod.yml` criado desabilitando Swagger UI e api-docs; Swagger só fica acessível nos ambientes `dev`/`default`
-  - **Bônus** — removidos todos os `@CrossOrigin(origins = "http://localhost:4200")` restantes nos controllers (`Auth`, `Avaliacao`, `Categoria`, `Prestador`); CORS já é tratado globalmente pelo `SecurityConfig`
-
----
-
-### 2026-05-12 — Felipe Lima (continuação 7)
-
-**Fix de UI entregue**
-- `fix/dashboard-max-width` — Paineis do cliente e do prestador alinhados com a largura do menu superior:
-  - Causa: navbar usa `container max-w-6xl mx-auto` (máx. 1152px) mas os paineis usavam apenas `container mx-auto` sem `max-w-6xl`, expandindo além da navbar em telas grandes
-  - Corrigido em 5 componentes: cabeçalho e corpo do `cliente-dashboard`, cabeçalho e corpo do `prestador-dashboard`, container principal de `cliente-perfil`, cabeçalho de `cliente-propostas-recebidas` e cabeçalho de `prestador-enviar-proposta`
-  - Seções de formulário com `max-w-3xl` mantidas — são intencionalmente mais estreitas
-
----
-
-### 2026-05-12 — Felipe Lima (continuação 6)
-
-**Fixes entregues**
-- `fix/bug7-cors-bug8-interceptor-401` — CORS parametrizado e interceptor de 401:
-  - Bug #7: `SecurityConfig.java` — `allowedOrigins` lê `${app.frontend.url}` (variável já existia no `application.yml` e no `docker-compose.yml` como `FRONTEND_URL`); `PerfilController.java` — removido `@CrossOrigin` hardcoded redundante
-  - Bug #8: `auth.interceptor.ts` — adicionado `catchError` após `next()`; quando o backend retorna 401, o interceptor limpa o `localStorage` e redireciona para `/login`, eliminando telas em branco com token expirado
-
----
-
-### 2026-05-12 — Felipe Lima (continuação 5)
-
-**Fix entregue**
-- `fix/bug6-environment-urls` — URLs da API centralizadas no `environment.ts`:
-  - Todos os 7 services Angular usavam `http://localhost:8080` hardcoded, tornando deploy em qualquer outro ambiente impossível sem recompilar
-  - `categoria`, `prestador`, `proposta`, `solicitacao`, `avaliacao`, `user` services: `private apiUrl = 'http://localhost:8080/api/...'` → `` `${environment.apiUrl}/...` ``
-  - `auth.service.ts`: 4 métodos com URL inline (`buscarPerfil`, `atualizarPerfil`, `alterarSenha`, `deletarConta`) substituídos por `environment.apiUrl`
-  - `environment.ts` (dev): `apiUrl = 'http://localhost:8080/api'`; `environment.prod.ts` (prod): `apiUrl = '/api'` (proxy reverso)
-
----
-
-### 2026-05-12 — Felipe Lima (continuação 4)
-
-**Fixes entregues**
-- `fix/bug5-cadastro-400-datas` — Correção do erro 400 no cadastro de novos usuários e padronização de datas:
-  - Backend: removidas anotações `@Size` e `@Pattern` de `RegisterDTO.senha` — essas restrições validavam a string Base64 enviada pelo frontend (`btoa(senha)`), não a senha original, causando 400 em cadastros perfeitamente válidos; `@NotBlank` é mantido
-  - Frontend: `user-profile.component.ts` — campo "Data de Expedição" alterado de `type="date"` (exige formato `YYYY-MM-DD`) para `type="text"` (exibe o valor em DD/MM/AAAA como armazenado); o campo é somente leitura
-  - Auditoria completa: todos os outros campos de data (`register.component`, `cliente-perfil.component`) já usavam `type="text"` com máscara DD/MM/AAAA ✓
-
----
-
-### 2026-05-12 — Felipe Lima (continuação 3)
-
-**Fixes de UI entregues**
-- Correção de overflow horizontal no painel do prestador de serviços:
-  - `min-w-0` em todos os containers `flex-1` dos cards (Contratos, Propostas, Concluídos, Oportunidades)
-  - `flex-shrink-0` em valores monetários e datas; `break-words` em descrições; `truncate` em nomes e endereços
-  - `overflow-hidden` nos cards de contratos e oportunidades como barreira de segurança
-- Botão "Ver Propostas" no painel do cliente ocultado para serviços `CONCLUIDA` e `CANCELADA` (idem no modal de detalhes)
-- Correção de overflow horizontal nos cards do painel do cliente (`min-w-0`, `break-words`, `flex-wrap`)
-- Bug #4 corrigido: formulário de perfil do prestador agora pré-preenche os campos corretamente
-  - `buscarPorUsuario(userId)` → `buscarMeuPerfil()` (`GET /api/prestadores/me` via JWT)
-- Aba "Minhas Avaliações" do perfil do cliente simplificada: exibe apenas nota média e estrelas agregadas (remove lista de avaliações individuais; reutiliza `User.avaliacaoMedia` e `totalAvaliacoes` já carregados por `buscarPerfil()`)
-
----
-
-### 2026-05-12 — Felipe Lima (continuação 2)
-
-**Fix entregue**
-- `fix/avaliacao-regras-visibilidade` — Correção da regra de unicidade de avaliação por serviço e visibilidade de estrelas nos dashboards:
-  - Backend: `SolicitacaoServicoDTO` enriquecido com `foiAvaliadoPeloCliente` e `foiAvaliadoPeloPrestador` (populados por `existsBySolicitacaoIdAndTipo`)
-  - Backend: `PropostaDTO` enriquecido com `foiAvaliadoPeloPrestador`
-  - Frontend: Dashboards do cliente e do prestador exibem badge "Avaliado ✓" quando o serviço já foi avaliado, evitando confusão com a regra de unicidade por `solicitacaoId`
-  - Frontend: Cabeçalho do dashboard do prestador mostra a média de estrelas recebidas (`prestador.avaliacaoMedia`)
-  - Frontend: Cabeçalho do dashboard do cliente mostra a média de estrelas recebidas via `buscarPerfil()` → `User.avaliacaoMedia`
-  - Frontend: Correção de typo `dataExpedicao` → `dataExpedicaoRg` em `user-profile.component.ts`
-
----
-
-### 2026-05-12 — Felipe Lima (continuação)
-
-**Funcionalidade entregue**
-- `feature/avaliacao-bidirecional` — Avaliação de mão dupla: prestador avalia cliente, notas visíveis nos perfis:
-  - Backend: enum `TipoAvaliacao` discrimina direção da avaliação; campo `tipo` adicionado em `Avaliacao`
-  - Backend: `User.avaliacaoMedia` e `User.totalAvaliacoes` armazenam a reputação do cliente (atualizada automaticamente)
-  - Backend: `POST /api/avaliacoes/para-cliente` — prestador avalia cliente após serviço concluído; valida que a proposta foi ACEITA
-  - Backend: `GET /api/avaliacoes/cliente/{clienteId}` — lista avaliações recebidas pelo cliente
-  - Frontend: `PrestadorAvaliacaoComponent` em `/prestador/solicitacao/:id/avaliacao` com estrelas interativas e estados completos
-  - Frontend: Seção "Serviços Concluídos" no painel do prestador com botão "Avaliar Cliente ★" por contrato
-  - Frontend: Aba "Minhas Avaliações" no perfil do cliente mostrando nota média e histórico de avaliações recebidas
-  - Frontend: Card de reputação no perfil do prestador exibindo `avaliacaoMedia` com estrelas em destaque
-
----
-
-## O que fazer a seguir
-
-Ordem sugerida por impacto no fluxo central do marketplace:
-
-### 1. ~~Marcar serviço como CONCLUÍDO~~ ✅ *Entregue em 2026-05-12*
-Endpoint dedicado `PATCH /api/solicitacoes/:id/concluir` com validação de propriedade e transição de status.
-Botão "Marcar como Concluído" no dashboard do cliente para solicitações `EM_ANDAMENTO`, com modal de confirmação e toast de sucesso.
-Branch: `feature/marcar-servico-concluido`.
-
-### 2. ~~Tela de avaliação do prestador~~ ✅ *Entregue em 2026-05-12*
-`ClienteAvaliacaoComponent` em `/cliente/solicitacao/:id/avaliacao` com estrelas interativas, comentário opcional e estados de loading/sucesso/erro. Botão "Avaliar" nos cards concluídos e link "Avaliar Agora" no toast de conclusão.
-Branch: `feature/tela-avaliacao`.
-
-### 3. ~~Avaliação bidirecional~~ ✅ *Entregue em 2026-05-12*
-Prestador avalia cliente, nota média exibida no perfil de ambos. `POST /api/avaliacoes/para-cliente`, `GET /api/avaliacoes/cliente/{id}`.
-Branch: `feature/avaliacao-bidirecional`.
-
-### 3.1. ~~Fix: unicidade de avaliação por serviço e visibilidade de estrelas~~ ✅ *Entregue em 2026-05-12*
-DTOs enriquecidos com flags `foiAvaliadoPeloCliente`/`foiAvaliadoPeloPrestador`; dashboards exibem "Avaliado ✓" e médias de estrelas no cabeçalho.
-Branch: `fix/avaliacao-regras-visibilidade`.
-
-### 4. ~~Bug: formulário de edição do perfil do prestador nunca pré-preenche~~ ✅ *Corrigido em 2026-05-12*
-`buscarPorUsuario(userId)` substituído por `buscarMeuPerfil()` → `GET /api/prestadores/me`.
-
-### 5. ~~Bug: cadastro de novos usuários retorna 400~~ ✅ *Corrigido em 2026-05-12*
-Removidas `@Size` e `@Pattern` de `RegisterDTO.senha` — validavam a string Base64 (`btoa(senha)`), não a senha original. Todas as datas auditadas e padronizadas em DD/MM/AAAA.
-
-### 6. ~~URLs da API hardcoded nos services Angular~~ ✅ *Corrigido em 2026-05-12*
-Todos os 7 services centralizados em `environment.apiUrl`; `environment.prod.ts` usa `/api` para proxy reverso.
-
-### 7. ~~CORS hardcoded~~ ✅ *Corrigido em 2026-05-12*
-`allowedOrigins` lê `${app.frontend.url}` via `application.yml`; `FRONTEND_URL` já estava configurado no `docker-compose.yml`.
-
-### 8. ~~Interceptor de 401~~ ✅ *Corrigido em 2026-05-12*
-`auth.interceptor.ts` trata 401: limpa `localStorage` e redireciona para `/login` quando o token expira.
 
 ---
 
@@ -341,6 +126,72 @@ vemresolver/
 ├── docker-compose.yml
 └── README.md
 ```
+
+---
+
+## O que está feito
+
+### Fluxo central do marketplace
+
+- ✅ Cadastro e login com verificação de e-mail (JWT 24h)
+- ✅ Guards de rota por papel (cliente / prestador)
+- ✅ Criação de solicitação de serviço (cliente)
+- ✅ Listagem de solicitações abertas para prestadores
+- ✅ Envio de proposta com valor e mensagem (prestador)
+- ✅ Propostas recebidas — aceitar / recusar com confirmação (cliente)
+- ✅ Painel do prestador com contratos em andamento, propostas pendentes e estatísticas reais
+- ✅ Marcar serviço como concluído — endpoint dedicado `/concluir` com validação de ownership
+- ✅ Avaliação do prestador pelo cliente — estrelas 1–5, comentário, estados completos
+- ✅ Avaliação bidirecional — prestador avalia cliente; notas médias exibidas nos perfis
+- ✅ Perfil do prestador — criar/editar com pré-preenchimento automático via `GET /api/prestadores/me`
+- ✅ Perfil do cliente com aba de avaliações recebidas e nota média
+- ✅ Soft delete de conta
+
+### Segurança e infraestrutura
+
+- ✅ CORS via variável de ambiente `${FRONTEND_URL}` — sem hardcode
+- ✅ URLs da API Angular centralizadas em `environment.ts` (`/api` em prod, `localhost:8080` em dev)
+- ✅ Interceptor Angular de 401 — limpa `localStorage` e redireciona para `/login`
+- ✅ Swagger desabilitado em produção (`application-prod.yml`)
+- ✅ `DataSeeder` restrito ao perfil `!prod` — sem usuários de teste em produção
+- ✅ Ownership em aceitar/recusar propostas e em alterar status de solicitação
+- ✅ Endpoints de categoria (`POST/PUT/DELETE`) restritos a `ROLE_ADMIN` — via `SecurityFilterChain` + `@PreAuthorize`
+- ✅ Criação de perfil de prestador restrita a `ROLE_PRESTADOR`
+- ✅ `UserController` legado removido — substituído por `PerfilController` com DTOs seguros (`UpdatePerfilDTO`)
+- ✅ Rodapé padronizado em todas as páginas públicas (logo + links + copyright)
+
+---
+
+## O que fazer a seguir
+
+### Prioridade 1 — Qualidade e segurança (recomendado antes de produção)
+
+| # | Tarefa | Área | Esforço |
+|---|--------|------|---------|
+| M1 | Mover lógica de `PropostaController` para `PropostaService` — remover `PrestadorRepository` injetado diretamente no controller | Backend | Pequeno |
+| M4 | Implementar refresh token — JWT atual expira em 24h sem renovação automática | Backend | Médio |
+| M5 | `isAuthenticated()` no Angular só verifica presença do token no `localStorage`, não a expiração | Frontend | Pequeno |
+| M10 | Substituir `ddl-auto: update` por Flyway ou Liquibase para controle seguro de migrações de schema | Backend | Médio |
+| M11 | Adicionar campo `dataCriacao` na entidade `Avaliacao` — hoje impossível ordenar avaliações cronologicamente | Backend | Pequeno |
+
+### Prioridade 2 — Melhorias de UX (próximas iterações)
+
+| # | Tarefa | Área | Esforço |
+|---|--------|------|---------|
+| M9 | Botão "Editar" na modal do dashboard do cliente apenas fecha o modal — deveria navegar para a tela de edição | Frontend | Pequeno |
+| B3 | Busca por categoria e barra de pesquisa na home atualmente apenas fazem `console.log` sem filtrar nada | Frontend | Médio |
+| B4 | Paginação visível em todas as listagens do frontend (backend já pagina, frontend não exibe controles) | Frontend | Médio |
+| B5 | Erros de HTTP nos componentes legados usam `console.error` sem nenhum feedback visual ao usuário | Frontend | Pequeno |
+| B1 | Sem rate limiting em `POST /api/auth/login` — vulnerável a força bruta | Backend | Pequeno |
+
+### Prioridade 3 — Evolução do produto (maior esforço)
+
+| Tarefa | Área | Esforço |
+|--------|------|---------|
+| Migrar templates HTML inline dos componentes legados para arquivos `.html` separados | Frontend | Médio |
+| Sistema de notificações em tempo real (polling ou WebSocket) | Full-stack | Grande |
+| Painel administrativo para gerenciar usuários, categorias e denúncias | Full-stack | Grande |
+| Busca geolocalizada de prestadores por raio de distância | Full-stack | Grande |
 
 ---
 
