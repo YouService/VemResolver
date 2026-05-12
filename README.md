@@ -172,6 +172,18 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação 8)
+
+**Fixes de segurança entregues**
+- `fix/seguranca-ownership-dataseed-swagger`:
+  - **C2** — `aceitarProposta` e `recusarProposta` em `PropostaService` agora verificam que o usuário autenticado é o dono da solicitação; antes qualquer usuário logado podia aceitar/recusar proposta de outro
+  - **C3** — `atualizarStatus` em `SolicitacaoServicoService` agora verifica ownership; antes qualquer usuário logado podia mudar o status de qualquer solicitação
+  - **C4** — `DataSeeder` anotado com `@Profile("!prod")`: usuários e categorias de teste não são criados quando `spring.profiles.active=prod`
+  - **A3** — `application-prod.yml` criado desabilitando Swagger UI e api-docs; Swagger só fica acessível nos ambientes `dev`/`default`
+  - **Bônus** — removidos todos os `@CrossOrigin(origins = "http://localhost:4200")` restantes nos controllers (`Auth`, `Avaliacao`, `Categoria`, `Prestador`); CORS já é tratado globalmente pelo `SecurityConfig`
+
+---
+
 ### 2026-05-12 — Felipe Lima (continuação 7)
 
 **Fix de UI entregue**
