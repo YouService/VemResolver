@@ -49,6 +49,10 @@ export class SolicitacaoService {
     return this.http.patch<SolicitacaoServico>(`${this.apiUrl}/${id}/status`, null, { params });
   }
 
+  concluir(id: number): Observable<SolicitacaoServico> {
+    return this.http.patch<SolicitacaoServico>(`${this.apiUrl}/${id}/concluir`, null);
+  }
+
   atualizar(id: number, solicitacao: SolicitacaoServico): Observable<SolicitacaoServico> {
     return this.http.put<SolicitacaoServico>(`${this.apiUrl}/${id}`, solicitacao);
   }

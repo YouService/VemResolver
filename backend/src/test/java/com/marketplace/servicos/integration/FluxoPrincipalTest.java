@@ -2,6 +2,7 @@ package com.marketplace.servicos.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marketplace.servicos.dto.LoginDTO;
+import com.marketplace.servicos.dto.PropostaDTO;
 import com.marketplace.servicos.dto.RegisterDTO;
 import com.marketplace.servicos.dto.SolicitacaoServicoDTO;
 import com.marketplace.servicos.model.TipoUsuario;
@@ -17,8 +18,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.math.BigDecimal;
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -114,14 +117,71 @@ public class FluxoPrincipalTest {
         solicitacao.setCidade("São Paulo");
         solicitacao.setEstado("SP");
 
-        mockMvc.perform(post("/api/solicitacoes")
+        MvcResult solicitacaoResult = mockMvc.perform(post("/api/solicitacoes")
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(solicitacao)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.descricao").value("Preciso trocar a fiação do chuveiro urgente."));
-        
-        System.out.println(">>> Solicitação criada com sucesso!");
+                .andExpect(jsonPath("$.descricao").value("Preciso trocar a fiação do chuveiro urgente."))
+                .andReturn();
+
+        Long solicitacaoId = objectMapper.readTree(
+                solicitacaoResult.getResponse().getContentAsString()).get("id").asLong();
+
+        System.out.println(">>> Solicitação criada com sucesso! ID: " + solicitacaoId);
+
+        // =================================================================================
+        // 5. LOGIN (Prestador 001) E ENVIO DE PROPOSTA
+        // =================================================================================
+        LoginDTO loginPrestador = new LoginDTO();
+        loginPrestador.setEmail("prestador001@teste.com");
+        loginPrestador.setSenha("123Quatro@");
+
+        MvcResult loginPrestadorResult = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginPrestador)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String tokenPrestador = objectMapper.readTree(
+                loginPrestadorResult.getResponse().getContentAsString()).get("token").asText();
+
+        PropostaDTO proposta = new PropostaDTO();
+        proposta.setSolicitacaoId(solicitacaoId);
+        proposta.setValor(BigDecimal.valueOf(250.0));
+        proposta.setMensagem("Faço o serviço com qualidade e rapidez, disponível amanhã.");
+
+        MvcResult propostaResult = mockMvc.perform(post("/api/propostas")
+                .header("Authorization", "Bearer " + tokenPrestador)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(proposta)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long propostaId = objectMapper.readTree(
+                propostaResult.getResponse().getContentAsString()).get("id").asLong();
+
+        System.out.println(">>> Proposta enviada com sucesso! ID: " + propostaId);
+
+        // =================================================================================
+        // 6. CLIENTE ACEITA A PROPOSTA
+        // =================================================================================
+        mockMvc.perform(patch("/api/propostas/" + propostaId + "/aceitar")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACEITA"));
+
+        System.out.println(">>> Proposta aceita. Solicitação agora em andamento.");
+
+        // =================================================================================
+        // 7. CLIENTE MARCA SERVIÇO COMO CONCLUÍDO
+        // =================================================================================
+        mockMvc.perform(patch("/api/solicitacoes/" + solicitacaoId + "/concluir")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CONCLUIDA"));
+
+        System.out.println(">>> Serviço marcado como CONCLUÍDO com sucesso!");
     }
 
     private void cadastrarUsuario(String nome, String email, String senha, TipoUsuario tipo) throws Exception {

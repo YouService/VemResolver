@@ -109,6 +109,24 @@ public class SolicitacaoServicoService {
     }
 
     @Transactional
+    public SolicitacaoServicoDTO concluirServico(Long id, Long clienteId) {
+        SolicitacaoServico solicitacao = solicitacaoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
+
+        if (!solicitacao.getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Apenas o cliente responsável pode concluir a solicitação");
+        }
+
+        if (solicitacao.getStatus() != StatusSolicitacao.EM_ANDAMENTO) {
+            throw new BusinessException("Apenas solicitações em andamento podem ser concluídas");
+        }
+
+        solicitacao.setStatus(StatusSolicitacao.CONCLUIDA);
+        solicitacao = solicitacaoRepository.save(solicitacao);
+        return toDTO(solicitacao);
+    }
+
+    @Transactional
     public void deletar(Long id, Long clienteId) {
         SolicitacaoServico solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
