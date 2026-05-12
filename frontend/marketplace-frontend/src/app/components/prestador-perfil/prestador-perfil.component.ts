@@ -56,10 +56,7 @@ export class PrestadorPerfilComponent implements OnInit {
   }
 
   carregarPerfilExistente() {
-    const userId = this.authService.getCurrentUserId();
-    if (!userId) return;
-
-    this.prestadorService.buscarPorUsuario(userId).subscribe({
+    this.prestadorService.buscarMeuPerfil().subscribe({
       next: (prestador: Prestador) => {
         this.prestadorExistente = prestador;
         this.perfilForm.patchValue({
@@ -69,8 +66,8 @@ export class PrestadorPerfilComponent implements OnInit {
         });
         this.categoriasSelecionadas = prestador.categoriasIds || [];
       },
-      error: (error: any) => {
-        console.log('Nenhum perfil encontrado, criando novo');
+      error: () => {
+        // 404 esperado para prestador sem perfil ainda — formulário fica em branco para criação
       }
     });
   }
