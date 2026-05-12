@@ -4,10 +4,11 @@ import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { AvaliacaoService } from '../services/avaliacao.service';
 import { ViaCEPService } from '../services/viacep.service';
 import { MaskDirective } from '../directives/mask.directive';
 import { SeletorUfComponent } from './seletor-uf.component';
-import { User, UpdatePerfilRequest, AlterarSenhaRequest } from '../models/models';
+import { User, UpdatePerfilRequest, AlterarSenhaRequest, Avaliacao } from '../models/models';
 
 @Component({
   selector: 'app-cliente-perfil',
@@ -48,6 +49,15 @@ import { User, UpdatePerfilRequest, AlterarSenhaRequest } from '../models/models
                     [class.hover:bg-gray-50]="abaAtiva !== 'senha'"
                     class="px-6 py-4 font-medium transition">
                     Alterar Senha
+                  </button>
+                  <button
+                    (click)="abaAtiva = 'avaliacoes'; carregarAvaliacoes()"
+                    [class.bg-blue-600]="abaAtiva === 'avaliacoes'"
+                    [class.text-white]="abaAtiva === 'avaliacoes'"
+                    [class.text-gray-600]="abaAtiva !== 'avaliacoes'"
+                    [class.hover:bg-gray-50]="abaAtiva !== 'avaliacoes'"
+                    class="px-6 py-4 font-medium transition">
+                    Minhas Avaliações
                   </button>
                   <button
                     (click)="abaAtiva = 'excluir'"
@@ -288,6 +298,64 @@ import { User, UpdatePerfilRequest, AlterarSenhaRequest } from '../models/models
                   </form>
                 }
 
+                @if (abaAtiva === 'avaliacoes') {
+                  <div>
+                    @if (loadingAvaliacoes) {
+                      <div class="text-center py-8">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      </div>
+                    } @else if (avaliacoes.length === 0) {
+                      <div class="text-center py-12">
+                        <span class="text-5xl">⭐</span>
+                        <p class="text-gray-600 mt-4">Você ainda não recebeu avaliações de prestadores.</p>
+                        <p class="text-gray-500 text-sm mt-1">As avaliações aparecem aqui após um prestador avaliar seu perfil como cliente.</p>
+                      </div>
+                    } @else {
+                      <div class="mb-4 p-4 bg-blue-50 rounded-lg flex items-center gap-4">
+                        <div class="text-center">
+                          <p class="text-3xl font-bold text-blue-700">{{ mediaAvaliacoes | number:'1.1-1' }}</p>
+                          <div class="flex text-yellow-500 text-lg justify-center">
+                            @for (star of [1,2,3,4,5]; track star) {
+                              <span>{{ star <= mediaAvaliacoes ? '★' : '☆' }}</span>
+                            }
+                          </div>
+                          <p class="text-xs text-gray-500 mt-1">{{ avaliacoes.length }} avaliação{{ avaliacoes.length !== 1 ? 'ões' : '' }}</p>
+                        </div>
+                        <div class="flex-1">
+                          <p class="text-sm font-semibold text-gray-800">Sua reputação como cliente</p>
+                          <p class="text-sm text-gray-600 mt-1">Esta nota é visível para prestadores ao avaliar se aceitam seus serviços.</p>
+                        </div>
+                      </div>
+
+                      <div class="space-y-4">
+                        @for (av of avaliacoes; track av.id) {
+                          <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                              <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                  {{ (av.nomeAvaliador || '?').charAt(0).toUpperCase() }}
+                                </div>
+                                <div>
+                                  <p class="font-semibold text-gray-900 text-sm">{{ av.nomeAvaliador }}</p>
+                                  <p class="text-xs text-gray-500">Prestador</p>
+                                </div>
+                              </div>
+                              <div class="flex text-yellow-500">
+                                @for (star of [1,2,3,4,5]; track star) {
+                                  <span>{{ star <= (av.nota || 0) ? '★' : '☆' }}</span>
+                                }
+                              </div>
+                            </div>
+                            @if (av.comentario) {
+                              <p class="text-gray-700 text-sm mt-3 pl-12">{{ av.comentario }}</p>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
                 @if (abaAtiva === 'excluir') {
                   <div class="space-y-6">
                     <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
@@ -351,7 +419,7 @@ import { User, UpdatePerfilRequest, AlterarSenhaRequest } from '../models/models
   `
 })
 export class ClientePerfilComponent implements OnInit {
-  abaAtiva: 'dados' | 'senha' | 'excluir' = 'dados';
+  abaAtiva: 'dados' | 'senha' | 'avaliacoes' | 'excluir' = 'dados';
   loading = false;
   salvando = false;
   alterandoSenha = false;
@@ -362,6 +430,14 @@ export class ClientePerfilComponent implements OnInit {
   errorMessageSenha = '';
   errorMessageExclusao = '';
   confirmarExclusao = false;
+  avaliacoes: Avaliacao[] = [];
+  loadingAvaliacoes = false;
+  avaliacoesCarregadas = false;
+
+  get mediaAvaliacoes(): number {
+    if (!this.avaliacoes.length) return 0;
+    return this.avaliacoes.reduce((sum, a) => sum + (a.nota || 0), 0) / this.avaliacoes.length;
+  }
 
   perfilForm: FormGroup;
   senhaForm: FormGroup;
@@ -369,6 +445,7 @@ export class ClientePerfilComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private avaliacaoService: AvaliacaoService,
     private viaCEPService: ViaCEPService,
     private router: Router
   ) {
@@ -541,6 +618,21 @@ export class ClientePerfilComponent implements OnInit {
       error: (error) => {
         console.error('Erro ao buscar CEP', error);
       }
+    });
+  }
+
+  carregarAvaliacoes() {
+    if (this.avaliacoesCarregadas) return;
+    const userId = this.authService.getCurrentUserId();
+    if (!userId) return;
+    this.loadingAvaliacoes = true;
+    this.avaliacaoService.listarPorCliente(userId, 0, 20).subscribe({
+      next: (response) => {
+        this.avaliacoes = response.content;
+        this.avaliacoesCarregadas = true;
+        this.loadingAvaliacoes = false;
+      },
+      error: () => { this.loadingAvaliacoes = false; }
     });
   }
 

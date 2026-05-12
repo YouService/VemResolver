@@ -72,6 +72,12 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private Boolean ativo = true;
+
+    @Column(nullable = false)
+    private Double avaliacaoMedia = 0.0;
+
+    @Column(nullable = false)
+    private Integer totalAvaliacoes = 0;
     
     @PrePersist
     protected void onCreate() {

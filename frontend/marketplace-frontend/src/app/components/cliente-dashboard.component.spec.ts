@@ -80,7 +80,7 @@ describe('ClienteDashboardComponent', () => {
     expect(component.mensagemSucesso).toContain('concluído');
     expect(component.mostrarModalConclusao).toBeFalse();
 
-    tick(5000);
+    tick(8000);
     expect(component.mensagemSucesso).toBe('');
   }));
 

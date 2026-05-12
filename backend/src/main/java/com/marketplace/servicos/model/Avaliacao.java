@@ -28,9 +28,13 @@ public class Avaliacao {
     @JoinColumn(name = "cliente_id", nullable = false)
     private User cliente;
     
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoAvaliacao tipo = TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR;
+
     @Column(nullable = false)
     private Integer nota;
-    
+
     @Column(columnDefinition = "TEXT")
     private String comentario;
 }

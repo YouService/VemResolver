@@ -6,6 +6,25 @@
       <p class="text-gray-600 mt-2">Complete seu perfil para receber mais solicitações</p>
     </div>
 
+    <!-- Rating Card (shown when prestador has reviews) -->
+    @if (prestadorExistente && (prestadorExistente.totalAvaliacoes || 0) > 0) {
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6 flex items-center gap-6">
+        <div class="text-center">
+          <p class="text-4xl font-bold text-yellow-500">{{ prestadorExistente.avaliacaoMedia | number:'1.1-1' }}</p>
+          <div class="flex text-yellow-500 text-2xl justify-center mt-1">
+            @for (star of [1,2,3,4,5]; track star) {
+              <span>{{ star <= (prestadorExistente.avaliacaoMedia || 0) ? '★' : '☆' }}</span>
+            }
+          </div>
+          <p class="text-xs text-gray-500 mt-1">{{ prestadorExistente.totalAvaliacoes }} avaliação{{ prestadorExistente.totalAvaliacoes !== 1 ? 'ões' : '' }}</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900">Sua reputação</p>
+          <p class="text-sm text-gray-600 mt-1">Nota média baseada nas avaliações dos clientes. Quanto maior, mais chances de receber propostas aceitas.</p>
+        </div>
+      </div>
+    }
+
     <!-- Form Card -->
     <div class="bg-white rounded-lg shadow-md p-6">
       <form [formGroup]="perfilForm" (ngSubmit)="salvarPerfil()">
