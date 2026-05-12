@@ -15,7 +15,7 @@ import { User, UpdatePerfilRequest, AlterarSenhaRequest } from '../models/models
   imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule, MaskDirective, SeletorUfComponent],
   template: `
     <div class="min-h-screen bg-gray-50">
-      <div class="container mx-auto px-4 py-8">
+      <div class="container max-w-6xl mx-auto px-4 py-8">
         <div class="max-w-4xl mx-auto">
           <div class="mb-6">
             <h1 class="text-3xl font-bold text-gray-900">Meu Perfil</h1>

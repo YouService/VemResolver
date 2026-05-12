@@ -172,6 +172,16 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação 7)
+
+**Fix de UI entregue**
+- `fix/dashboard-max-width` — Paineis do cliente e do prestador alinhados com a largura do menu superior:
+  - Causa: navbar usa `container max-w-6xl mx-auto` (máx. 1152px) mas os paineis usavam apenas `container mx-auto` sem `max-w-6xl`, expandindo além da navbar em telas grandes
+  - Corrigido em 5 componentes: cabeçalho e corpo do `cliente-dashboard`, cabeçalho e corpo do `prestador-dashboard`, container principal de `cliente-perfil`, cabeçalho de `cliente-propostas-recebidas` e cabeçalho de `prestador-enviar-proposta`
+  - Seções de formulário com `max-w-3xl` mantidas — são intencionalmente mais estreitas
+
+---
+
 ### 2026-05-12 — Felipe Lima (continuação 6)
 
 **Fixes entregues**
