@@ -4,6 +4,7 @@ import com.marketplace.servicos.dto.PropostaDTO;
 import com.marketplace.servicos.exception.BusinessException;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.*;
+import com.marketplace.servicos.repository.AvaliacaoRepository;
 import com.marketplace.servicos.repository.PrestadorRepository;
 import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
@@ -18,13 +19,16 @@ public class PropostaService {
     private final PropostaRepository propostaRepository;
     private final SolicitacaoServicoRepository solicitacaoRepository;
     private final PrestadorRepository prestadorRepository;
-    
+    private final AvaliacaoRepository avaliacaoRepository;
+
     public PropostaService(PropostaRepository propostaRepository,
-                          SolicitacaoServicoRepository solicitacaoRepository,
-                          PrestadorRepository prestadorRepository) {
+                           SolicitacaoServicoRepository solicitacaoRepository,
+                           PrestadorRepository prestadorRepository,
+                           AvaliacaoRepository avaliacaoRepository) {
         this.propostaRepository = propostaRepository;
         this.solicitacaoRepository = solicitacaoRepository;
         this.prestadorRepository = prestadorRepository;
+        this.avaliacaoRepository = avaliacaoRepository;
     }
     
     @Transactional
@@ -113,6 +117,8 @@ public class PropostaService {
         dto.setCidade(proposta.getSolicitacao().getCidade());
         dto.setEstado(proposta.getSolicitacao().getEstado());
         dto.setCategoriaNome(proposta.getSolicitacao().getCategoria().getNome());
+        dto.setFoiAvaliadoPeloPrestador(
+            avaliacaoRepository.existsBySolicitacaoIdAndTipo(proposta.getSolicitacao().getId(), TipoAvaliacao.PRESTADOR_AVALIA_CLIENTE));
         return dto;
     }
 }

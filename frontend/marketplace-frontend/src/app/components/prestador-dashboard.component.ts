@@ -20,6 +20,19 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
             <div>
               <h1 class="text-3xl font-bold text-gray-900">Painel do Prestador</h1>
               <p class="text-gray-600 mt-1">Bem-vindo, {{ userName }}</p>
+              @if ((prestador?.totalAvaliacoes || 0) > 0) {
+                <div class="flex items-center gap-2 mt-2">
+                  <span class="text-yellow-500 text-lg">
+                    @for (star of [1,2,3,4,5]; track star) {
+                      {{ star <= (prestador?.avaliacaoMedia || 0) ? '★' : '☆' }}
+                    }
+                  </span>
+                  <span class="font-semibold text-gray-800">{{ prestador?.avaliacaoMedia | number:'1.1-1' }}</span>
+                  <span class="text-gray-500 text-sm">({{ prestador?.totalAvaliacoes }} avaliação{{ (prestador?.totalAvaliacoes || 0) !== 1 ? 'ões' : '' }} de clientes)</span>
+                </div>
+              } @else {
+                <p class="text-gray-400 text-xs mt-1">Sem avaliações recebidas ainda</p>
+              }
             </div>
             <button
               routerLink="/prestador/perfil"
@@ -212,11 +225,17 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
                   </div>
                   <div class="text-right ml-4 flex flex-col items-end gap-2">
                     <p class="font-bold text-green-700">R$ {{ proposta.valor | number:'1.2-2' }}</p>
-                    <a
-                      [routerLink]="['/prestador/solicitacao', proposta.solicitacaoId, 'avaliacao']"
-                      class="px-3 py-1.5 bg-yellow-500 text-white text-xs font-semibold rounded-lg hover:bg-yellow-600 transition">
-                      Avaliar Cliente ★
-                    </a>
+                    @if (proposta.foiAvaliadoPeloPrestador) {
+                      <span class="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-lg">
+                        Avaliado ✓
+                      </span>
+                    } @else {
+                      <a
+                        [routerLink]="['/prestador/solicitacao', proposta.solicitacaoId, 'avaliacao']"
+                        class="px-3 py-1.5 bg-yellow-500 text-white text-xs font-semibold rounded-lg hover:bg-yellow-600 transition">
+                        Avaliar Cliente ★
+                      </a>
+                    }
                   </div>
                 </div>
               }

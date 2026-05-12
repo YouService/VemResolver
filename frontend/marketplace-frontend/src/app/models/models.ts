@@ -123,6 +123,8 @@ export interface SolicitacaoServico {
   estado: string;
   status?: StatusSolicitacao;
   dataCriacao?: Date;
+  foiAvaliadoPeloCliente?: boolean;
+  foiAvaliadoPeloPrestador?: boolean;
 }
 
 export interface Proposta {
@@ -141,6 +143,7 @@ export interface Proposta {
   cidade?: string;
   estado?: string;
   categoriaNome?: string;
+  foiAvaliadoPeloPrestador?: boolean;
 }
 
 export interface Avaliacao {
