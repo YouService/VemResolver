@@ -137,33 +137,35 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
               @for (solicitacao of solicitacoesFiltradas; track solicitacao.id) {
                 <div class="border rounded-lg p-5 hover:shadow-lg transition">
                   <div class="flex items-start justify-between mb-3">
-                    <div class="flex-1">
-                      <div class="flex items-center gap-3 mb-2">
-                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
                           {{ solicitacao.categoriaNome }}
                         </span>
                         <span [class]="getStatusClass(solicitacao.status!)">
                           {{ getStatusText(solicitacao.status!) }}
                         </span>
                       </div>
-                      <p class="text-gray-800 mb-2">{{ solicitacao.descricao }}</p>
+                      <p class="text-gray-800 mb-2 break-words">{{ solicitacao.descricao }}</p>
                     </div>
-                    <span class="text-xs text-gray-500 ml-4">
+                    <span class="text-xs text-gray-500 ml-4 whitespace-nowrap flex-shrink-0">
                       {{ formatarData(solicitacao.dataCriacao) }}
                     </span>
                   </div>
-                  
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center text-sm text-gray-600">
-                      <span class="mr-4">📍 {{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
+
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex items-center text-sm text-gray-600 min-w-0">
+                      <span class="truncate">📍 {{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
                     </div>
 
                     <div class="flex gap-2 flex-wrap">
-                      <a
-                        [routerLink]="['/cliente/solicitacao', solicitacao.id, 'propostas']"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm">
-                        Ver Propostas
-                      </a>
+                      @if (solicitacao.status === 'ABERTA' || solicitacao.status === 'EM_ANDAMENTO') {
+                        <a
+                          [routerLink]="['/cliente/solicitacao', solicitacao.id, 'propostas']"
+                          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm">
+                          Ver Propostas
+                        </a>
+                      }
                       @if (solicitacao.status === 'EM_ANDAMENTO') {
                         <button
                           (click)="confirmarConclusao(solicitacao)"
@@ -245,14 +247,16 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                 </div>
               </div>
             </div>
-            <div class="p-6 border-t">
-              <a
-                [routerLink]="['/cliente/solicitacao', solicitacaoSelecionada.id, 'propostas']"
-                (click)="fecharModal()"
-                class="w-full block text-center py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
-                Ver Propostas Recebidas
-              </a>
-            </div>
+            @if (solicitacaoSelecionada?.status === 'ABERTA' || solicitacaoSelecionada?.status === 'EM_ANDAMENTO') {
+              <div class="p-6 border-t">
+                <a
+                  [routerLink]="['/cliente/solicitacao', solicitacaoSelecionada.id, 'propostas']"
+                  (click)="fecharModal()"
+                  class="w-full block text-center py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                  Ver Propostas Recebidas
+                </a>
+              </div>
+            }
             @if (podeEditarOuExcluir()) {
               <div class="p-6 border-t bg-gray-50 flex gap-3 justify-end">
                 <button
