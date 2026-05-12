@@ -123,13 +123,21 @@ import { MatIconModule } from '@angular/material/icon';
         </div>
       </section>
 
-      <!-- Footer Simples -->
-      <footer class="bg-white py-8 border-t border-gray-200 mt-auto">
-        <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p class="mb-2">&copy; 2026 VemResolver LTDA.</p>
-          <div class="flex justify-center gap-4">
-            <a routerLink="/termos-uso" target="_blank" class="hover:text-blue-600">Termos de Uso</a>
-            <a routerLink="/politica-privacidade" target="_blank" class="hover:text-blue-600">Política de Privacidade</a>
+      <!-- Footer -->
+      <footer class="bg-white py-10 border-t border-gray-100">
+        <div class="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="flex items-center gap-2">
+            <img src="assets/logo.png" alt="VemResolver" class="h-8 w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition">
+          </div>
+          <div class="flex flex-col md:flex-row gap-6 items-center">
+            <div class="flex gap-4 text-sm font-medium text-gray-500">
+              <a routerLink="/sobre-nos" class="hover:text-blue-600 transition cursor-pointer">Sobre nós</a>
+              <a routerLink="/termos-uso" class="hover:text-blue-600 transition cursor-pointer">Termos de uso</a>
+              <a routerLink="/politica-privacidade" class="hover:text-blue-600 transition cursor-pointer">Política de Privacidade</a>
+            </div>
+            <div class="text-sm text-gray-500 text-center md:text-right">
+              &copy; 2026 VemResolver LTDA. Todos os direitos reservados.
+            </div>
           </div>
         </div>
       </footer>
