@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,8 +50,9 @@ public class PrestadorController {
     }
     
     @PostMapping
+    @PreAuthorize("hasRole('PRESTADOR')")
     @SecurityRequirement(name = "bearer-jwt")
-    @Operation(summary = "Criar ou atualizar perfil de prestador")
+    @Operation(summary = "Criar ou atualizar perfil de prestador (apenas PRESTADOR)")
     public ResponseEntity<PrestadorDTO> criarOuAtualizar(
             @Valid @RequestBody PrestadorDTO dto,
             @AuthenticationPrincipal User user) {
