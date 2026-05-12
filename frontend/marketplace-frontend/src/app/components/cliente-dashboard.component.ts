@@ -145,7 +145,7 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                       <span class="mr-4">📍 {{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
                     </div>
 
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 flex-wrap">
                       <a
                         [routerLink]="['/cliente/solicitacao', solicitacao.id, 'propostas']"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm">
@@ -157,6 +157,13 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                           class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm">
                           Marcar como Concluído
                         </button>
+                      }
+                      @if (solicitacao.status === 'CONCLUIDA') {
+                        <a
+                          [routerLink]="['/cliente/solicitacao', solicitacao.id, 'avaliacao']"
+                          class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition font-medium text-sm">
+                          Avaliar
+                        </a>
                       }
                       <button
                         (click)="verDetalhes(solicitacao.id!)"
@@ -255,9 +262,19 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
       }
 
       @if (mensagemSucesso) {
-        <div class="fixed top-4 right-4 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3">
-          <span>{{ mensagemSucesso }}</span>
-          <button (click)="mensagemSucesso = ''" class="text-white hover:text-green-200 font-bold">✕</button>
+        <div class="fixed top-4 right-4 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm">
+          <div class="flex items-start gap-3">
+            <span class="flex-1 text-sm">{{ mensagemSucesso }}</span>
+            <button (click)="mensagemSucesso = ''" class="text-white hover:text-green-200 font-bold flex-shrink-0">✕</button>
+          </div>
+          @if (idSolicitacaoConcluida) {
+            <a
+              [routerLink]="['/cliente/solicitacao', idSolicitacaoConcluida, 'avaliacao']"
+              (click)="mensagemSucesso = ''"
+              class="mt-3 block text-center bg-white text-green-700 font-semibold py-2 px-4 rounded-lg hover:bg-green-50 transition text-sm">
+              Avaliar Agora ★
+            </a>
+          }
         </div>
       }
 
@@ -324,6 +341,7 @@ export class ClienteDashboardComponent implements OnInit {
   solicitacaoParaConcluir: SolicitacaoServico | null = null;
   concluindo = false;
   mensagemSucesso = '';
+  idSolicitacaoConcluida: number | null = null;
 
   constructor(
     private solicitacaoService: SolicitacaoService,
@@ -473,12 +491,14 @@ export class ClienteDashboardComponent implements OnInit {
     this.concluindo = true;
     this.solicitacaoService.concluir(this.solicitacaoParaConcluir.id!).subscribe({
       next: () => {
+        const idConcluida = this.solicitacaoParaConcluir!.id!;
         this.fecharModalConclusao();
         this.fecharModal();
         this.carregarSolicitacoes();
         this.concluindo = false;
-        this.mensagemSucesso = 'Serviço marcado como concluído! Você já pode avaliar o prestador.';
-        setTimeout(() => { this.mensagemSucesso = ''; }, 5000);
+        this.idSolicitacaoConcluida = idConcluida;
+        this.mensagemSucesso = 'Serviço marcado como concluído! Avalie o prestador.';
+        setTimeout(() => { this.mensagemSucesso = ''; this.idSolicitacaoConcluida = null; }, 8000);
       },
       error: (error: any) => {
         console.error('Erro ao concluir serviço', error);
