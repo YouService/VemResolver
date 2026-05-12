@@ -383,7 +383,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | # | Problema | Arquivo | Status |
 |---|----------|---------|--------|
 | A1 | CORS hardcoded em `http://localhost:4200` | `SecurityConfig.java` + `PerfilController.java` | ❌ **Pendente** |
-| A2 | URL do backend hardcoded `http://localhost:8080` em todos os services Angular | Todos `services/*.ts` | ❌ **Pendente** |
+| A2 | URL do backend hardcoded `http://localhost:8080` em todos os services Angular | Todos `services/*.ts` | ✅ **Resolvido** em 2026-05-12 — centralizado em `environment.apiUrl` |
 | A3 | Swagger exposto publicamente sem restrição | `SecurityConfig.java` | ❌ **Pendente** |
 | A4 | Endpoints de categoria sem restrição de role ADMIN | `CategoriaController.java` | ❌ **Pendente** |
 | A5 | `POST /api/prestadores` sem verificação de tipo — CLIENTE pode criar perfil de PRESTADOR | `PrestadorController.java` | ❌ **Pendente** |
@@ -456,7 +456,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 
 | # | Tarefa | Esforço |
 |---|--------|---------|
-| P | Centralizar URL do backend em `environment.ts` (Bug #6) | Pequeno |
+| ~~P~~ | ~~Centralizar URL do backend em `environment.ts` (Bug #6)~~ | ✅ Resolvido |
 | P | CORS via variável de ambiente — remover hardcode (Bug #7) | Pequeno |
 | P | Interceptor Angular para 401 — redirecionar ao login (Bug #8) | Pequeno |
 | P | Ownership checks em `PATCH /propostas/:id/aceitar` e `/recusar` | Pequeno |
