@@ -172,6 +172,15 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação 6)
+
+**Fixes entregues**
+- `fix/bug7-cors-bug8-interceptor-401` — CORS parametrizado e interceptor de 401:
+  - Bug #7: `SecurityConfig.java` — `allowedOrigins` lê `${app.frontend.url}` (variável já existia no `application.yml` e no `docker-compose.yml` como `FRONTEND_URL`); `PerfilController.java` — removido `@CrossOrigin` hardcoded redundante
+  - Bug #8: `auth.interceptor.ts` — adicionado `catchError` após `next()`; quando o backend retorna 401, o interceptor limpa o `localStorage` e redireciona para `/login`, eliminando telas em branco com token expirado
+
+---
+
 ### 2026-05-12 — Felipe Lima (continuação 5)
 
 **Fix entregue**
@@ -266,11 +275,11 @@ Removidas `@Size` e `@Pattern` de `RegisterDTO.senha` — validavam a string Bas
 ### 6. ~~URLs da API hardcoded nos services Angular~~ ✅ *Corrigido em 2026-05-12*
 Todos os 7 services centralizados em `environment.apiUrl`; `environment.prod.ts` usa `/api` para proxy reverso.
 
-### 7. CORS hardcoded
-`SecurityConfig.java:63` — CORS fixo em `localhost:4200`. Parametrizar via variável de ambiente antes de qualquer deploy.
+### 7. ~~CORS hardcoded~~ ✅ *Corrigido em 2026-05-12*
+`allowedOrigins` lê `${app.frontend.url}` via `application.yml`; `FRONTEND_URL` já estava configurado no `docker-compose.yml`.
 
-### 8. Interceptor de 401
-Sem interceptor de resposta para redirecionar ao login após token expirado. O usuário fica preso com telas em branco.
+### 8. ~~Interceptor de 401~~ ✅ *Corrigido em 2026-05-12*
+`auth.interceptor.ts` trata 401: limpa `localStorage` e redireciona para `/login` quando o token expira.
 
 ---
 
