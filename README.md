@@ -172,6 +172,16 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação 4)
+
+**Fixes entregues**
+- `fix/bug5-cadastro-400-datas` — Correção do erro 400 no cadastro de novos usuários e padronização de datas:
+  - Backend: removidas anotações `@Size` e `@Pattern` de `RegisterDTO.senha` — essas restrições validavam a string Base64 enviada pelo frontend (`btoa(senha)`), não a senha original, causando 400 em cadastros perfeitamente válidos; `@NotBlank` é mantido
+  - Frontend: `user-profile.component.ts` — campo "Data de Expedição" alterado de `type="date"` (exige formato `YYYY-MM-DD`) para `type="text"` (exibe o valor em DD/MM/AAAA como armazenado); o campo é somente leitura
+  - Auditoria completa: todos os outros campos de data (`register.component`, `cliente-perfil.component`) já usavam `type="text"` com máscara DD/MM/AAAA ✓
+
+---
+
 ### 2026-05-12 — Felipe Lima (continuação 3)
 
 **Fixes de UI entregues**
@@ -239,9 +249,8 @@ Branch: `fix/avaliacao-regras-visibilidade`.
 ### 4. ~~Bug: formulário de edição do perfil do prestador nunca pré-preenche~~ ✅ *Corrigido em 2026-05-12*
 `buscarPorUsuario(userId)` substituído por `buscarMeuPerfil()` → `GET /api/prestadores/me`.
 
-### 5. Bug: cadastro de novos usuários retorna 400
-`RegisterDTO` no backend tem `@NotBlank` em CPF, RG e data de expedição, mas o frontend não envia esses campos.
-Decidir: remover as anotações `@NotBlank` do backend (mais simples) ou adicionar os campos no formulário de cadastro.
+### 5. ~~Bug: cadastro de novos usuários retorna 400~~ ✅ *Corrigido em 2026-05-12*
+Removidas `@Size` e `@Pattern` de `RegisterDTO.senha` — validavam a string Base64 (`btoa(senha)`), não a senha original. Todas as datas auditadas e padronizadas em DD/MM/AAAA.
 
 ### 6. URLs da API hardcoded nos services Angular
 Todos os services usam `http://localhost:8080` diretamente. Centralizar em `src/environments/environment.ts` antes de qualquer deploy em outro ambiente.
