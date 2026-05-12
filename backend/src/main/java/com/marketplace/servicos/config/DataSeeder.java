@@ -64,9 +64,21 @@ public class DataSeeder {
                 prestador.setAtivo(true);
                 userRepository.save(prestador);
                 
+                User admin = new User();
+                admin.setNome("Administrador");
+                admin.setLogin("admin");
+                admin.setEmail("admin@vemresolver.com");
+                admin.setSenha(passwordEncoder.encode("Admin@2025"));
+                admin.setTipo(TipoUsuario.ADMIN);
+                admin.setTelefone("11900000000");
+                admin.setDataCadastro(LocalDateTime.now());
+                admin.setAtivo(true);
+                userRepository.save(admin);
+
                 System.out.println("✓ Usuários de teste criados:");
                 System.out.println("  Cliente: joao@cliente.com / 123456");
                 System.out.println("  Prestador: maria@prestador.com / 123456");
+                System.out.println("  Admin: admin@vemresolver.com / Admin@2025");
             }
         };
     }

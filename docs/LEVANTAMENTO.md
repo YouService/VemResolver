@@ -56,7 +56,7 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── PrestadorController.java
 │   ├── PropostaController.java
 │   ├── SolicitacaoServicoController.java
-│   └── UserController.java     (legado — retorna entidade User diretamente)
+│   └── UserController.java     (removido em 2026-05-12 — endpoints cobertos por PerfilController e AuthController)
 ├── dto/
 │   ├── AlterarSenhaDTO.java
 │   ├── AuthResponseDTO.java
@@ -372,7 +372,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 
 | # | Problema | Arquivo | Status |
 |---|----------|---------|--------|
-| C1 | `UserController` retorna entidade `User` diretamente (sem DTO) | `UserController.java` | ⚠️ **Parcial** — `senha` tem `@JsonProperty(WRITE_ONLY)` e não é serializada, mas arquitetura ainda viola separação de camadas |
+| C1 | `UserController` retorna entidade `User` diretamente (sem DTO) | `UserController.java` | ✅ **Resolvido** em 2026-05-12 — `UserController` removido; `GET /api/users/me` e `PUT /api/users/me` eram cobertos por `PerfilController` (usa `UpdatePerfilDTO`); `DELETE /api/users/me` coberto por `DELETE /api/auth/conta` |
 | C2 | `PATCH /api/propostas/{id}/aceitar` e `/recusar` sem verificação de ownership | `PropostaController.java` | ✅ **Resolvido** em 2026-05-12 — verifica clienteId do dono da solicitação |
 | C3 | `PATCH /api/solicitacoes/{id}/status` sem verificação de ownership | `SolicitacaoServicoController.java` | ✅ **Resolvido** em 2026-05-12 — verifica ownership antes de mudar status |
 | C4 | `DataSeeder` sem profile guard — cria usuários com senha `123456` em todos os ambientes | `DataSeeder.java` | ✅ **Resolvido** em 2026-05-12 — `@Profile("!prod")` |
@@ -385,9 +385,9 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | A1 | CORS hardcoded em `http://localhost:4200` | `SecurityConfig.java` + `PerfilController.java` | ✅ **Resolvido** em 2026-05-12 — lê `${app.frontend.url}` |
 | A2 | URL do backend hardcoded `http://localhost:8080` em todos os services Angular | Todos `services/*.ts` | ✅ **Resolvido** em 2026-05-12 — centralizado em `environment.apiUrl` |
 | A3 | Swagger exposto publicamente sem restrição | `SecurityConfig.java` | ✅ **Resolvido** em 2026-05-12 — `application-prod.yml` desabilita Swagger no perfil prod |
-| A4 | Endpoints de categoria sem restrição de role ADMIN | `CategoriaController.java` | ❌ **Pendente** |
-| A5 | `POST /api/prestadores` sem verificação de tipo — CLIENTE pode criar perfil de PRESTADOR | `PrestadorController.java` | ❌ **Pendente** |
-| A6 | `PUT /api/users/me` aceita entidade `User` no body — permite alterar `tipo`, `login` etc. | `UserController.java` | ❌ **Pendente** — `PUT /api/perfil` mais seguro existe, mas `/api/users/me` ainda está ativo |
+| A4 | Endpoints de categoria sem restrição de role ADMIN | `CategoriaController.java` | ✅ **Resolvido** em 2026-05-12 — `POST/PUT/DELETE /api/categorias` exigem `ROLE_ADMIN` via `SecurityFilterChain` + `@PreAuthorize`; `ADMIN` adicionado ao enum `TipoUsuario`; usuário admin no `DataSeeder` |
+| A5 | `POST /api/prestadores` sem verificação de tipo — CLIENTE pode criar perfil de PRESTADOR | `PrestadorController.java` | ✅ **Resolvido** em 2026-05-12 — `POST /api/prestadores` exige `ROLE_PRESTADOR` via `SecurityFilterChain` + `@PreAuthorize` |
+| A6 | `PUT /api/users/me` aceita entidade `User` no body — permite alterar `tipo`, `login` etc. | `UserController.java` | ✅ **Resolvido** em 2026-05-12 — `UserController` removido inteiramente; usar `PUT /api/perfil` com `UpdatePerfilDTO` |
 | A7 | Sem interceptor de resposta 401 no Angular | — | ✅ **Resolvido** em 2026-05-12 — redireciona para /login ao receber 401 |
 | A8 | Formulário de perfil do prestador nunca pré-prenchia os campos | `prestador-perfil.component.ts` | ✅ **Resolvido** em 2026-05-12 |
 

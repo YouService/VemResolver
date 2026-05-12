@@ -172,6 +172,17 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação 9)
+
+**Fixes de segurança entregues**
+- `fix/seguranca-a4-a5-a6`:
+  - **A4** — `POST/PUT/DELETE /api/categorias` agora exigem `ROLE_ADMIN`: regras adicionadas ao `SecurityFilterChain` e `@PreAuthorize("hasRole('ADMIN')")` nos métodos do controller (defesa em profundidade); `ADMIN` adicionado ao enum `TipoUsuario`; usuário admin criado no `DataSeeder` (apenas `!prod`)
+  - **A5** — `POST /api/prestadores` agora exige `ROLE_PRESTADOR`: regra no `SecurityFilterChain` + `@PreAuthorize("hasRole('PRESTADOR')")` impede que um CLIENTE crie perfil de prestador
+  - **A6 + C1** — `UserController` removido: todos os endpoints eram cobertos por alternativas mais seguras (`GET/PUT /api/perfil` usa `UpdatePerfilDTO`; `DELETE /api/auth/conta` cobre a exclusão de conta)
+  - **Testes**: `CategoriaSecurityTest` (6 casos `@WebMvcTest` verificando que GET é público, POST/PUT/DELETE retornam 403 para CLIENTE/PRESTADOR); `PrestadorServiceTest` (5 casos cobrindo criação com PRESTADOR válido, rejeição de CLIENTE, categoria inexistente e busca); `SolicitacaoServicoServiceTest` corrigido (mock faltante de `AvaliacaoRepository` adicionado); `AuthServiceTest` corrigido (CPF obrigatório no `register` adicionado ao teste)
+
+---
+
 ### 2026-05-12 — Felipe Lima (continuação 8)
 
 **Fixes de segurança entregues**
