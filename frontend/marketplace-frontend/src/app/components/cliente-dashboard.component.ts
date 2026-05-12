@@ -151,6 +151,13 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm">
                         Ver Propostas
                       </a>
+                      @if (solicitacao.status === 'EM_ANDAMENTO') {
+                        <button
+                          (click)="confirmarConclusao(solicitacao)"
+                          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm">
+                          Marcar como Concluído
+                        </button>
+                      }
                       <button
                         (click)="verDetalhes(solicitacao.id!)"
                         class="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition font-medium text-sm">
@@ -234,6 +241,46 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                 </button>
               </div>
             }
+            @if (solicitacaoSelecionada?.status === 'EM_ANDAMENTO') {
+              <div class="p-6 border-t bg-gray-50 flex justify-end">
+                <button
+                  (click)="confirmarConclusao(solicitacaoSelecionada!)"
+                  class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">
+                  Marcar como Concluído
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      @if (mensagemSucesso) {
+        <div class="fixed top-4 right-4 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3">
+          <span>{{ mensagemSucesso }}</span>
+          <button (click)="mensagemSucesso = ''" class="text-white hover:text-green-200 font-bold">✕</button>
+        </div>
+      }
+
+      @if (mostrarModalConclusao) {
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="fecharModalConclusao()">
+          <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" (click)="$event.stopPropagation()">
+            <div class="p-6">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">Confirmar Conclusão</h3>
+              <p class="text-gray-600">Confirma que o serviço foi realizado e deseja marcá-lo como <strong>Concluído</strong>?</p>
+              <p class="text-gray-500 text-sm mt-2">Após concluído, você poderá avaliar o prestador.</p>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex gap-3 justify-end">
+              <button
+                (click)="fecharModalConclusao()"
+                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium">
+                Cancelar
+              </button>
+              <button
+                (click)="executarConclusao()"
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">
+                {{ concluindo ? 'Concluindo...' : 'Confirmar' }}
+              </button>
+            </div>
           </div>
         </div>
       }
@@ -273,6 +320,10 @@ export class ClienteDashboardComponent implements OnInit {
   mostrarModalExclusao = false;
   excluindo = false;
   errorMessage = '';
+  mostrarModalConclusao = false;
+  solicitacaoParaConcluir: SolicitacaoServico | null = null;
+  concluindo = false;
+  mensagemSucesso = '';
 
   constructor(
     private solicitacaoService: SolicitacaoService,
@@ -402,6 +453,36 @@ export class ClienteDashboardComponent implements OnInit {
         console.error('Erro ao excluir solicitação', error);
         this.errorMessage = 'Erro ao excluir solicitação';
         this.excluindo = false;
+      }
+    });
+  }
+
+  confirmarConclusao(solicitacao: SolicitacaoServico) {
+    this.solicitacaoParaConcluir = solicitacao;
+    this.mostrarModalConclusao = true;
+  }
+
+  fecharModalConclusao() {
+    this.mostrarModalConclusao = false;
+    this.solicitacaoParaConcluir = null;
+  }
+
+  executarConclusao() {
+    if (!this.solicitacaoParaConcluir) return;
+
+    this.concluindo = true;
+    this.solicitacaoService.concluir(this.solicitacaoParaConcluir.id!).subscribe({
+      next: () => {
+        this.fecharModalConclusao();
+        this.fecharModal();
+        this.carregarSolicitacoes();
+        this.concluindo = false;
+        this.mensagemSucesso = 'Serviço marcado como concluído! Você já pode avaliar o prestador.';
+        setTimeout(() => { this.mensagemSucesso = ''; }, 5000);
+      },
+      error: (error: any) => {
+        console.error('Erro ao concluir serviço', error);
+        this.concluindo = false;
       }
     });
   }

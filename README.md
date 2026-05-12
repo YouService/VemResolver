@@ -140,34 +140,52 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
 **Documentação gerada**
 - `docs/DAS.md`, `docs/REGRAS-DE-NEGOCIO.md`, `docs/API.md`, `docs/LEVANTAMENTO.md`
 
+### 2026-05-12 — Felipe Lima
+
+**Funcionalidade entregue**
+- `feature/marcar-servico-concluido` — Ação de marcar serviço como Concluído:
+  - Endpoint dedicado `PATCH /api/solicitacoes/{id}/concluir` com validação: apenas o cliente dono pode chamar, e somente quando a solicitação está em `EM_ANDAMENTO`
+  - Botão "Marcar como Concluído" visível nos cards do dashboard e no modal de detalhes, exclusivamente para solicitações `EM_ANDAMENTO`
+  - Modal de confirmação antes de executar a ação
+  - Toast de sucesso com auto-dismiss em 5s: "Serviço marcado como concluído! Você já pode avaliar o prestador."
+  - Testes: 5 unit tests Mockito (`SolicitacaoServicoServiceTest`), spec Angular com 6 casos (`ClienteDashboardComponent.spec`), e fluxo de integração estendido com envio de proposta + aceite + conclusão
+
+**Infraestrutura**
+- `docker-compose.yml` corrigido: adicionadas variáveis `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` e `FRONTEND_URL` que estavam faltando e impediam o rebuild da imagem de subir
+
 ---
 
 ## O que fazer a seguir
 
 Ordem sugerida por impacto no fluxo central do marketplace:
 
-### 1. Marcar serviço como CONCLUÍDO *(alta prioridade)*
-O endpoint já existe: `PATCH /api/solicitacoes/:id/status?status=CONCLUIDA`.
-Falta um botão no painel do cliente para solicitações com status `EM_ANDAMENTO`.
-Sugestão: adicionar botão "Marcar como Concluído" na tela `/cliente/solicitacao/:id/propostas` quando a solicitação está em andamento.
+### 1. ~~Marcar serviço como CONCLUÍDO~~ ✅ *Entregue em 2026-05-12*
+Endpoint dedicado `PATCH /api/solicitacoes/:id/concluir` com validação de propriedade e transição de status.
+Botão "Marcar como Concluído" no dashboard do cliente para solicitações `EM_ANDAMENTO`, com modal de confirmação e toast de sucesso.
+Branch: `feature/marcar-servico-concluido`.
 
-### 2. Tela de avaliação do prestador *(alta prioridade)*
+### 2. Tela de avaliação do prestador *(alta prioridade — próximo item)*
 Após a solicitação ir para `CONCLUIDA`, o cliente deve poder avaliar (nota 1–5 + comentário).
 A API está completa: `POST /api/avaliacoes`.
 Nenhum componente frontend existe. Criar em `/cliente/avaliar/:solicitacaoId`.
+Redirecionar automaticamente do toast de conclusão para essa tela.
 
 ### 3. Bug: formulário de edição do perfil do prestador nunca pré-preenche
 `prestador-perfil.component.ts:237` ainda chama `buscarPorUsuario(userId)` → endpoint inexistente.
 Corrigir para `buscarMeuPerfil()` (mesmo fix já feito no dashboard).
-**Verificar se o develop já tem isso corrigido antes de trabalhar.**
 
 ### 4. Bug: cadastro de novos usuários retorna 400
 `RegisterDTO` no backend tem `@NotBlank` em CPF, RG e data de expedição, mas o frontend não envia esses campos.
 Decidir: remover as anotações `@NotBlank` do backend (mais simples) ou adicionar os campos no formulário de cadastro.
-**Verificar se o develop já tem isso corrigido antes de trabalhar.**
 
 ### 5. URLs da API hardcoded nos services Angular
 Todos os services usam `http://localhost:8080` diretamente. Centralizar em `src/environments/environment.ts` antes de qualquer deploy em outro ambiente.
+
+### 6. CORS hardcoded
+`SecurityConfig.java:63` — CORS fixo em `localhost:4200`. Parametrizar via variável de ambiente antes de qualquer deploy.
+
+### 7. Interceptor de 401
+Sem interceptor de resposta para redirecionar ao login após token expirado. O usuário fica preso com telas em branco.
 
 ---
 
