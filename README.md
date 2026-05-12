@@ -172,6 +172,19 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação)
+
+**Funcionalidade entregue**
+- `feature/avaliacao-bidirecional` — Avaliação de mão dupla: prestador avalia cliente, notas visíveis nos perfis:
+  - Backend: enum `TipoAvaliacao` discrimina direção da avaliação; campo `tipo` adicionado em `Avaliacao`
+  - Backend: `User.avaliacaoMedia` e `User.totalAvaliacoes` armazenam a reputação do cliente (atualizada automaticamente)
+  - Backend: `POST /api/avaliacoes/para-cliente` — prestador avalia cliente após serviço concluído; valida que a proposta foi ACEITA
+  - Backend: `GET /api/avaliacoes/cliente/{clienteId}` — lista avaliações recebidas pelo cliente
+  - Frontend: `PrestadorAvaliacaoComponent` em `/prestador/solicitacao/:id/avaliacao` com estrelas interativas e estados completos
+  - Frontend: Seção "Serviços Concluídos" no painel do prestador com botão "Avaliar Cliente ★" por contrato
+  - Frontend: Aba "Minhas Avaliações" no perfil do cliente mostrando nota média e histórico de avaliações recebidas
+  - Frontend: Card de reputação no perfil do prestador exibindo `avaliacaoMedia` com estrelas em destaque
+
 ---
 
 ## O que fazer a seguir
@@ -187,21 +200,25 @@ Branch: `feature/marcar-servico-concluido`.
 `ClienteAvaliacaoComponent` em `/cliente/solicitacao/:id/avaliacao` com estrelas interativas, comentário opcional e estados de loading/sucesso/erro. Botão "Avaliar" nos cards concluídos e link "Avaliar Agora" no toast de conclusão.
 Branch: `feature/tela-avaliacao`.
 
-### 3. Bug: formulário de edição do perfil do prestador nunca pré-preenche
-`prestador-perfil.component.ts:237` ainda chama `buscarPorUsuario(userId)` → endpoint inexistente.
+### 3. ~~Avaliação bidirecional~~ ✅ *Entregue em 2026-05-12*
+Prestador avalia cliente, nota média exibida no perfil de ambos. `POST /api/avaliacoes/para-cliente`, `GET /api/avaliacoes/cliente/{id}`.
+Branch: `feature/avaliacao-bidirecional`.
+
+### 4. Bug: formulário de edição do perfil do prestador nunca pré-preenche
+`prestador-perfil.component.ts:62` ainda chama `buscarPorUsuario(userId)` → endpoint inexistente.
 Corrigir para `buscarMeuPerfil()` (mesmo fix já feito no dashboard).
 
-### 4. Bug: cadastro de novos usuários retorna 400
+### 5. Bug: cadastro de novos usuários retorna 400
 `RegisterDTO` no backend tem `@NotBlank` em CPF, RG e data de expedição, mas o frontend não envia esses campos.
 Decidir: remover as anotações `@NotBlank` do backend (mais simples) ou adicionar os campos no formulário de cadastro.
 
-### 5. URLs da API hardcoded nos services Angular
+### 6. URLs da API hardcoded nos services Angular
 Todos os services usam `http://localhost:8080` diretamente. Centralizar em `src/environments/environment.ts` antes de qualquer deploy em outro ambiente.
 
-### 6. CORS hardcoded
+### 7. CORS hardcoded
 `SecurityConfig.java:63` — CORS fixo em `localhost:4200`. Parametrizar via variável de ambiente antes de qualquer deploy.
 
-### 7. Interceptor de 401
+### 8. Interceptor de 401
 Sem interceptor de resposta para redirecionar ao login após token expirado. O usuário fica preso com telas em branco.
 
 ---
