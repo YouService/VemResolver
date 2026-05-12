@@ -418,6 +418,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | B5 | Erros de HTTP tratados apenas com `console.error()` sem feedback visual | Múltiplos componentes | ⚠️ **Parcial** — novos componentes usam `NotificationService`; legados ainda usam `console.error` |
 | B6 | Templates HTML inline em arquivos TypeScript | Todos os componentes originais | ❌ **Pendente** — novos componentes usam arquivos separados |
 | B7 | Paineis do cliente e prestador mais largos que o navbar em telas grandes | `cliente-dashboard`, `prestador-dashboard` e outros | ✅ **Resolvido** em 2026-05-12 — `max-w-6xl` adicionado em 5 componentes |
+| B8 | Rodapés inconsistentes entre as páginas (estilos, logo ausente, links divergentes) | `home`, `register`, `seguranca`, `seja-profissional` | ✅ **Resolvido** em 2026-05-12 — padrão unificado: logo + links (Sobre nós, Termos de uso, Política de Privacidade) + copyright |
 
 ---
 
