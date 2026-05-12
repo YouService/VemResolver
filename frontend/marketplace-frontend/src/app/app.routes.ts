@@ -12,6 +12,7 @@ import { PrestadorEnviarPropostaComponent } from './components/prestador-enviar-
 import { PrestadorPerfilComponent } from './components/prestador-perfil/prestador-perfil.component';
 import { ClienteAvaliacaoComponent } from './components/cliente-avaliacao.component';
 import { ClientePropostasRecebidasComponent } from './components/cliente-propostas-recebidas.component';
+import { PrestadorAvaliacaoComponent } from './components/prestador-avaliacao.component';
 import { RegisterComponent } from './components/register/register.component';
 import { SegurancaComponent } from './components/seguranca.component';
 import { SejaProfissionalComponent } from './components/seja-profissional.component';
@@ -63,6 +64,11 @@ export const routes: Routes = [
   {
     path: 'prestador/solicitacao/:id',
     component: PrestadorEnviarPropostaComponent,
+    canActivate: [prestadorGuard]
+  },
+  {
+    path: 'prestador/solicitacao/:id/avaliacao',
+    component: PrestadorAvaliacaoComponent,
     canActivate: [prestadorGuard]
   },
   {

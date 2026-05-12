@@ -16,6 +16,11 @@ export enum StatusProposta {
   RECUSADA = 'RECUSADA'
 }
 
+export enum TipoAvaliacao {
+  CLIENTE_AVALIA_PRESTADOR = 'CLIENTE_AVALIA_PRESTADOR',
+  PRESTADOR_AVALIA_CLIENTE = 'PRESTADOR_AVALIA_CLIENTE'
+}
+
 export interface User {
   id: number;
   nome: string;
@@ -34,6 +39,8 @@ export interface User {
   complemento?: string;
   dataCadastro: Date;
   ativo: boolean;
+  avaliacaoMedia?: number;
+  totalAvaliacoes?: number;
 }
 
 export interface AuthResponse {
@@ -139,9 +146,12 @@ export interface Proposta {
 export interface Avaliacao {
   id?: number;
   solicitacaoId: number;
-  prestadorId: number;
+  prestadorId?: number;
   clienteId?: number;
   clienteNome?: string;
+  tipo?: TipoAvaliacao;
+  nomeAvaliador?: string;
+  nomeAvaliado?: string;
   nota: number;
   comentario?: string;
 }
