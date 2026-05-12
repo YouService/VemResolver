@@ -172,6 +172,21 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação 3)
+
+**Fixes de UI entregues**
+- Correção de overflow horizontal no painel do prestador de serviços:
+  - `min-w-0` em todos os containers `flex-1` dos cards (Contratos, Propostas, Concluídos, Oportunidades)
+  - `flex-shrink-0` em valores monetários e datas; `break-words` em descrições; `truncate` em nomes e endereços
+  - `overflow-hidden` nos cards de contratos e oportunidades como barreira de segurança
+- Botão "Ver Propostas" no painel do cliente ocultado para serviços `CONCLUIDA` e `CANCELADA` (idem no modal de detalhes)
+- Correção de overflow horizontal nos cards do painel do cliente (`min-w-0`, `break-words`, `flex-wrap`)
+- Bug #4 corrigido: formulário de perfil do prestador agora pré-preenche os campos corretamente
+  - `buscarPorUsuario(userId)` → `buscarMeuPerfil()` (`GET /api/prestadores/me` via JWT)
+- Aba "Minhas Avaliações" do perfil do cliente simplificada: exibe apenas nota média e estrelas agregadas (remove lista de avaliações individuais; reutiliza `User.avaliacaoMedia` e `totalAvaliacoes` já carregados por `buscarPerfil()`)
+
+---
+
 ### 2026-05-12 — Felipe Lima (continuação 2)
 
 **Fix entregue**
@@ -221,9 +236,8 @@ Branch: `feature/avaliacao-bidirecional`.
 DTOs enriquecidos com flags `foiAvaliadoPeloCliente`/`foiAvaliadoPeloPrestador`; dashboards exibem "Avaliado ✓" e médias de estrelas no cabeçalho.
 Branch: `fix/avaliacao-regras-visibilidade`.
 
-### 4. Bug: formulário de edição do perfil do prestador nunca pré-preenche
-`prestador-perfil.component.ts:62` ainda chama `buscarPorUsuario(userId)` → endpoint inexistente.
-Corrigir para `buscarMeuPerfil()` (mesmo fix já feito no dashboard).
+### 4. ~~Bug: formulário de edição do perfil do prestador nunca pré-preenche~~ ✅ *Corrigido em 2026-05-12*
+`buscarPorUsuario(userId)` substituído por `buscarMeuPerfil()` → `GET /api/prestadores/me`.
 
 ### 5. Bug: cadastro de novos usuários retorna 400
 `RegisterDTO` no backend tem `@NotBlank` em CPF, RG e data de expedição, mas o frontend não envia esses campos.
