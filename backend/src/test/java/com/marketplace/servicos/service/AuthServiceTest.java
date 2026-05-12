@@ -71,11 +71,13 @@ class AuthServiceTest {
         RegisterDTO dto = new RegisterDTO();
         dto.setNome("Fulano");
         dto.setEmail("fulano@example.com");
+        dto.setCpf("111.111.111-11");
         String rawPassword = "Password123";
         String encoded = Base64.getEncoder().encodeToString(rawPassword.getBytes());
         dto.setSenha(encoded);
         dto.setTipo(TipoUsuario.CLIENTE);
 
+        when(userRepository.existsByCpfAndAtivoTrue(any())).thenReturn(false);
         when(userRepository.existsByEmailAndAtivoTrue(dto.getEmail())).thenReturn(false);
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(any())).thenReturn("encodedPwd");
@@ -97,8 +99,10 @@ class AuthServiceTest {
     void register_ExistingActiveEmail_Throws() {
         RegisterDTO dto = new RegisterDTO();
         dto.setEmail("active@example.com");
+        dto.setCpf("222.222.222-22");
         dto.setSenha(Base64.getEncoder().encodeToString("Xx123456".getBytes()));
 
+        when(userRepository.existsByCpfAndAtivoTrue(any())).thenReturn(false);
         when(userRepository.existsByEmailAndAtivoTrue(dto.getEmail())).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> authService.register(dto));

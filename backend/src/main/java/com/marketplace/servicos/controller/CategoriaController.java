@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -36,23 +37,26 @@ public class CategoriaController {
     }
     
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "bearer-jwt")
-    @Operation(summary = "Criar nova categoria")
+    @Operation(summary = "Criar nova categoria (apenas ADMIN)")
     public ResponseEntity<CategoriaDTO> criar(@Valid @RequestBody CategoriaDTO dto) {
         CategoriaDTO criada = categoriaService.criar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(criada);
     }
-    
+
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "bearer-jwt")
-    @Operation(summary = "Atualizar categoria")
+    @Operation(summary = "Atualizar categoria (apenas ADMIN)")
     public ResponseEntity<CategoriaDTO> atualizar(@PathVariable Long id, @Valid @RequestBody CategoriaDTO dto) {
         return ResponseEntity.ok(categoriaService.atualizar(id, dto));
     }
-    
+
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "bearer-jwt")
-    @Operation(summary = "Deletar categoria")
+    @Operation(summary = "Deletar categoria (apenas ADMIN)")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         categoriaService.deletar(id);
         return ResponseEntity.noContent().build();

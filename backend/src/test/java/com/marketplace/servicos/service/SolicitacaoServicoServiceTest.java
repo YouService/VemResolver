@@ -4,6 +4,7 @@ import com.marketplace.servicos.dto.SolicitacaoServicoDTO;
 import com.marketplace.servicos.exception.BusinessException;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.*;
+import com.marketplace.servicos.repository.AvaliacaoRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class SolicitacaoServicoServiceTest {
 
     @Mock
     private com.marketplace.servicos.repository.CategoriaRepository categoriaRepository;
+
+    @Mock
+    private AvaliacaoRepository avaliacaoRepository;
 
     @InjectMocks
     private SolicitacaoServicoService solicitacaoService;
