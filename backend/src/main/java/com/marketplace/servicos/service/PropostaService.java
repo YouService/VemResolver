@@ -106,6 +106,13 @@ public class PropostaService {
         dto.setMensagem(proposta.getMensagem());
         dto.setStatus(proposta.getStatus());
         dto.setDataEnvio(proposta.getDataEnvio());
+        dto.setSolicitacaoDescricao(proposta.getSolicitacao().getDescricao());
+        dto.setSolicitacaoStatus(proposta.getSolicitacao().getStatus());
+        dto.setClienteNome(proposta.getSolicitacao().getCliente().getNome());
+        dto.setClienteId(proposta.getSolicitacao().getCliente().getId());
+        dto.setCidade(proposta.getSolicitacao().getCidade());
+        dto.setEstado(proposta.getSolicitacao().getEstado());
+        dto.setCategoriaNome(proposta.getSolicitacao().getCategoria().getNome());
         return dto;
     }
 }
