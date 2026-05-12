@@ -172,6 +172,19 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação 2)
+
+**Fix entregue**
+- `fix/avaliacao-regras-visibilidade` — Correção da regra de unicidade de avaliação por serviço e visibilidade de estrelas nos dashboards:
+  - Backend: `SolicitacaoServicoDTO` enriquecido com `foiAvaliadoPeloCliente` e `foiAvaliadoPeloPrestador` (populados por `existsBySolicitacaoIdAndTipo`)
+  - Backend: `PropostaDTO` enriquecido com `foiAvaliadoPeloPrestador`
+  - Frontend: Dashboards do cliente e do prestador exibem badge "Avaliado ✓" quando o serviço já foi avaliado, evitando confusão com a regra de unicidade por `solicitacaoId`
+  - Frontend: Cabeçalho do dashboard do prestador mostra a média de estrelas recebidas (`prestador.avaliacaoMedia`)
+  - Frontend: Cabeçalho do dashboard do cliente mostra a média de estrelas recebidas via `buscarPerfil()` → `User.avaliacaoMedia`
+  - Frontend: Correção de typo `dataExpedicao` → `dataExpedicaoRg` em `user-profile.component.ts`
+
+---
+
 ### 2026-05-12 — Felipe Lima (continuação)
 
 **Funcionalidade entregue**
@@ -203,6 +216,10 @@ Branch: `feature/tela-avaliacao`.
 ### 3. ~~Avaliação bidirecional~~ ✅ *Entregue em 2026-05-12*
 Prestador avalia cliente, nota média exibida no perfil de ambos. `POST /api/avaliacoes/para-cliente`, `GET /api/avaliacoes/cliente/{id}`.
 Branch: `feature/avaliacao-bidirecional`.
+
+### 3.1. ~~Fix: unicidade de avaliação por serviço e visibilidade de estrelas~~ ✅ *Entregue em 2026-05-12*
+DTOs enriquecidos com flags `foiAvaliadoPeloCliente`/`foiAvaliadoPeloPrestador`; dashboards exibem "Avaliado ✓" e médias de estrelas no cabeçalho.
+Branch: `fix/avaliacao-regras-visibilidade`.
 
 ### 4. Bug: formulário de edição do perfil do prestador nunca pré-preenche
 `prestador-perfil.component.ts:62` ainda chama `buscarPorUsuario(userId)` → endpoint inexistente.
