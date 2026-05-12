@@ -382,13 +382,13 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 
 | # | Problema | Arquivo | Status |
 |---|----------|---------|--------|
-| A1 | CORS hardcoded em `http://localhost:4200` | `SecurityConfig.java` + `PerfilController.java` | ❌ **Pendente** |
+| A1 | CORS hardcoded em `http://localhost:4200` | `SecurityConfig.java` + `PerfilController.java` | ✅ **Resolvido** em 2026-05-12 — lê `${app.frontend.url}` |
 | A2 | URL do backend hardcoded `http://localhost:8080` em todos os services Angular | Todos `services/*.ts` | ✅ **Resolvido** em 2026-05-12 — centralizado em `environment.apiUrl` |
 | A3 | Swagger exposto publicamente sem restrição | `SecurityConfig.java` | ❌ **Pendente** |
 | A4 | Endpoints de categoria sem restrição de role ADMIN | `CategoriaController.java` | ❌ **Pendente** |
 | A5 | `POST /api/prestadores` sem verificação de tipo — CLIENTE pode criar perfil de PRESTADOR | `PrestadorController.java` | ❌ **Pendente** |
 | A6 | `PUT /api/users/me` aceita entidade `User` no body — permite alterar `tipo`, `login` etc. | `UserController.java` | ❌ **Pendente** — `PUT /api/perfil` mais seguro existe, mas `/api/users/me` ainda está ativo |
-| A7 | Sem interceptor de resposta 401 no Angular | — | ❌ **Pendente** |
+| A7 | Sem interceptor de resposta 401 no Angular | — | ✅ **Resolvido** em 2026-05-12 — redireciona para /login ao receber 401 |
 | A8 | Formulário de perfil do prestador nunca pré-prenchia os campos | `prestador-perfil.component.ts` | ✅ **Resolvido** em 2026-05-12 |
 
 ### MÉDIO
@@ -457,8 +457,8 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | # | Tarefa | Esforço |
 |---|--------|---------|
 | ~~P~~ | ~~Centralizar URL do backend em `environment.ts` (Bug #6)~~ | ✅ Resolvido |
-| P | CORS via variável de ambiente — remover hardcode (Bug #7) | Pequeno |
-| P | Interceptor Angular para 401 — redirecionar ao login (Bug #8) | Pequeno |
+| ~~P~~ | ~~CORS via variável de ambiente (Bug #7)~~ | ✅ Resolvido |
+| ~~P~~ | ~~Interceptor Angular para 401 (Bug #8)~~ | ✅ Resolvido |
 | P | Ownership checks em `PATCH /propostas/:id/aceitar` e `/recusar` | Pequeno |
 | P | Ownership checks em `PATCH /solicitacoes/:id/status` | Pequeno |
 | P | `DataSeeder` com `@Profile("dev")` — não rodar em produção | Pequeno |
