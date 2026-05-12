@@ -122,35 +122,35 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
             </div>
             <div class="space-y-4">
               @for (proposta of contratosAndamento; track proposta.id) {
-                <div class="border-2 border-yellow-300 bg-yellow-50 rounded-lg p-5">
-                  <div class="flex items-start justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                <div class="border-2 border-yellow-300 bg-yellow-50 rounded-lg p-5 overflow-hidden">
+                  <div class="flex items-start justify-between gap-3 mb-3">
+                    <div class="flex items-center gap-2 flex-wrap min-w-0">
+                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
                         {{ proposta.categoriaNome }}
                       </span>
-                      <span class="bg-yellow-200 text-yellow-900 text-xs font-semibold px-3 py-1 rounded-full">
+                      <span class="bg-yellow-200 text-yellow-900 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
                         Em Andamento
                       </span>
                     </div>
-                    <span class="text-sm font-bold text-green-700">
+                    <span class="text-sm font-bold text-green-700 flex-shrink-0">
                       R$ {{ proposta.valor | number:'1.2-2' }}
                     </span>
                   </div>
 
-                  <p class="text-gray-800 font-medium mb-3">{{ proposta.solicitacaoDescricao }}</p>
+                  <p class="text-gray-800 font-medium mb-3 break-words">{{ proposta.solicitacaoDescricao }}</p>
 
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-600">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
                       <span>👤</span>
-                      <span>{{ proposta.clienteNome }}</span>
+                      <span class="truncate">{{ proposta.clienteNome }}</span>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
                       <span>📍</span>
-                      <span>{{ proposta.cidade }}, {{ proposta.estado }}</span>
+                      <span class="truncate">{{ proposta.cidade }}, {{ proposta.estado }}</span>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
                       <span>📅</span>
-                      <span>Aceito {{ formatarData(proposta.dataEnvio) }}</span>
+                      <span class="truncate">Aceito {{ formatarData(proposta.dataEnvio) }}</span>
                     </div>
                   </div>
 
@@ -176,17 +176,17 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
             </h2>
             <div class="space-y-3">
               @for (proposta of propostasAguardando; track proposta.id) {
-                <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-                  <div class="flex-1">
+                <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between gap-3">
+                  <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 mb-1">
-                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
                         {{ proposta.categoriaNome }}
                       </span>
                     </div>
-                    <p class="text-gray-800 text-sm line-clamp-1">{{ proposta.solicitacaoDescricao }}</p>
-                    <p class="text-gray-500 text-xs mt-1">📍 {{ proposta.cidade }}, {{ proposta.estado }}</p>
+                    <p class="text-gray-800 text-sm line-clamp-1 break-words">{{ proposta.solicitacaoDescricao }}</p>
+                    <p class="text-gray-500 text-xs mt-1 truncate">📍 {{ proposta.cidade }}, {{ proposta.estado }}</p>
                   </div>
-                  <div class="text-right ml-4">
+                  <div class="text-right flex-shrink-0">
                     <p class="font-bold text-green-700">R$ {{ proposta.valor | number:'1.2-2' }}</p>
                     <p class="text-xs text-gray-500">{{ formatarData(proposta.dataEnvio) }}</p>
                     <span class="inline-block mt-1 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
@@ -210,20 +210,20 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
             </h2>
             <div class="space-y-3">
               @for (proposta of servicosConcluidos; track proposta.id) {
-                <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between gap-3">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
                         {{ proposta.categoriaNome }}
                       </span>
-                      <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                      <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
                         Concluído
                       </span>
                     </div>
-                    <p class="text-gray-800 text-sm line-clamp-1">{{ proposta.solicitacaoDescricao }}</p>
-                    <p class="text-gray-500 text-xs mt-1">👤 {{ proposta.clienteNome }}</p>
+                    <p class="text-gray-800 text-sm line-clamp-1 break-words">{{ proposta.solicitacaoDescricao }}</p>
+                    <p class="text-gray-500 text-xs mt-1 truncate">👤 {{ proposta.clienteNome }}</p>
                   </div>
-                  <div class="text-right ml-4 flex flex-col items-end gap-2">
+                  <div class="text-right flex-shrink-0 flex flex-col items-end gap-2">
                     <p class="font-bold text-green-700">R$ {{ proposta.valor | number:'1.2-2' }}</p>
                     @if (proposta.foiAvaliadoPeloPrestador) {
                       <span class="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-lg">
@@ -305,26 +305,26 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
           } @else {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               @for (solicitacao of solicitacoes; track solicitacao.id) {
-                <div class="border rounded-lg p-5 hover:shadow-lg transition">
-                  <div class="flex items-start justify-between mb-3">
-                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                <div class="border rounded-lg p-5 hover:shadow-lg transition overflow-hidden">
+                  <div class="flex items-start justify-between gap-2 mb-3">
+                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full truncate min-w-0">
                       {{ solicitacao.categoriaNome }}
                     </span>
-                    <span class="text-xs text-gray-500">
+                    <span class="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
                       {{ formatarData(solicitacao.dataCriacao) }}
                     </span>
                   </div>
 
-                  <p class="text-gray-800 mb-4 line-clamp-3">{{ solicitacao.descricao }}</p>
+                  <p class="text-gray-800 mb-4 line-clamp-3 break-words">{{ solicitacao.descricao }}</p>
 
                   <div class="space-y-2 mb-4 text-sm text-gray-600">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
                       <span>👤</span>
-                      <span>{{ solicitacao.clienteNome }}</span>
+                      <span class="truncate">{{ solicitacao.clienteNome }}</span>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
                       <span>📍</span>
-                      <span>{{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
+                      <span class="truncate">{{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
                     </div>
                   </div>
 
