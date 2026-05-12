@@ -10,6 +10,7 @@ import { PoliticaPrivacidadeComponent } from './components/politica-privacidade.
 import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
 import { PrestadorEnviarPropostaComponent } from './components/prestador-enviar-proposta.component';
 import { PrestadorPerfilComponent } from './components/prestador-perfil/prestador-perfil.component';
+import { ClienteAvaliacaoComponent } from './components/cliente-avaliacao.component';
 import { ClientePropostasRecebidasComponent } from './components/cliente-propostas-recebidas.component';
 import { RegisterComponent } from './components/register/register.component';
 import { SegurancaComponent } from './components/seguranca.component';
@@ -67,6 +68,11 @@ export const routes: Routes = [
   {
     path: 'cliente/solicitacao/:id/propostas',
     component: ClientePropostasRecebidasComponent,
+    canActivate: [clienteGuard]
+  },
+  {
+    path: 'cliente/solicitacao/:id/avaliacao',
+    component: ClienteAvaliacaoComponent,
     canActivate: [clienteGuard]
   },
   { path: 'notification-demo', component: NotificationDemoComponent },

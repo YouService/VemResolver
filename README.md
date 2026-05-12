@@ -156,12 +156,21 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
 **Bug corrigido**
 - `fix/cors-patch-method` — `PATCH` ausente em `setAllowedMethods` no `SecurityConfig.java` causava 403 no preflight CORS de todas as ações de aceitar/recusar proposta e marcar serviço como concluído
 
-**Funcionalidade entregue**
+**Funcionalidade entregue (2)**
 - `feature/prestador-contratos-andamento` — Painel do prestador agora reflete propostas aceitas:
   - `PropostaDTO` enriquecido com dados da solicitação (descrição, status, cliente, localização, categoria)
   - Seção "Contratos em Andamento" com cards destacados para propostas aceitas pelo cliente
   - Seção "Propostas Aguardando Resposta" para propostas ainda pendentes
   - Stats reais: oportunidades abertas, aguardando resposta, em andamento, concluídos (antes todos hardcoded em 0)
+
+**Funcionalidade entregue (3)**
+- `feature/tela-avaliacao` — Tela de avaliação do prestador em `/cliente/solicitacao/:id/avaliacao`:
+  - Estrelas interativas 1–5 com hover, texto descritivo da nota e validação
+  - Exibe nome do prestador (buscado da proposta aceita) e dados da solicitação
+  - Campo de comentário opcional com contador de caracteres (máx. 500)
+  - Estados: carregando, formulário, enviando, sucesso, erro (incluindo "já avaliado")
+  - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
+  - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
 ---
 
@@ -174,11 +183,9 @@ Endpoint dedicado `PATCH /api/solicitacoes/:id/concluir` com validação de prop
 Botão "Marcar como Concluído" no dashboard do cliente para solicitações `EM_ANDAMENTO`, com modal de confirmação e toast de sucesso.
 Branch: `feature/marcar-servico-concluido`.
 
-### 2. Tela de avaliação do prestador *(alta prioridade — próximo item)*
-Após a solicitação ir para `CONCLUIDA`, o cliente deve poder avaliar (nota 1–5 + comentário).
-A API está completa: `POST /api/avaliacoes`.
-Nenhum componente frontend existe. Criar em `/cliente/avaliar/:solicitacaoId`.
-Redirecionar automaticamente do toast de conclusão para essa tela.
+### 2. ~~Tela de avaliação do prestador~~ ✅ *Entregue em 2026-05-12*
+`ClienteAvaliacaoComponent` em `/cliente/solicitacao/:id/avaliacao` com estrelas interativas, comentário opcional e estados de loading/sucesso/erro. Botão "Avaliar" nos cards concluídos e link "Avaliar Agora" no toast de conclusão.
+Branch: `feature/tela-avaliacao`.
 
 ### 3. Bug: formulário de edição do perfil do prestador nunca pré-preenche
 `prestador-perfil.component.ts:237` ainda chama `buscarPorUsuario(userId)` → endpoint inexistente.
