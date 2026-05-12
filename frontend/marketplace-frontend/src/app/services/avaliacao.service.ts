@@ -15,10 +15,17 @@ export class AvaliacaoService {
     return this.http.post<Avaliacao>(this.apiUrl, avaliacao);
   }
 
+  criarParaCliente(avaliacao: Avaliacao): Observable<Avaliacao> {
+    return this.http.post<Avaliacao>(`${this.apiUrl}/para-cliente`, avaliacao);
+  }
+
   listarPorPrestador(prestadorId: number, page: number = 0, size: number = 10): Observable<PageResponse<Avaliacao>> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
+    const params = new HttpParams().set('page', page).set('size', size);
     return this.http.get<PageResponse<Avaliacao>>(`${this.apiUrl}/prestador/${prestadorId}`, { params });
+  }
+
+  listarPorCliente(clienteId: number, page: number = 0, size: number = 10): Observable<PageResponse<Avaliacao>> {
+    const params = new HttpParams().set('page', page).set('size', size);
+    return this.http.get<PageResponse<Avaliacao>>(`${this.apiUrl}/cliente/${clienteId}`, { params });
   }
 }

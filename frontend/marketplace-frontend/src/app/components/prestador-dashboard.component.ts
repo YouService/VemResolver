@@ -186,6 +186,44 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
           </div>
         }
 
+        <!-- Serviços Concluídos -->
+        @if (servicosConcluidos.length > 0) {
+          <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              Serviços Concluídos
+              <span class="bg-purple-100 text-purple-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">
+                {{ servicosConcluidos.length }}
+              </span>
+            </h2>
+            <div class="space-y-3">
+              @for (proposta of servicosConcluidos; track proposta.id) {
+                <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                        {{ proposta.categoriaNome }}
+                      </span>
+                      <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                        Concluído
+                      </span>
+                    </div>
+                    <p class="text-gray-800 text-sm line-clamp-1">{{ proposta.solicitacaoDescricao }}</p>
+                    <p class="text-gray-500 text-xs mt-1">👤 {{ proposta.clienteNome }}</p>
+                  </div>
+                  <div class="text-right ml-4 flex flex-col items-end gap-2">
+                    <p class="font-bold text-green-700">R$ {{ proposta.valor | number:'1.2-2' }}</p>
+                    <a
+                      [routerLink]="['/prestador/solicitacao', proposta.solicitacaoId, 'avaliacao']"
+                      class="px-3 py-1.5 bg-yellow-500 text-white text-xs font-semibold rounded-lg hover:bg-yellow-600 transition">
+                      Avaliar Cliente ★
+                    </a>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
         <!-- Perfil Info -->
         @if (prestador) {
           <div class="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -199,6 +237,20 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
                 <p class="text-gray-600 text-sm">Categorias de Serviço</p>
                 <p class="font-semibold">{{ prestador.categoriasIds?.length || 0 }} categoria(s)</p>
               </div>
+              @if ((prestador.totalAvaliacoes || 0) > 0) {
+                <div>
+                  <p class="text-gray-600 text-sm">Sua Avaliação</p>
+                  <div class="flex items-center gap-2">
+                    <span class="text-yellow-500 text-lg">
+                      @for (star of [1,2,3,4,5]; track star) {
+                        {{ star <= (prestador.avaliacaoMedia || 0) ? '★' : '☆' }}
+                      }
+                    </span>
+                    <span class="font-semibold">{{ prestador.avaliacaoMedia | number:'1.1-1' }}</span>
+                    <span class="text-gray-500 text-sm">({{ prestador.totalAvaliacoes }} avaliação{{ (prestador.totalAvaliacoes || 0) !== 1 ? 'ões' : '' }})</span>
+                  </div>
+                </div>
+              }
             </div>
             @if (prestador.descricaoPerfil) {
               <div class="mt-4">

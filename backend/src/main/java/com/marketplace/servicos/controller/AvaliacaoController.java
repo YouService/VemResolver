@@ -16,31 +16,47 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/avaliacoes")
-@Tag(name = "Avaliações", description = "Gerenciamento de avaliações de prestadores")
+@Tag(name = "Avaliações", description = "Gerenciamento de avaliações bidirecionais")
 @CrossOrigin(origins = "http://localhost:4200")
 public class AvaliacaoController {
-    
+
     private final AvaliacaoService avaliacaoService;
-    
+
     public AvaliacaoController(AvaliacaoService avaliacaoService) {
         this.avaliacaoService = avaliacaoService;
     }
-    
+
     @PostMapping
     @SecurityRequirement(name = "bearer-jwt")
-    @Operation(summary = "Criar avaliação")
+    @Operation(summary = "Cliente avalia prestador")
     public ResponseEntity<AvaliacaoDTO> criar(
             @Valid @RequestBody AvaliacaoDTO dto,
             @AuthenticationPrincipal User user) {
-        AvaliacaoDTO criada = avaliacaoService.criar(dto, user.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(criada);
+        return ResponseEntity.status(HttpStatus.CREATED).body(avaliacaoService.criar(dto, user.getId()));
     }
-    
+
+    @PostMapping("/para-cliente")
+    @SecurityRequirement(name = "bearer-jwt")
+    @Operation(summary = "Prestador avalia cliente")
+    public ResponseEntity<AvaliacaoDTO> criarParaCliente(
+            @Valid @RequestBody AvaliacaoDTO dto,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(avaliacaoService.criarPorPrestador(dto, user.getId()));
+    }
+
     @GetMapping("/prestador/{prestadorId}")
-    @Operation(summary = "Listar avaliações de um prestador")
+    @Operation(summary = "Listar avaliações recebidas por um prestador")
     public ResponseEntity<Page<AvaliacaoDTO>> listarPorPrestador(
             @PathVariable Long prestadorId,
             Pageable pageable) {
         return ResponseEntity.ok(avaliacaoService.listarPorPrestador(prestadorId, pageable));
+    }
+
+    @GetMapping("/cliente/{clienteId}")
+    @Operation(summary = "Listar avaliações recebidas por um cliente")
+    public ResponseEntity<Page<AvaliacaoDTO>> listarPorCliente(
+            @PathVariable Long clienteId,
+            Pageable pageable) {
+        return ResponseEntity.ok(avaliacaoService.listarPorCliente(clienteId, pageable));
     }
 }
