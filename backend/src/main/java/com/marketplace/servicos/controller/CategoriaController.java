@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/categorias")
 @Tag(name = "Categorias", description = "Gerenciamento de categorias de serviços")
-@CrossOrigin(origins = "http://localhost:4200")
 public class CategoriaController {
     
     private final CategoriaService categoriaService;

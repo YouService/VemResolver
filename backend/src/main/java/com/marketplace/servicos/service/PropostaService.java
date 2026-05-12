@@ -68,35 +68,43 @@ public class PropostaService {
     }
     
     @Transactional
-    public PropostaDTO aceitarProposta(Long propostaId) {
+    public PropostaDTO aceitarProposta(Long propostaId, Long clienteId) {
         Proposta proposta = propostaRepository.findById(propostaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Proposta não encontrada"));
-        
+
+        if (!proposta.getSolicitacao().getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Apenas o cliente dono da solicitação pode aceitar propostas");
+        }
+
         if (proposta.getStatus() != StatusProposta.ENVIADA) {
             throw new BusinessException("Esta proposta já foi processada");
         }
-        
+
         proposta.setStatus(StatusProposta.ACEITA);
         proposta.getSolicitacao().setStatus(StatusSolicitacao.EM_ANDAMENTO);
-        
+
         proposta = propostaRepository.save(proposta);
         solicitacaoRepository.save(proposta.getSolicitacao());
-        
+
         return toDTO(proposta);
     }
-    
+
     @Transactional
-    public PropostaDTO recusarProposta(Long propostaId) {
+    public PropostaDTO recusarProposta(Long propostaId, Long clienteId) {
         Proposta proposta = propostaRepository.findById(propostaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Proposta não encontrada"));
-        
+
+        if (!proposta.getSolicitacao().getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Apenas o cliente dono da solicitação pode recusar propostas");
+        }
+
         if (proposta.getStatus() != StatusProposta.ENVIADA) {
             throw new BusinessException("Esta proposta já foi processada");
         }
-        
+
         proposta.setStatus(StatusProposta.RECUSADA);
         proposta = propostaRepository.save(proposta);
-        
+
         return toDTO(proposta);
     }
     

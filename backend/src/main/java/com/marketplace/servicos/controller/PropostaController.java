@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/propostas")
 @SecurityRequirement(name = "bearer-jwt")
 @Tag(name = "Propostas", description = "Gerenciamento de propostas de serviço")
-@CrossOrigin(origins = "http://localhost:4200")
 public class PropostaController {
     
     private final PropostaService propostaService;
@@ -63,13 +62,17 @@ public class PropostaController {
     
     @PatchMapping("/{id}/aceitar")
     @Operation(summary = "Aceitar proposta")
-    public ResponseEntity<PropostaDTO> aceitar(@PathVariable Long id) {
-        return ResponseEntity.ok(propostaService.aceitarProposta(id));
+    public ResponseEntity<PropostaDTO> aceitar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(propostaService.aceitarProposta(id, user.getId()));
     }
-    
+
     @PatchMapping("/{id}/recusar")
     @Operation(summary = "Recusar proposta")
-    public ResponseEntity<PropostaDTO> recusar(@PathVariable Long id) {
-        return ResponseEntity.ok(propostaService.recusarProposta(id));
+    public ResponseEntity<PropostaDTO> recusar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(propostaService.recusarProposta(id, user.getId()));
     }
 }

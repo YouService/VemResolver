@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/prestadores")
 @Tag(name = "Prestadores", description = "Gerenciamento de prestadores de serviços")
-@CrossOrigin(origins = "http://localhost:4200")
 public class PrestadorController {
     
     private final PrestadorService prestadorService;
