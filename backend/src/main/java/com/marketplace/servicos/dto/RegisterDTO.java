@@ -4,8 +4,6 @@ import com.marketplace.servicos.model.TipoUsuario;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
@@ -19,9 +17,6 @@ public class RegisterDTO {
     private String email;
     
     @NotBlank(message = "Senha é obrigatória")
-    @Size(min = 8, message = "A senha deve ter no mínimo 8 caracteres")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$", 
-             message = "A senha deve conter pelo menos uma letra maiúscula, uma minúscula e um número")
     @JsonProperty(access = Access.WRITE_ONLY)
     private String senha;
     
@@ -52,7 +47,7 @@ public class RegisterDTO {
 
     public RegisterDTO(@NotBlank(message = "Nome é obrigatório") String nome,
             @NotBlank(message = "Email é obrigatório") @Email(message = "Email inválido") String email,
-            @NotBlank(message = "Senha é obrigatória") @Size(min = 8, message = "A senha deve ter no mínimo 8 caracteres") @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$", message = "A senha deve conter pelo menos uma letra maiúscula, uma minúscula e um número") String senha,
+            @NotBlank(message = "Senha é obrigatória") String senha,
             @NotNull(message = "Tipo de usuário é obrigatório") TipoUsuario tipo, String telefone, String cpf,
             String rg, String orgaoExpedidor, String dataExpedicaoRg, String cep, String endereco, String cidade,
             String estado, String numero, String complemento) {
