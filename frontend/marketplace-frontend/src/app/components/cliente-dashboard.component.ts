@@ -15,7 +15,7 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
     <div class="min-h-screen bg-gray-50">
       <!-- Header -->
       <div class="bg-white shadow-sm border-b">
-        <div class="container mx-auto px-4 py-6">
+        <div class="container max-w-6xl mx-auto px-4 py-6">
           <div class="flex items-center justify-between">
             <div>
               <h1 class="text-3xl font-bold text-gray-900">Painel do Cliente</h1>
@@ -50,7 +50,7 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
         </div>
       </div>
 
-      <div class="container mx-auto px-4 py-8">
+      <div class="container max-w-6xl mx-auto px-4 py-8">
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div class="bg-white rounded-lg shadow-md p-6">

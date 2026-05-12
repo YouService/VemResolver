@@ -13,7 +13,7 @@ import { SolicitacaoServico, Proposta, StatusProposta } from '../models/models';
     <div class="min-h-screen bg-gray-50">
       <!-- Header -->
       <div class="bg-white shadow-sm border-b">
-        <div class="container mx-auto px-4 py-6">
+        <div class="container max-w-6xl mx-auto px-4 py-6">
           <div class="flex items-center gap-4">
             <button
               (click)="voltar()"

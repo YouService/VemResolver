@@ -15,7 +15,7 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
     <div class="min-h-screen bg-gray-50">
       <!-- Header -->
       <div class="bg-white shadow-sm border-b">
-        <div class="container mx-auto px-4 py-6">
+        <div class="container max-w-6xl mx-auto px-4 py-6">
           <div class="flex items-center justify-between">
             <div>
               <h1 class="text-3xl font-bold text-gray-900">Painel do Prestador</h1>
@@ -43,7 +43,7 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
         </div>
       </div>
 
-      <div class="container mx-auto px-4 py-8">
+      <div class="container max-w-6xl mx-auto px-4 py-8">
 
         <!-- Alert perfil incompleto -->
         @if (!prestador) {
