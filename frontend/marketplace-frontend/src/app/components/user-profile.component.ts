@@ -82,8 +82,9 @@ import { UserService } from '../services/user.service';
                 Data de Expedição (não pode ser alterada)
               </label>
               <input
-                type="date"
+                type="text"
                 formControlName="dataExpedicao"
+                placeholder="DD/MM/AAAA"
                 class="w-full px-4 py-3 border rounded-lg bg-gray-100"
                 readonly>
             </div>
