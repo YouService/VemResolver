@@ -40,4 +40,5 @@ public class PropostaDTO {
     private String cidade;
     private String estado;
     private String categoriaNome;
+    private Boolean foiAvaliadoPeloPrestador;
 }

@@ -17,9 +17,22 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
       <div class="bg-white shadow-sm border-b">
         <div class="container mx-auto px-4 py-6">
           <div class="flex items-center justify-between">
-            <div class="flex items-center justify-between">
+            <div>
               <h1 class="text-3xl font-bold text-gray-900">Painel do Cliente</h1>
               <p class="text-gray-600 mt-1">Bem-vindo, {{ userName }}</p>
+              @if ((totalAvaliacoesRecebidas || 0) > 0) {
+                <div class="flex items-center gap-2 mt-2">
+                  <span class="text-yellow-500 text-lg">
+                    @for (star of [1,2,3,4,5]; track star) {
+                      {{ star <= (minhaAvaliacaoMedia || 0) ? '★' : '☆' }}
+                    }
+                  </span>
+                  <span class="font-semibold text-gray-800">{{ minhaAvaliacaoMedia | number:'1.1-1' }}</span>
+                  <span class="text-gray-500 text-sm">({{ totalAvaliacoesRecebidas }} avaliação{{ totalAvaliacoesRecebidas !== 1 ? 'ões' : '' }} de prestadores)</span>
+                </div>
+              } @else {
+                <p class="text-gray-400 text-xs mt-1">Sem avaliações recebidas ainda</p>
+              }
             </div>
             <div class="flex gap-3">
               <button
@@ -159,11 +172,17 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                         </button>
                       }
                       @if (solicitacao.status === 'CONCLUIDA') {
-                        <a
-                          [routerLink]="['/cliente/solicitacao', solicitacao.id, 'avaliacao']"
-                          class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition font-medium text-sm">
-                          Avaliar
-                        </a>
+                        @if (solicitacao.foiAvaliadoPeloCliente) {
+                          <span class="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium text-sm">
+                            Avaliado ✓
+                          </span>
+                        } @else {
+                          <a
+                            [routerLink]="['/cliente/solicitacao', solicitacao.id, 'avaliacao']"
+                            class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition font-medium text-sm">
+                            Avaliar ★
+                          </a>
+                        }
                       }
                       <button
                         (click)="verDetalhes(solicitacao.id!)"
@@ -332,6 +351,8 @@ export class ClienteDashboardComponent implements OnInit {
   solicitacoesFiltradas: SolicitacaoServico[] = [];
   userName: string = '';
   loading = false;
+  minhaAvaliacaoMedia = 0;
+  totalAvaliacoesRecebidas = 0;
   filtroStatus: string = '';
   solicitacaoSelecionada: SolicitacaoServico | null = null;
   mostrarModalExclusao = false;
@@ -352,6 +373,17 @@ export class ClienteDashboardComponent implements OnInit {
   ngOnInit(): void {
     this.userName = this.authService.getCurrentUserName() || 'Cliente';
     this.carregarSolicitacoes();
+    this.carregarMinhaAvaliacao();
+  }
+
+  carregarMinhaAvaliacao(): void {
+    this.authService.buscarPerfil().subscribe({
+      next: (user) => {
+        this.minhaAvaliacaoMedia = user.avaliacaoMedia || 0;
+        this.totalAvaliacoesRecebidas = user.totalAvaliacoes || 0;
+      },
+      error: () => {}
+    });
   }
 
   carregarSolicitacoes() {

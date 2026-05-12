@@ -230,7 +230,7 @@ export class UserProfileComponent implements OnInit {
           email: user.email,
           cpf: user.cpf,
           rg: user.rg,
-          dataExpedicao: user.dataExpedicao,
+          dataExpedicao: user.dataExpedicaoRg,
           telefone: user.telefone
         });
       },

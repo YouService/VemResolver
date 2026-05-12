@@ -23,11 +23,27 @@ import { SolicitacaoServico, Proposta, StatusProposta } from '../models/models';
           </div>
         }
 
-        <!-- Erro: solicitação não concluída ou já avaliada -->
+        <!-- Erro: solicitação não concluída ou não encontrada -->
         @if (!loading && erroCarregamento) {
           <div class="bg-white rounded-lg shadow-md p-8 text-center">
             <span class="text-6xl">⚠️</span>
             <h2 class="text-xl font-bold text-gray-900 mt-4">{{ erroCarregamento }}</h2>
+            <button
+              routerLink="/cliente/dashboard"
+              class="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+              Voltar ao Painel
+            </button>
+          </div>
+        }
+
+        <!-- Já avaliado -->
+        @if (!loading && jaAvaliado) {
+          <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <span class="text-6xl">✅</span>
+            <h2 class="text-2xl font-bold text-gray-900 mt-4">Serviço já avaliado</h2>
+            <p class="text-gray-600 mt-2">
+              Você já enviou sua avaliação para este serviço. Cada serviço pode ser avaliado apenas uma vez.
+            </p>
             <button
               routerLink="/cliente/dashboard"
               class="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
@@ -58,7 +74,7 @@ import { SolicitacaoServico, Proposta, StatusProposta } from '../models/models';
         }
 
         <!-- Formulário -->
-        @if (!loading && !enviado && !erroCarregamento && solicitacao) {
+        @if (!loading && !enviado && !erroCarregamento && !jaAvaliado && solicitacao) {
           <div class="bg-white rounded-lg shadow-md overflow-hidden">
 
             <!-- Header -->
@@ -182,6 +198,7 @@ export class ClienteAvaliacaoComponent implements OnInit {
   loading = true;
   enviando = false;
   enviado = false;
+  jaAvaliado = false;
   notaEnviada = 0;
   tentouEnviar = false;
   erroCarregamento = '';
@@ -215,6 +232,11 @@ export class ClienteAvaliacaoComponent implements OnInit {
       next: (sol) => {
         if (sol.status !== 'CONCLUIDA') {
           this.erroCarregamento = 'Este serviço ainda não foi concluído e não pode ser avaliado.';
+          this.loading = false;
+          return;
+        }
+        if (sol.foiAvaliadoPeloCliente) {
+          this.jaAvaliado = true;
           this.loading = false;
           return;
         }

@@ -33,4 +33,7 @@ public class SolicitacaoServicoDTO {
     
     private StatusSolicitacao status;
     private LocalDateTime dataCriacao;
+
+    private Boolean foiAvaliadoPeloCliente;
+    private Boolean foiAvaliadoPeloPrestador;
 }
