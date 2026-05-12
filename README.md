@@ -172,6 +172,17 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação 10)
+
+**Padronização de rodapés entregue**
+- `fix/footer-padronizacao`:
+  - Rodapé unificado em 4 páginas: **home**, **register**, **segurança** e **seja profissional**
+  - Padrão: logo (`assets/logo.png`) com efeito grayscale/opacity no hover + links para Sobre nós, Termos de uso e Política de Privacidade + copyright
+  - Removido link "Segurança" do rodapé do cadastro (fora do conjunto padrão)
+  - Páginas de destino dos links (`politica-privacidade`, `termos-uso`, `sobre-nos`) mantidas sem alteração (B8 ✅)
+
+---
+
 ### 2026-05-12 — Felipe Lima (continuação 9)
 
 **Fixes de segurança entregues**
