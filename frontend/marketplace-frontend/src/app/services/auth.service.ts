@@ -75,18 +75,18 @@ export class AuthService {
   }
 
   buscarPerfil(): Observable<User> {
-    return this.http.get<User>(`http://localhost:8080/api/perfil`);
+    return this.http.get<User>(`${environment.apiUrl}/perfil`);
   }
 
   atualizarPerfil(data: UpdatePerfilRequest): Observable<User> {
-    return this.http.put<User>(`http://localhost:8080/api/perfil`, data);
+    return this.http.put<User>(`${environment.apiUrl}/perfil`, data);
   }
 
   alterarSenha(data: AlterarSenhaRequest): Observable<void> {
-    return this.http.put<void>(`http://localhost:8080/api/perfil/senha`, data);
+    return this.http.put<void>(`${environment.apiUrl}/perfil/senha`, data);
   }
 
   deletarConta(): Observable<void> {
-    return this.http.delete<void>(`http://localhost:8080/api/auth/conta`);
+    return this.http.delete<void>(`${environment.apiUrl}/auth/conta`);
   }
 }

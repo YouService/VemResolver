@@ -172,6 +172,17 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
   - Botão "Avaliar" (amarelo) nos cards do dashboard para solicitações concluídas
   - Toast de conclusão atualizado com botão "Avaliar Agora ★" e redirect direto
 
+### 2026-05-12 — Felipe Lima (continuação 5)
+
+**Fix entregue**
+- `fix/bug6-environment-urls` — URLs da API centralizadas no `environment.ts`:
+  - Todos os 7 services Angular usavam `http://localhost:8080` hardcoded, tornando deploy em qualquer outro ambiente impossível sem recompilar
+  - `categoria`, `prestador`, `proposta`, `solicitacao`, `avaliacao`, `user` services: `private apiUrl = 'http://localhost:8080/api/...'` → `` `${environment.apiUrl}/...` ``
+  - `auth.service.ts`: 4 métodos com URL inline (`buscarPerfil`, `atualizarPerfil`, `alterarSenha`, `deletarConta`) substituídos por `environment.apiUrl`
+  - `environment.ts` (dev): `apiUrl = 'http://localhost:8080/api'`; `environment.prod.ts` (prod): `apiUrl = '/api'` (proxy reverso)
+
+---
+
 ### 2026-05-12 — Felipe Lima (continuação 4)
 
 **Fixes entregues**
@@ -252,8 +263,8 @@ Branch: `fix/avaliacao-regras-visibilidade`.
 ### 5. ~~Bug: cadastro de novos usuários retorna 400~~ ✅ *Corrigido em 2026-05-12*
 Removidas `@Size` e `@Pattern` de `RegisterDTO.senha` — validavam a string Base64 (`btoa(senha)`), não a senha original. Todas as datas auditadas e padronizadas em DD/MM/AAAA.
 
-### 6. URLs da API hardcoded nos services Angular
-Todos os services usam `http://localhost:8080` diretamente. Centralizar em `src/environments/environment.ts` antes de qualquer deploy em outro ambiente.
+### 6. ~~URLs da API hardcoded nos services Angular~~ ✅ *Corrigido em 2026-05-12*
+Todos os 7 services centralizados em `environment.apiUrl`; `environment.prod.ts` usa `/api` para proxy reverso.
 
 ### 7. CORS hardcoded
 `SecurityConfig.java:63` — CORS fixo em `localhost:4200`. Parametrizar via variável de ambiente antes de qualquer deploy.
