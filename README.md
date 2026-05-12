@@ -153,6 +153,9 @@ Criados automaticamente pelo `DataSeeder` na primeira inicialização:
 **Infraestrutura**
 - `docker-compose.yml` corrigido: adicionadas variáveis `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` e `FRONTEND_URL` que estavam faltando e impediam o rebuild da imagem de subir
 
+**Bug corrigido**
+- `fix/cors-patch-method` — `PATCH` ausente em `setAllowedMethods` no `SecurityConfig.java` causava 403 no preflight CORS de todas as ações de aceitar/recusar proposta e marcar serviço como concluído
+
 ---
 
 ## O que fazer a seguir
