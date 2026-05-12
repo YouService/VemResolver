@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/perfil")
 @Tag(name = "Perfil", description = "Endpoints de gerenciamento de perfil do usuário")
-@CrossOrigin(origins = "http://localhost:4200")
 public class PerfilController {
 
     private final PerfilService perfilService;
