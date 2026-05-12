@@ -24,7 +24,14 @@ export interface User {
   telefone?: string;
   cpf?: string;
   rg?: string;
-  dataExpedicao?: string;
+  orgaoExpedidor?: string;
+  dataExpedicaoRg?: string;
+  cep?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  numero?: string;
+  complemento?: string;
   dataCadastro: Date;
   ativo: boolean;
 }
@@ -47,12 +54,38 @@ export interface RegisterRequest {
   nome: string;
   email: string;
   senha: string;
-  confirmarSenha?: string;
   tipo: TipoUsuario;
   telefone?: string;
   cpf?: string;
   rg?: string;
-  dataExpedicao?: string;
+  orgaoExpedidor?: string;
+  dataExpedicaoRg?: string;
+  cep?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  numero?: string;
+  complemento?: string;
+  dataCadastro: Date;
+}
+
+export interface UpdatePerfilRequest {
+  nome: string;
+  email: string;
+  telefone?: string;
+  cep?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  rg?: string;
+  orgaoExpedidor?: string;
+  dataExpedicaoRg?: string;
+}
+
+export interface AlterarSenhaRequest {
+  senhaAtual: string;
+  novaSenha: string;
+  confirmarSenha: string;
 }
 
 export interface Categoria {

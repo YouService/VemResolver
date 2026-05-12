@@ -27,64 +27,28 @@ Plataforma web que conecta clientes a prestadores de serviços autônomos. O flu
 
 ---
 
-## Pré-requisitos para desenvolvimento local
-
-Você precisa de **uma** das duas opções abaixo:
-
-**Opção A — Docker (recomendada):** apenas Docker Desktop instalado e em execução.
-
-**Opção B — Manual:** Java 21 LTS, Maven 3.9+, Node.js 22 LTS, Angular CLI 19, PostgreSQL 16.
-
----
-
-## Subindo o ambiente com Docker
-
-Esta é a forma mais rápida. Sobe o banco, o backend e o frontend juntos.
-
-**1. Clone o repositório:**
-
-```bash
-git clone https://github.com/YouService/youservice.git
-cd youservice
-```
-
-**2. Suba os containers:**
+## Subindo o ambiente com Docker (recomendado)
 
 ```bash
 docker-compose up
 ```
 
-Na primeira execução, o Docker irá baixar as imagens e compilar o backend. O processo leva entre 3 e 10 minutos dependendo da conexão.
-
-**3. Aguarde os logs de inicialização:**
-
-O backend está pronto quando você ver:
+Aguarde até ver no log:
 
 ```
-marketplace-backend | Started MarketplaceServicosApplication in XX seconds
-```
-
-O frontend está pronto quando você ver:
-
-```
-marketplace-frontend | Application bundle generation complete.
+marketplace-backend  | Started MarketplaceServicosApplication in XX seconds
 marketplace-frontend |   ➜  Local: http://localhost:4200/
 ```
 
-**4. Acesse a aplicação:**
-
 - Frontend: `http://localhost:4200`
-- API Backend: `http://localhost:8080`
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- API / Swagger: `http://localhost:8080/swagger-ui.html`
 
-**Para parar os containers:**
-
+Para parar e preservar os dados:
 ```bash
 docker-compose down
 ```
 
-**Para parar e apagar os dados do banco:**
-
+Para parar e apagar os dados do banco:
 ```bash
 docker-compose down -v
 ```
@@ -95,18 +59,12 @@ docker-compose down -v
 
 ### Backend
 
-**1. Configure o banco PostgreSQL:**
-
-Crie um banco de dados chamado `marketplace_db`:
-
+1. Crie o banco:
 ```sql
 CREATE DATABASE marketplace_db;
 ```
 
-**2. Configure as variáveis de ambiente:**
-
-Crie o arquivo `backend/.env.dev` com o conteúdo abaixo, substituindo os valores conforme seu ambiente:
-
+2. Crie `backend/.env.dev`:
 ```env
 DB_URL=jdbc:postgresql://localhost:5432/marketplace_db
 DB_USERNAME=postgres
@@ -115,80 +73,101 @@ JWT_SECRET=bWFya2V0cGxhY2UtZGV2LXNlY3JldC1rZXktbWluaW11bS0yNTZiaXRzLWxlbmd0aC1va
 JWT_EXPIRATION=86400000
 ```
 
-> O `JWT_SECRET` deve ser uma string codificada em Base64 com no mínimo 256 bits. O valor acima é adequado apenas para desenvolvimento local.
-
-**3. Execute o backend:**
-
+3. Execute:
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-O servidor sobe na porta `8080`.
-
 ### Frontend
-
-**1. Instale as dependências:**
 
 ```bash
 cd frontend/marketplace-frontend
 npm install
-```
-
-**2. Configure a URL da API:**
-
-Edite `src/environments/environment.ts`:
-
-```typescript
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8080'
-};
-```
-
-**3. Execute o servidor de desenvolvimento:**
-
-```bash
 npm start
 ```
-
-O frontend sobe na porta `4200` com hot-reload ativo.
 
 ---
 
 ## Usuários de teste
 
-O `DataSeeder` cria automaticamente dois usuários na primeira inicialização:
+Criados automaticamente pelo `DataSeeder` na primeira inicialização:
 
 | Papel | Email | Senha |
 |-------|-------|-------|
 | Cliente | `joao@cliente.com` | `123456` |
 | Prestador | `maria@prestador.com` | `123456` |
 
-> Esses usuários existem apenas para fins de desenvolvimento. Em produção, o `DataSeeder` deve ser desabilitado via Spring Profile.
+---
+
+## Documentação técnica
+
+| Documento | Descrição |
+|-----------|-----------|
+| [`docs/DAS.md`](docs/DAS.md) | Arquitetura de Software — camadas, pacotes, modelo de dados |
+| [`docs/REGRAS-DE-NEGOCIO.md`](docs/REGRAS-DE-NEGOCIO.md) | Fluxo completo do marketplace, estados, autorizações |
+| [`docs/API.md`](docs/API.md) | Contratos OpenAPI dos endpoints principais |
+| [`docs/LEVANTAMENTO.md`](docs/LEVANTAMENTO.md) | Levantamento técnico — estado atual, débitos e plano de ação |
 
 ---
 
-## Variáveis de ambiente
+## Histórico de Desenvolvimento
 
-### Backend (obrigatórias)
+### 2026-05-11 — Felipe Lima
 
-| Variável | Descrição | Exemplo |
-|----------|-----------|---------|
-| `DB_URL` | JDBC URL do PostgreSQL | `jdbc:postgresql://localhost:5432/marketplace_db` |
-| `DB_USERNAME` | Usuário do banco | `postgres` |
-| `DB_PASSWORD` | Senha do banco | `postgres` |
-| `JWT_SECRET` | Secret JWT em Base64 (mín. 256 bits) | ver exemplo acima |
-| `JWT_EXPIRATION` | Tempo de expiração do token em milissegundos | `86400000` (24h) |
+**Infraestrutura / ambiente**
+- Corrigidos os nomes das variáveis de ambiente no `docker-compose.yml` (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`) que estavam errados e impediam o backend de subir
+- Adicionado `--host 0.0.0.0 --poll 1000` ao `ng serve` para o frontend funcionar dentro do Docker no Windows
 
-### Frontend
+**Bug corrigido**
+- `fix/perfil-prestador-banner` — Banner "complete seu perfil" no painel do prestador não desaparecia após salvar o perfil. Causa: `carregarPerfil()` chamava `buscarPorUsuario(userId)` mapeado para `/api/prestadores/usuario/:id`, endpoint que não existe. Corrigido para `buscarMeuPerfil()` → `GET /api/prestadores/me`
 
-As URLs e configurações de ambiente são centralizadas em:
+**Funcionalidades entregues**
+- `feature/envio-proposta-prestador` — Tela completa de envio de proposta para o prestador em `/prestador/solicitacao/:id`:
+  - Exibe todos os detalhes da solicitação (descrição, cliente, local, categoria)
+  - Formulário com valor (R$) e mensagem, com validações
+  - Estado de sucesso após envio e tratamento de erro da API (ex: proposta duplicada)
+  - Botão "Ver Detalhes e Enviar Proposta" no dashboard do prestador agora navega para esta tela
 
-- `src/environments/environment.ts` — desenvolvimento
-- `src/environments/environment.prod.ts` — produção
+- `feature/propostas-recebidas-cliente` — Tela de propostas recebidas para o cliente em `/cliente/solicitacao/:id/propostas`:
+  - Lista todas as propostas: nome do prestador, valor em destaque, mensagem, data, status
+  - Aceitar proposta: confirmação inline antes de executar (informa que a solicitação vai para Em Andamento)
+  - Recusar proposta: executa direto
+  - Ações visíveis apenas para propostas `ENVIADA` com solicitação `ABERTA`
+  - Banner de sucesso pós-aceite
+  - Botão "Ver Propostas" adicionado nos cards e no modal de detalhes do dashboard do cliente
 
-Nunca altere URLs diretamente nos services Angular.
+**Documentação gerada**
+- `docs/DAS.md`, `docs/REGRAS-DE-NEGOCIO.md`, `docs/API.md`, `docs/LEVANTAMENTO.md`
+
+---
+
+## O que fazer a seguir
+
+Ordem sugerida por impacto no fluxo central do marketplace:
+
+### 1. Marcar serviço como CONCLUÍDO *(alta prioridade)*
+O endpoint já existe: `PATCH /api/solicitacoes/:id/status?status=CONCLUIDA`.
+Falta um botão no painel do cliente para solicitações com status `EM_ANDAMENTO`.
+Sugestão: adicionar botão "Marcar como Concluído" na tela `/cliente/solicitacao/:id/propostas` quando a solicitação está em andamento.
+
+### 2. Tela de avaliação do prestador *(alta prioridade)*
+Após a solicitação ir para `CONCLUIDA`, o cliente deve poder avaliar (nota 1–5 + comentário).
+A API está completa: `POST /api/avaliacoes`.
+Nenhum componente frontend existe. Criar em `/cliente/avaliar/:solicitacaoId`.
+
+### 3. Bug: formulário de edição do perfil do prestador nunca pré-preenche
+`prestador-perfil.component.ts:237` ainda chama `buscarPorUsuario(userId)` → endpoint inexistente.
+Corrigir para `buscarMeuPerfil()` (mesmo fix já feito no dashboard).
+**Verificar se o develop já tem isso corrigido antes de trabalhar.**
+
+### 4. Bug: cadastro de novos usuários retorna 400
+`RegisterDTO` no backend tem `@NotBlank` em CPF, RG e data de expedição, mas o frontend não envia esses campos.
+Decidir: remover as anotações `@NotBlank` do backend (mais simples) ou adicionar os campos no formulário de cadastro.
+**Verificar se o develop já tem isso corrigido antes de trabalhar.**
+
+### 5. URLs da API hardcoded nos services Angular
+Todos os services usam `http://localhost:8080` diretamente. Centralizar em `src/environments/environment.ts` antes de qualquer deploy em outro ambiente.
 
 ---
 
@@ -197,60 +176,15 @@ Nunca altere URLs diretamente nos services Angular.
 ```
 vemresolver/
 ├── backend/                    # Spring Boot
-│   ├── src/main/java/
-│   │   └── com/marketplace/servicos/
-│   ├── src/main/resources/
-│   │   └── application.yml
-│   └── Dockerfile
+│   ├── src/main/java/com/marketplace/servicos/
+│   └── src/main/resources/application.yml
 ├── frontend/
 │   └── marketplace-frontend/   # Angular 19
-│       ├── src/app/
-│       └── package.json
+│       └── src/app/
 ├── docs/                       # Documentação técnica
-│   ├── DAS.md                  # Documento de Arquitetura
-│   ├── REGRAS-DE-NEGOCIO.md   # Regras de negócio
-│   ├── API.md                  # Documentação de API
-│   └── LEVANTAMENTO.md         # Levantamento técnico completo
 ├── docker-compose.yml
 └── README.md
 ```
-
----
-
-## Executando os testes
-
-### Backend
-
-```bash
-cd backend
-mvn test
-```
-
-### Frontend
-
-```bash
-cd frontend/marketplace-frontend
-npm test
-```
-
----
-
-## Documentação técnica adicional
-
-Todos os documentos técnicos estão na pasta `docs/`:
-
-- [`docs/DAS.md`](docs/DAS.md) — Documento de Arquitetura de Software
-- [`docs/REGRAS-DE-NEGOCIO.md`](docs/REGRAS-DE-NEGOCIO.md) — Especificação completa das regras de negócio
-- [`docs/API.md`](docs/API.md) — Documentação de API com exemplos e YAML OpenAPI
-- [`docs/LEVANTAMENTO.md`](docs/LEVANTAMENTO.md) — Levantamento técnico completo: estado atual, débitos e plano de ação
-
----
-
-## Contribuindo
-
-- Crie uma branch a partir de `develop` seguindo o padrão: `feature/nome-da-feature`, `fix/nome-do-bug` ou `docs/nome-do-documento`
-- Faça merge de volta para `develop` e, após validação, para `main`
-- Compile e teste localmente antes de abrir pull request
 
 ---
 

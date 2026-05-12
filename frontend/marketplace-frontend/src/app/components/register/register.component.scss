@@ -1,0 +1,23 @@
+// This component uses TailwindCSS only, no additional SCSS styles needed
+// All styles are defined in the HTML template using Tailwind utility classes
+
+// Global snackbar styles
+::ng-deep {
+  .success-snackbar {
+    background-color: #10b981 !important;
+    color: white !important;
+
+    .mat-simple-snackbar {
+      color: white !important;
+    }
+  }
+
+  .error-snackbar {
+    background-color: #ef4444 !important;
+    color: white !important;
+
+    .mat-simple-snackbar {
+      color: white !important;
+    }
+  }
+}

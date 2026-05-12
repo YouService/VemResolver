@@ -42,6 +42,16 @@ public class SolicitacaoServicoController {
     public ResponseEntity<SolicitacaoServicoDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(solicitacaoService.buscarPorId(id));
     }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar solicitação de serviço")
+    public ResponseEntity<SolicitacaoServicoDTO> atualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody SolicitacaoServicoDTO dto,
+            @AuthenticationPrincipal User user) {
+        SolicitacaoServicoDTO atualizada = solicitacaoService.atualizar(id, dto, user.getId());
+        return ResponseEntity.ok(atualizada);
+    }
     
     @GetMapping("/minhas")
     @Operation(summary = "Listar minhas solicitações")
@@ -70,11 +80,11 @@ public class SolicitacaoServicoController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Cancelar solicitação")
+    @Operation(summary = "Excluir solicitação")
     public ResponseEntity<Void> deletar(
             @PathVariable Long id,
             @AuthenticationPrincipal User user) {
-        solicitacaoService.cancelar(id, user.getId());
+        solicitacaoService.deletar(id, user.getId());
         return ResponseEntity.noContent().build();
     }
 }

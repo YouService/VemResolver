@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn clean *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(npx ng *)",
+      "Bash(mvn spring-boot:run)",
+      "Bash(npm run *)",
+      "Bash(mvn test *)",
+      "Bash(git merge *)",
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "Bash(psql -U postgres -d vemresolver_db -c \"SELECT id, login, role FROM usuarios;\")",
+      "PowerShell(& \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -d vemresolver_db -c \"SELECT id, login, role FROM usuarios;\" 2>&1)",
+      "Bash(curl -s -X POST http://localhost:8080/api/clientes -H \"Content-Type: application/json\" -d \"{\\\\\"nome\\\\\":\\\\\"Teste Silva\\\\\",\\\\\"email\\\\\":\\\\\"teste@email.com\\\\\",\\\\\"telefone\\\\\":\\\\\"11999990000\\\\\",\\\\\"cpf\\\\\":\\\\\"12345678901\\\\\",\\\\\"rg\\\\\":\\\\\"1234567\\\\\",\\\\\"dataNascimento\\\\\":\\\\\"1990-01-15\\\\\",\\\\\"dataExpedicaoRg\\\\\":\\\\\"2010-05-20\\\\\",\\\\\"usuario\\\\\":{\\\\\"login\\\\\":\\\\\"teste.silva\\\\\",\\\\\"senha\\\\\":\\\\\"senha123\\\\\"}}\")",
+      "Bash(curl -s -X POST http://localhost:8080/api/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"login\\\\\":\\\\\"teste.silva\\\\\",\\\\\"senha\\\\\":\\\\\"senha123\\\\\"}\")",
+      "Bash(curl -s http://localhost:8080/api/clientes -H 'Authorization: Bearer __TRACKED_VAR__')",
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(curl *)",
+      "PowerShell($env:PGPASSWORD = \"123456\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -c \"\\\\l\" 2>&1 | Select-String \"youservice|vemresolver\")",
+      "PowerShell($env:PGPASSWORD = \"123456\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -c \"\\\\l\")",
+      "PowerShell(mvn *)",
+      "PowerShell(docker stats marketplace-frontend *)",
+      "PowerShell(docker logs marketplace-frontend 2>&1 | ForEach-Object { $_ } | Measure-Object -Line)",
+      "PowerShell(docker exec marketplace-frontend *)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:8080/api/categorias?page=0&size=10\" -Method GET -UseBasicParsing 2>&1 | Select-Object StatusCode, StatusDescription, Content)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8080/api/categorias?page=0&size=10\" -UseBasicParsing; Write-Host \"Status: $\\($r.StatusCode\\)\"; Write-Host $r.Content } catch { Write-Host \"Erro: $\\($_.Exception.Response.StatusCode\\)\"; Write-Host $_.Exception.Message })",
+      "PowerShell($body = '{\"email\":\"joao@cliente.com\",\"senha\":\"123456\"}'; try { $r = Invoke-WebRequest -Uri \"http://localhost:8080/api/auth/login\" -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing; Write-Host \"Status: $\\($r.StatusCode\\)\"; Write-Host $r.Content } catch { Write-Host \"Status: $\\($_.Exception.Response.StatusCode.value__\\)\"; $stream = $_.Exception.Response.GetResponseStream\\(\\); $reader = New-Object System.IO.StreamReader\\($stream\\); Write-Host $reader.ReadToEnd\\(\\) })",
+      "PowerShell([Convert]::ToBase64String\\([System.Text.Encoding]::UTF8.GetBytes\\(\"marketplace-dev-secret-key-minimum-256bits-length-ok\"\\)\\))"
+    ]
+  }
+}

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { SolicitacaoService } from '../services/solicitacao.service';
 import { AuthService } from '../services/auth.service';
 import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
@@ -16,15 +17,22 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
       <div class="bg-white shadow-sm border-b">
         <div class="container mx-auto px-4 py-6">
           <div class="flex items-center justify-between">
-            <div>
+            <div class="flex items-center justify-between">
               <h1 class="text-3xl font-bold text-gray-900">Painel do Cliente</h1>
               <p class="text-gray-600 mt-1">Bem-vindo, {{ userName }}</p>
             </div>
-            <button 
-              routerLink="/cliente/nova-solicitacao"
-              class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
-              + Nova Solicitação
-            </button>
+            <div class="flex gap-3">
+              <button
+                routerLink="/cliente/nova-solicitacao"
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
+                + Nova Solicitação
+              </button>
+              <button
+                routerLink="/cliente/perfil"
+                class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition">
+                Meu Perfil
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -136,33 +144,41 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                     <div class="flex items-center text-sm text-gray-600">
                       <span class="mr-4">📍 {{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
                     </div>
-                    
-                    <button 
-                      (click)="verDetalhes(solicitacao.id!)"
-                      class="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition font-medium">
-                      Ver Detalhes
-                    </button>
+
+                    <div class="flex gap-2">
+                      <a
+                        [routerLink]="['/cliente/solicitacao', solicitacao.id, 'propostas']"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm">
+                        Ver Propostas
+                      </a>
+                      <button
+                        (click)="verDetalhes(solicitacao.id!)"
+                        class="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition font-medium text-sm">
+                        Detalhes
+                      </button>
+                    </div>
                   </div>
                 </div>
               }
             </div>
           }
-        <!-- Modal de Detalhes -->
-        @if (solicitacaoSelecionada) {
-          <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="fecharModal()">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4" (click)="$event.stopPropagation()">
-              <div class="p-6 border-b">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-2xl font-bold text-gray-900">Detalhes da Solicitação</h2>
-                  <button (click)="fecharModal()" class="text-gray-500 hover:text-gray-700">
-                    <span class="text-2xl">&times;</span>
-                  </button>
-                </div>
-              </div>
+        </div>
+      </div>
 
-              <div class="p-6">
-                <!-- Status e Categoria -->
-                <div class="flex items-center gap-3 mb-4">
+      @if (solicitacaoSelecionada) {
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="fecharModal()">
+          <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+            <div class="p-6 border-b">
+              <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-gray-900">Detalhes da Solicitação</h2>
+                <button (click)="fecharModal()" class="text-gray-400 hover:text-gray-600">
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-center gap-2">
                   <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
                     {{ solicitacaoSelecionada.categoriaNome }}
                   </span>
@@ -170,88 +186,80 @@ import { SolicitacaoServico, StatusSolicitacao } from '../models/models';
                     {{ getStatusText(solicitacaoSelecionada.status!) }}
                   </span>
                 </div>
-
-                <!-- Data de Criação -->
-                <div class="text-sm text-gray-600 mb-4">
-                  📅 Criada em: {{ formatarDataCompleta(solicitacaoSelecionada.dataCriacao) }}
+                <div>
+                  <p class="text-sm text-gray-600">Descrição</p>
+                  <p class="text-gray-800 mt-1">{{ solicitacaoSelecionada.descricao }}</p>
                 </div>
-
-                <!-- Localização -->
-                <div class="flex items-center text-gray-700 mb-4">
-                  <span class="mr-2">📍</span>
-                  <span>{{ solicitacaoSelecionada.cidade }}, {{ solicitacaoSelecionada.estado }}</span>
-                </div>
-
-                <!-- Descrição -->
-                <div class="mb-6">
-                  <h3 class="font-semibold text-gray-900 mb-2">Descrição</h3>
-                  <p class="text-gray-700">{{ solicitacaoSelecionada.descricao }}</p>
-                </div>
-
-                <!-- Ações -->
-                @if (podeEditarOuExcluir()) {
-                  <div class="border-t pt-4 mt-4">
-                    <h3 class="font-semibold text-gray-900 mb-3">Ações</h3>
-                    <div class="flex gap-3">
-                      <button 
-                        (click)="editarSolicitacao()"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
-                        ✏️ Editar
-                      </button>
-                      <button 
-                        (click)="confirmarExclusao()"
-                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
-                        🗑️ Cancelar
-                      </button>
-                    </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-sm text-gray-600">Cidade</p>
+                    <p class="text-gray-800 mt-1">{{ solicitacaoSelecionada.cidade }}</p>
                   </div>
-                }
-
-                <!-- Mensagem de erro -->
-                @if (errorMessage) {
-                  <div class="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                    {{ errorMessage }}
+                  <div>
+                    <p class="text-sm text-gray-600">Estado</p>
+                    <p class="text-gray-800 mt-1">{{ solicitacaoSelecionada.estado }}</p>
                   </div>
-                }
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- Modal de Confirmação de Exclusão -->
-        @if (mostrarModalExclusao) {
-          <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="fecharModalExclusao()">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" (click)="$event.stopPropagation()">
-              <div class="p-6">
-                <div class="text-center mb-4">
-                  <span class="text-5xl">⚠️</span>
                 </div>
-                <h2 class="text-xl font-bold text-gray-900 text-center mb-2">Confirmar Cancelamento</h2>
-                <p class="text-gray-600 text-center mb-6">
-                  Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.
-                </p>
-                <div class="flex gap-3">
-                  <button 
-                    (click)="fecharModalExclusao()"
-                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">
-                    Cancelar
-                  </button>
-                  <button 
-                    (click)="excluirSolicitacao()"
-                    [disabled]="excluindo"
-                    class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50">
-                    @if (excluindo) {
-                      <span>Cancelando...</span>
-                    } @else {
-                      <span>Confirmar</span>
-                    }
-                  </button>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-sm text-gray-600">Data de Criação</p>
+                    <p class="text-gray-800 mt-1">{{ formatarDataCompleta(solicitacaoSelecionada.dataCriacao) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-600">Status</p>
+                    <p class="text-gray-800 mt-1">{{ getStatusText(solicitacaoSelecionada.status!) }}</p>
+                  </div>
                 </div>
               </div>
             </div>
+            <div class="p-6 border-t">
+              <a
+                [routerLink]="['/cliente/solicitacao', solicitacaoSelecionada.id, 'propostas']"
+                (click)="fecharModal()"
+                class="w-full block text-center py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                Ver Propostas Recebidas
+              </a>
+            </div>
+            @if (podeEditarOuExcluir()) {
+              <div class="p-6 border-t bg-gray-50 flex gap-3 justify-end">
+                <button
+                  (click)="confirmarExclusao()"
+                  class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+                  Excluir
+                </button>
+                <button
+                  (click)="editarSolicitacao()"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                  Editar
+                </button>
+              </div>
+            }
           </div>
-        }
-      </div>
+        </div>
+      }
+
+      @if (mostrarModalExclusao) {
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="fecharModalExclusao()">
+          <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" (click)="$event.stopPropagation()">
+            <div class="p-6">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">Confirmar Exclusão</h3>
+              <p class="text-gray-600">Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex gap-3 justify-end">
+              <button
+                (click)="fecharModalExclusao()"
+                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium">
+                Cancelar
+              </button>
+              <button
+                (click)="excluirSolicitacao()"
+                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+                {{ excluindo ? 'Excluindo...' : 'Excluir' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -268,7 +276,8 @@ export class ClienteDashboardComponent implements OnInit {
 
   constructor(
     private solicitacaoService: SolicitacaoService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -341,52 +350,44 @@ export class ClienteDashboardComponent implements OnInit {
   formatarDataCompleta(data: any): string {
     if (!data) return '';
     const date = new Date(data);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
-  verDetalhes(id: number): void {
+  verDetalhes(id: number) {
     this.solicitacaoService.buscarPorId(id).subscribe({
       next: (solicitacao) => {
         this.solicitacaoSelecionada = solicitacao;
-        this.errorMessage = '';
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Erro ao carregar detalhes da solicitação', error);
-        this.errorMessage = 'Erro ao carregar detalhes da solicitação.';
       }
     });
   }
 
-  fecharModal(): void {
+  fecharModal() {
     this.solicitacaoSelecionada = null;
     this.errorMessage = '';
   }
 
   podeEditarOuExcluir(): boolean {
-    if (!this.solicitacaoSelecionada) return false;
-    return this.solicitacaoSelecionada.status === 'ABERTA';
+    return this.solicitacaoSelecionada?.status === 'ABERTA';
   }
 
-  editarSolicitacao(): void {
-    if (!this.solicitacaoSelecionada) return;
-    this.fecharModal();
+  editarSolicitacao() {
+    if (this.solicitacaoSelecionada) {
+      this.router.navigate(['/cliente/editar-solicitacao', this.solicitacaoSelecionada.id]);
+    }
   }
 
-  confirmarExclusao(): void {
+  confirmarExclusao() {
     this.mostrarModalExclusao = true;
   }
 
-  fecharModalExclusao(): void {
+  fecharModalExclusao() {
     this.mostrarModalExclusao = false;
   }
 
-  excluirSolicitacao(): void {
+  excluirSolicitacao() {
     if (!this.solicitacaoSelecionada) return;
 
     this.excluindo = true;
@@ -397,10 +398,9 @@ export class ClienteDashboardComponent implements OnInit {
         this.carregarSolicitacoes();
         this.excluindo = false;
       },
-      error: (error) => {
-        console.error('Erro ao cancelar solicitação', error);
-        this.errorMessage = 'Erro ao cancelar solicitação.';
-        this.fecharModalExclusao();
+      error: (error: any) => {
+        console.error('Erro ao excluir solicitação', error);
+        this.errorMessage = 'Erro ao excluir solicitação';
         this.excluindo = false;
       }
     });

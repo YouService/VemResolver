@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,37 +28,54 @@ public class User implements UserDetails {
     
     @Column(nullable = false)
     private String nome;
-    
+
     @Column(nullable = false, unique = true)
     private String login;
-    
+
     @Column(nullable = false, unique = true)
     private String email;
-    
+
     @Column(nullable = false)
+    @ToString.Exclude
+    @JsonProperty(access = Access.WRITE_ONLY)
     private String senha;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoUsuario tipo;
-    
+
     private String telefone;
-    
+
     private String cpf;
-    
+
     private String rg;
-    
-    private String dataExpedicao;
-    
-    @Column(nullable = false)
+
+    private String orgaoExpedidor;
+
+    @Column(name = "data_expedicao_rg")
+    private String dataExpedicaoRg;
+
+    private String cep;
+
+    private String endereco;
+
+    private String cidade;
+
+    private String estado;
+
+    private String numero;
+
+    private String complemento;
+
+    @Column(name = "data_cadastro", columnDefinition = "TIMESTAMP(0)")
     private LocalDateTime dataCadastro;
-    
+
     @Column(nullable = false)
     private Boolean ativo = true;
     
     @PrePersist
     protected void onCreate() {
-        dataCadastro = LocalDateTime.now();
+        dataCadastro = LocalDateTime.now().withNano(0);
         if (ativo == null) {
             ativo = true;
         }

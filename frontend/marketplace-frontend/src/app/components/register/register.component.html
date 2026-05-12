@@ -1,0 +1,585 @@
+<div class="min-h-screen flex">
+  <!-- Left Side - Visual Section -->
+  <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-800 relative overflow-hidden items-center justify-center p-12">
+    <!-- Decorative Elements -->
+    <div class="absolute top-0 right-0 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+    <div class="absolute -bottom-8 left-20 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+
+    <!-- Content -->
+    <div class="relative z-10 text-white text-center max-w-md">
+      <h1 class="text-5xl font-bold mb-6 leading-tight">
+        Resolva seus problemas com os melhores profissionais
+      </h1>
+      <p class="text-lg opacity-90 mb-8">
+        Encontre prestadores qualificados e confiáveis em poucos minutos. Complete seu cadastro agora mesmo!
+      </p>
+      <div class="flex justify-center gap-4">
+        <div class="w-full h-1 bg-white opacity-30 rounded"></div>
+      </div>
+      <p class="text-sm opacity-75 mt-6">
+        Junte-se a milhares de clientes e profissionais satisfeitos no VemResolver
+      </p>
+    </div>
+  </div>
+
+  <!-- Right Side - Form Section -->
+  <div class="w-full lg:w-1/2 bg-gray-50 flex items-center justify-center p-4 lg:p-12">
+    <div class="w-full max-w-lg">
+      <!-- Mobile Logo -->
+      <div class="lg:hidden mb-6 text-center">
+        <img src="assets/logo.png" alt="VemResolver" class="h-10 mx-auto">
+      </div>
+
+      <mat-stepper linear #stepper class="register-stepper shadow-lg rounded-xl overflow-hidden">
+
+        <!-- Step 1: CPF and Terms -->
+        <mat-step [stepControl]="step1Form">
+          <ng-template matStepLabel>CPF e Termos</ng-template>
+
+          <div class="p-6 lg:p-8">
+            <div class="mb-6">
+              <h2 class="text-2xl lg:text-3xl font-bold text-gray-900">Vamos começar!</h2>
+              <p class="text-gray-600 mt-2">Informe seus dados para iniciar o cadastro</p>
+            </div>
+
+            <form [formGroup]="step1Form" class="space-y-6">
+              <!-- CPF Field -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">CPF</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">badge</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="cpf"
+                    appMask="000.000.000-00"
+                    maxlength="14"
+                    required
+                    placeholder="000.000.000-00"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+                @if (step1Form.get('cpf')?.hasError('required') && step1Form.get('cpf')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">CPF é obrigatório</p>
+                }
+                @if (step1Form.get('cpf')?.hasError('invalidCpf')) {
+                  <p class="text-red-500 text-sm mt-1">CPF inválido</p>
+                }
+              </div>
+
+              <!-- Terms Section -->
+              <div class="bg-gray-100 rounded-lg p-4 border border-gray-300">
+                <label class="flex items-start cursor-pointer">
+                  <input
+                    type="checkbox"
+                    formControlName="termsAccepted"
+                    required
+                    class="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                  >
+                  <span class="ml-3 text-sm text-gray-700">
+                    Li e aceito os
+                    <a href="/termos-uso" target="_blank" class="text-blue-600 font-semibold hover:underline">termos de uso</a>
+                    e a
+                    <a href="/politica-privacidade" target="_blank" class="text-blue-600 font-semibold hover:underline">política de privacidade</a>
+                  </span>
+                </label>
+                @if (step1Form.get('termsAccepted')?.touched && step1Form.get('termsAccepted')?.hasError('required')) {
+                  <p class="text-red-500 text-sm mt-2">Você deve aceitar os termos para continuar</p>
+                }
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex gap-3 pt-4">
+                <button
+                  mat-raised-button
+                  matStepperNext
+                  [disabled]="step1Form.invalid"
+                  class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-700 text-white font-semibold rounded-lg hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Avançar
+                  <mat-icon class="ml-2">arrow_forward</mat-icon>
+                </button>
+              </div>
+
+              <!-- Login Link -->
+              <div class="text-center pt-4">
+                <span class="text-gray-600">Já possui conta? </span>
+                <a routerLink="/login" class="text-blue-600 font-semibold hover:underline">Fazer login</a>
+              </div>
+            </form>
+          </div>
+        </mat-step>
+
+        <!-- Step 2: Personal Data -->
+        <mat-step [stepControl]="step2Form">
+          <ng-template matStepLabel>Dados Pessoais</ng-template>
+
+          <div class="p-6 lg:p-8">
+            <div class="mb-6">
+              <h2 class="text-2xl lg:text-3xl font-bold text-gray-900">Dados Pessoais</h2>
+              <p class="text-gray-600 mt-2">Preencha suas informações pessoais</p>
+            </div>
+
+            <form [formGroup]="step2Form" class="space-y-5">
+              <!-- Full Name -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Nome Completo</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">person</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="nome"
+                    appUppercase
+                    required
+                    placeholder="SEU NOME COMPLETO"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition uppercase"
+                  >
+                </div>
+                @if (step2Form.get('nome')?.hasError('required') && step2Form.get('nome')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Nome é obrigatório</p>
+                }
+              </div>
+
+              <!-- Email -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">email</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    type="email"
+                    formControlName="email"
+                    required
+                    placeholder="seu.email@exemplo.com"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+                @if (step2Form.get('email')?.hasError('required') && step2Form.get('email')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Email é obrigatório</p>
+                }
+                @if (step2Form.get('email')?.hasError('email') && step2Form.get('email')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Email inválido</p>
+                }
+              </div>
+
+              <!-- Password -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Senha</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">lock</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    type="password"
+                    formControlName="senha"
+                    required
+                    placeholder="Mínimo 8 caracteres"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+                @if (step2Form.get('senha')?.hasError('required') && step2Form.get('senha')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Senha é obrigatória</p>
+                }
+                @if (step2Form.get('senha')?.hasError('minlength') && step2Form.get('senha')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Mínimo 8 caracteres</p>
+                }
+                @if (step2Form.get('senha')?.hasError('pattern') && step2Form.get('senha')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Deve conter letras maiúsculas, minúsculas e números</p>
+                }
+              </div>
+
+              <!-- Confirm Password -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Confirmar Senha</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">lock</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    type="password"
+                    formControlName="confirmarSenha"
+                    required
+                    placeholder="Repita sua senha"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+                @if (step2Form.get('confirmarSenha')?.hasError('required') && step2Form.get('confirmarSenha')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Confirmação é obrigatória</p>
+                }
+                @if (step2Form.get('confirmarSenha')?.hasError('passwordMismatch') && step2Form.get('confirmarSenha')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">As senhas não conferem</p>
+                }
+              </div>
+
+              <!-- Phone -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Telefone</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">phone</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="telefone"
+                    appMask="(00) 00000-0000"
+                    maxlength="15"
+                    required
+                    placeholder="(11) 98765-4321"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+                @if (step2Form.get('telefone')?.hasError('required') && step2Form.get('telefone')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Telefone é obrigatório</p>
+                }
+              </div>
+
+              <!-- RG -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">RG</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">credit_card</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="rg"
+                    placeholder="Seu RG"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+              </div>
+
+              <!-- Issuing Agency -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Órgão Expedidor</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">account_balance</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="orgaoExpedidor"
+                    appUppercase
+                    placeholder="EX: SSP/SP"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition uppercase"
+                  >
+                </div>
+              </div>
+
+              <!-- Issue Date -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Data de Expedição</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">calendar_today</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    type="text"
+                    formControlName="dataExpedicaoRg"
+                    placeholder="DD/MM/AAAA"
+                    maxlength="10"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+              </div>
+
+              <!-- User Type -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Usuário</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">work</mat-icon>
+                  </span>
+                  <select
+                    formControlName="tipo"
+                    required
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white"
+                  >
+                    <option value="CLIENTE">Cliente</option>
+                    <option value="PRESTADOR">Prestador de Serviço</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex gap-3 pt-4">
+                <button
+                  mat-button
+                  matStepperPrevious
+                  type="button"
+                  class="flex-1 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-100 transition"
+                >
+                  <mat-icon class="mr-2">arrow_back</mat-icon>
+                  Voltar
+                </button>
+                <button
+                  mat-raised-button
+                  matStepperNext
+                  [disabled]="step2Form.invalid"
+                  class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-700 text-white font-semibold rounded-lg hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Avançar
+                  <mat-icon class="ml-2">arrow_forward</mat-icon>
+                </button>
+              </div>
+            </form>
+          </div>
+        </mat-step>
+
+        <!-- Step 3: Address -->
+        <mat-step [stepControl]="step3Form">
+          <ng-template matStepLabel>Endereço</ng-template>
+
+          <div class="p-6 lg:p-8">
+            <div class="mb-6">
+              <h2 class="text-2xl lg:text-3xl font-bold text-gray-900">Endereço</h2>
+              <p class="text-gray-600 mt-2">Informe seu endereço completo</p>
+            </div>
+
+            <form [formGroup]="step3Form" class="space-y-5">
+              <!-- CEP -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">CEP</label>
+                <div class="flex gap-2">
+                  <div class="flex-1 relative">
+                    <span class="absolute left-3 top-3 text-gray-400">
+                      <mat-icon class="text-lg">location_on</mat-icon>
+                    </span>
+                    <input
+                      matInput
+                      formControlName="cep"
+                      appMask="00000-000"
+                      maxlength="9"
+                      (blur)="buscarCep()"
+                      required
+                      placeholder="00000-000"
+                      class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    >
+                  </div>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    (click)="buscarCep()"
+                    [disabled]="loadingCep || step3Form.get('cep')?.invalid"
+                    class="px-4 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 transition disabled:opacity-50"
+                  >
+                    <mat-icon>{{ loadingCep ? 'hourglass_empty' : 'search' }}</mat-icon>
+                  </button>
+                </div>
+                @if (step3Form.get('cep')?.hasError('required') && step3Form.get('cep')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">CEP é obrigatório</p>
+                }
+                <p class="text-gray-500 text-xs mt-1">Digite o CEP e buscaremos o endereço</p>
+              </div>
+
+              <!-- Address -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Endereço</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">home</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="endereco"
+                    required
+                    placeholder="Rua, avenida..."
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+                @if (step3Form.get('endereco')?.hasError('required') && step3Form.get('endereco')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Endereço é obrigatório</p>
+                }
+              </div>
+
+              <!-- Number -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Número</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">tag</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="numero"
+                    placeholder="123"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+              </div>
+
+              <!-- Complement -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Complemento</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">add_location</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="complemento"
+                    placeholder="Apto, Bloco, etc"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+              </div>
+
+              <!-- City -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Cidade</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">location_city</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="cidade"
+                    required
+                    placeholder="Sua cidade"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  >
+                </div>
+                @if (step3Form.get('cidade')?.hasError('required') && step3Form.get('cidade')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Cidade é obrigatória</p>
+                }
+              </div>
+
+              <!-- State -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Estado</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400">
+                    <mat-icon class="text-lg">map</mat-icon>
+                  </span>
+                  <input
+                    matInput
+                    formControlName="estado"
+                    maxlength="2"
+                    required
+                    placeholder="UF"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition uppercase"
+                  >
+                </div>
+                @if (step3Form.get('estado')?.hasError('required') && step3Form.get('estado')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Estado é obrigatório</p>
+                }
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex gap-3 pt-4">
+                <button
+                  mat-button
+                  matStepperPrevious
+                  type="button"
+                  class="flex-1 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-100 transition"
+                >
+                  <mat-icon class="mr-2">arrow_back</mat-icon>
+                  Voltar
+                </button>
+                <button
+                  mat-raised-button
+                  type="button"
+                  (click)="onSubmit()"
+                  [disabled]="step1Form.invalid || step2Form.invalid || step3Form.invalid || loading"
+                  class="flex-1 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <mat-icon class="mr-2">check_circle</mat-icon>
+                  {{ loading ? 'Salvando...' : 'Finalizar Cadastro' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </mat-step>
+      </mat-stepper>
+    </div>
+  </div>
+</div>
+  <!-- Footer -->
+  <footer class="bg-white py-10 border-t border-gray-100">
+    <div class="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-2">
+          <img src="assets/logo.png" alt="VemResolver" class="h-8 w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition">
+      </div>
+      <div class="flex flex-col md:flex-row gap-6 items-center">
+        <div class="flex gap-4 text-sm font-medium text-gray-500">
+          <a routerLink="/sobre-nos" class="hover:text-blue-600 transition cursor-pointer">Sobre nós</a>
+          <a routerLink="/seguranca" class="hover:text-blue-600 transition cursor-pointer">Segurança</a>
+          <a routerLink="/termos-uso" class="hover:text-blue-600 transition cursor-pointer">Termos de uso</a>
+          <a routerLink="/politica-privacidade" class="hover:text-blue-600 transition cursor-pointer">Política de Privacidade</a>
+        </div>
+        <div class="text-sm text-gray-400 text-center md:text-right">
+          &copy; 2026 VemResolver LTDA.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+<style>
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.register-stepper {
+  background: white;
+  border-radius: 12px;
+}
+
+::ng-deep .register-stepper {
+  .mat-stepper-horizontal-line {
+    border-top-color: #e5e7eb !important;
+  }
+
+  .mat-step-header {
+    background-color: transparent !important;
+    padding: 16px 24px !important;
+
+    &.cdk-keyboard-focused,
+    &.cdk-program-focused {
+      background-color: #f3f4f6 !important;
+    }
+
+    .mat-step-icon {
+      background-color: #d1d5db !important;
+      color: white !important;
+
+      &.mat-step-icon-selected,
+      &.mat-step-icon-state-done {
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important;
+      }
+    }
+
+    .mat-step-label {
+      font-size: 12px;
+      font-weight: 500;
+
+      &.mat-step-label-active {
+        color: #2563eb !important;
+      }
+    }
+  }
+}
+</style>
