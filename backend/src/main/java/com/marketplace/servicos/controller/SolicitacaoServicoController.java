@@ -79,6 +79,14 @@ public class SolicitacaoServicoController {
         return ResponseEntity.ok(solicitacaoService.atualizarStatus(id, status));
     }
 
+    @PatchMapping("/{id}/concluir")
+    @Operation(summary = "Marcar serviço como concluído")
+    public ResponseEntity<SolicitacaoServicoDTO> concluir(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(solicitacaoService.concluirServico(id, user.getId()));
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Excluir solicitação")
     public ResponseEntity<Void> deletar(

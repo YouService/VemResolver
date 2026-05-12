@@ -28,6 +28,11 @@ services:
       DB_PASSWORD: postgres
       JWT_SECRET: bWFya2V0cGxhY2UtZGV2LXNlY3JldC1rZXktbWluaW11bS0yNTZiaXRzLWxlbmd0aC1vaw==
       JWT_EXPIRATION: 86400000
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: dev@localhost
+      MAIL_PASSWORD: dev
+      FRONTEND_URL: http://localhost:4200
     ports:
       - "8080:8080"
     networks:
