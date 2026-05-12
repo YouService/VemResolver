@@ -4,6 +4,7 @@ import com.marketplace.servicos.dto.SolicitacaoServicoDTO;
 import com.marketplace.servicos.exception.BusinessException;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.*;
+import com.marketplace.servicos.repository.AvaliacaoRepository;
 import com.marketplace.servicos.repository.CategoriaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import com.marketplace.servicos.repository.UserRepository;
@@ -18,13 +19,16 @@ public class SolicitacaoServicoService {
     private final SolicitacaoServicoRepository solicitacaoRepository;
     private final UserRepository userRepository;
     private final CategoriaRepository categoriaRepository;
-    
+    private final AvaliacaoRepository avaliacaoRepository;
+
     public SolicitacaoServicoService(SolicitacaoServicoRepository solicitacaoRepository,
-                                    UserRepository userRepository,
-                                    CategoriaRepository categoriaRepository) {
+                                     UserRepository userRepository,
+                                     CategoriaRepository categoriaRepository,
+                                     AvaliacaoRepository avaliacaoRepository) {
         this.solicitacaoRepository = solicitacaoRepository;
         this.userRepository = userRepository;
         this.categoriaRepository = categoriaRepository;
+        this.avaliacaoRepository = avaliacaoRepository;
     }
     
     @Transactional
@@ -154,6 +158,10 @@ public class SolicitacaoServicoService {
         dto.setEstado(solicitacao.getEstado());
         dto.setStatus(solicitacao.getStatus());
         dto.setDataCriacao(solicitacao.getDataCriacao());
+        dto.setFoiAvaliadoPeloCliente(
+            avaliacaoRepository.existsBySolicitacaoIdAndTipo(solicitacao.getId(), TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR));
+        dto.setFoiAvaliadoPeloPrestador(
+            avaliacaoRepository.existsBySolicitacaoIdAndTipo(solicitacao.getId(), TipoAvaliacao.PRESTADOR_AVALIA_CLIENTE));
         return dto;
     }
 }

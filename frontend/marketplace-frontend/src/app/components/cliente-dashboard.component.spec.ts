@@ -30,10 +30,11 @@ describe('ClienteDashboardComponent', () => {
     solicitacaoServiceSpy = jasmine.createSpyObj('SolicitacaoService', [
       'listarMinhas', 'buscarPorId', 'deletar', 'concluir'
     ]);
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUserName']);
+    authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUserName', 'buscarPerfil']);
 
     solicitacaoServiceSpy.listarMinhas.and.returnValue(of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 10 }));
     authServiceSpy.getCurrentUserName.and.returnValue('João');
+    authServiceSpy.buscarPerfil.and.returnValue(of({ id: 1, nome: 'João', email: 'joao@test.com', avaliacaoMedia: 0, totalAvaliacoes: 0 } as any));
 
     await TestBed.configureTestingModule({
       imports: [ClienteDashboardComponent],
