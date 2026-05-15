@@ -189,7 +189,19 @@ vemresolver/
 
 ## O que fazer a seguir
 
-Todas as prioridades 1, 2 e 3 foram concluídas. O produto está pronto para deploy em staging.
+### Prioridade 4 — Competitividade com GetNinjas e Cronoshare
+
+Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](https://www.getninjas.com.br/) e [Cronoshare](https://www.cronoshare.com.br/). Os itens abaixo representam os gaps identificados em relação aos concorrentes, ordenados por impacto × esforço.
+
+| # | Funcionalidade | Justificativa | Impacto | Esforço |
+|---|---|---|---|---|
+| P4.1 | **Chat interno** entre cliente e prestador após aceitação de proposta | Sem canal de comunicação dentro da plataforma, cliente e prestador trocam contato por fora — risco de abandono e sem histórico | Alto | Médio |
+| P4.2 | **Portfólio de fotos** no perfil do prestador (até 10 imagens de trabalhos realizados) | Fotos são o principal elemento de conversão em serviços visuais (pintura, reforma, cozinha) | Alto | Baixo |
+| P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Prestadores sem guia visual ficam com perfis fracos; reduz taxa de prestadores cadastrados mas inativos | Médio-Alto | Baixo |
+| P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar serviço | Prestador não tem URL pública para divulgar fora da plataforma; gera tráfego orgânico de volta | Médio-Alto | Baixo |
+| P4.5 | **Notificações por e-mail** transacionais (nova proposta recebida, proposta aceita, nova solicitação compatível) | Polling de 30 s só funciona com a aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio |
+| P4.6 | **Badge "Verificado"** automático para prestadores com 5+ contratos concluídos e média ≥ 4,0 | Nenhum diferencial visual entre prestadores hoje; badge cria gamificação de reputação | Médio | Baixo |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade do serviço e comunicação (além da nota geral) | Nota única 1–5 é pouco granular; dimensões separadas ajudam o cliente a escolher e o prestador a melhorar | Médio | Médio |
 
 ---
 
