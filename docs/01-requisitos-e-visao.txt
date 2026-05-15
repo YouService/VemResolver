@@ -1,0 +1,500 @@
+# DOCUMENTO DE REQUISITOS E VISÃO — VemResolver
+# Versão 1.0 — Gerado em 2026-05-15
+# Baseado no código-fonte real do repositório (branch main)
+
+================================================================================
+# 1. DOCUMENTO DE VISÃO
+================================================================================
+
+## 1.1 Nome e Natureza do Produto
+
+VemResolver é um marketplace web B2C que conecta CLIENTES (pessoas físicas que
+precisam de serviços domésticos ou profissionais) a PRESTADORES autônomos
+cadastrados na plataforma.
+
+## 1.2 Stack Tecnológica Resumida
+
+* Backend: Java 21, Spring Boot 3.2.1, Spring Security, Spring Data JPA, Flyway,
+  PostgreSQL 16
+* Frontend: Angular 19.2 (standalone components), TypeScript 5.7, Tailwind CSS 3.4
+* Infraestrutura: Docker Compose com três serviços separados (frontend, backend,
+  banco de dados)
+
+## 1.3 Fluxo Central do Sistema
+
+O fluxo principal de negócio ocorre na seguinte sequência:
+
+1. Cliente autentica-se e abre uma solicitação de serviço com categoria, descrição,
+   cidade e estado
+2. Prestadores visualizam as solicitações abertas e enviam propostas com valor e
+   mensagem
+3. Cliente aceita uma proposta — a solicitação passa para EM_ANDAMENTO
+4. Serviço é executado; cliente marca a solicitação como CONCLUIDA
+5. Avaliação mútua: cliente avalia o prestador e o prestador avalia o cliente
+
+## 1.4 Atores e Papéis
+
+* ROLE_CLIENTE
+  - Abre e gerencia solicitações de serviço
+  - Recebe, aceita ou recusa propostas
+  - Marca serviços como concluídos
+  - Avalia prestadores após a conclusão
+
+* ROLE_PRESTADOR
+  - Visualiza solicitações abertas com filtros de categoria, cidade e estado
+  - Envia propostas com valor monetário e mensagem
+  - Gerencia seu perfil profissional (descrição, categorias, localização)
+  - Avalia clientes após a conclusão do serviço
+
+* ROLE_ADMIN
+  - Gerencia categorias de serviço (criação, edição e exclusão)
+  - As demais operações de listagem de categorias são públicas
+
+
+================================================================================
+# 2. REQUISITOS FUNCIONAIS
+================================================================================
+
+## RF-01 — Cadastro de Usuário
+
+* Ator principal: visitante não autenticado
+* Endpoint: POST /api/auth/register
+* Descrição: Permite que qualquer visitante crie uma conta informando nome,
+  e-mail, senha, CPF, telefone, endereço e tipo de usuário (CLIENTE ou PRESTADOR)
+* Regras de negócio derivadas do código (AuthService.register):
+  - O campo CPF é obrigatório; uma BusinessException é lançada se ausente
+  - O CPF é normalizado via DocumentUtils.somenteNumeroCpf antes da persistência
+  - CPF único entre contas ativas: validado por
+    userRepository.existsByCpfAndAtivoTrue
+  - E-mail único entre contas ativas: validado por
+    userRepository.existsByEmailAndAtivoTrue
+  - A senha é recebida codificada em Base64 pelo frontend, decodificada por
+    DecodeValueUtils.decodeBase64 no backend e armazenada com BCryptPasswordEncoder
+  - O campo login é preenchido com o mesmo valor do e-mail
+  - A conta é criada com ativo = false; o usuário não pode fazer login até
+    verificar o e-mail
+  - Se o e-mail já existir com ativo = false, a conta é reativada com os novos
+    dados (comportamento de re-cadastro)
+  - Um VerificationToken é gerado com UUID.randomUUID().toString() e persistido
+  - O e-mail de verificação é enviado via EmailService; falha no envio é logada
+    mas não impede a criação da conta (bloco try-catch sem rollback)
+  - O retorno é AuthResponseDTO sem token JWT (token = null até a verificação)
+
+
+## RF-02 — Verificação de Conta por E-mail
+
+* Ator principal: usuário recem-cadastrado
+* Endpoint: GET /api/auth/verify?token={uuid}
+* Descrição: Ativa a conta do usuário mediante apresentação do token recebido
+  por e-mail
+* Regras de negócio derivadas do código (AuthService.verifyAccount e
+  VerificationToken):
+  - O token é buscado por verificationTokenRepository.findByToken(token)
+  - Se o token não for encontrado: BusinessException("Token de verificação
+    inválido.")
+  - A expiração é calculada em VerificationToken.calculateExpiryDate com
+    60 * 24 minutos (24 horas a partir da criação)
+  - Se expiryDate.isBefore(LocalDateTime.now()): BusinessException("O link de
+    verificação expirou. Solicite um novo.")
+  - Em caso de sucesso: user.setAtivo(true) + userRepository.save(user)
+  - O VerificationToken é excluído após uso bem-sucedido
+    (verificationTokenRepository.delete)
+
+
+## RF-03 — Autenticação
+
+* Ator principal: usuário cadastrado e verificado
+* Endpoint: POST /api/auth/login
+* Descrição: Autentica o usuário com e-mail e senha, retornando JWT e
+  refresh token
+* Regras de negócio derivadas do código (AuthService.login):
+  - Delega para AuthenticationManager.authenticate com
+    UsernamePasswordAuthenticationToken
+  - O CustomUserDetailsService carrega o User pelo e-mail (campo login = email)
+  - Validação adicional: if (!user.getAtivo()) lança BusinessException("Sua conta
+    ainda não foi ativada. Verifique seu email.")
+  - JWT gerado por JwtTokenProvider.generateToken; expiração padrão de 86400000 ms
+    (24 horas), configurável via ${JWT_EXPIRATION}
+  - Refresh token gerado por RefreshTokenService.generateRefreshToken;
+    expiração padrão de 604800000 ms (7 dias), configurável via
+    ${JWT_REFRESH_EXPIRATION}
+  - Ao gerar novo refresh token, o token anterior do usuário é excluído por
+    refreshTokenRepository.deleteByUser antes da criação do novo
+  - Retorno: AuthResponseDTO com token, refreshToken, userId, nome, email e
+    tipoUsuario
+
+
+## RF-04 — Renovação de Sessão (Refresh Token)
+
+* Ator principal: usuário autenticado com sessão expirada
+* Endpoint: POST /api/auth/refresh
+* Corpo esperado: RefreshRequestDTO com campo refreshToken
+* Descrição: Emite novo par de tokens (access + refresh) sem exigir re-login
+* Regras de negócio derivadas do código (RefreshTokenService.validateAndRotate):
+  - Token buscado por refreshTokenRepository.findByToken(tokenString)
+  - Se não encontrado: BusinessException("Refresh token inválido")
+  - Se existing.getRevoked() == true ou existing.getExpiryDate().isBefore(
+    LocalDateTime.now()): token é excluído + BusinessException("Refresh token
+    expirado. Faça login novamente.")
+  - Em caso de token válido: refreshTokenRepository.deleteByUser(user) exclui
+    todos os tokens anteriores do usuário (rotação completa)
+  - Novo RefreshToken criado com UUID.randomUUID().toString() e nova
+    expiryDate = LocalDateTime.now().plusSeconds(refreshExpiration / 1000)
+  - Novo JWT gerado via JwtTokenProvider.generateToken
+  - Retorno: AuthResponseDTO com novo token e novo refreshToken
+
+
+## RF-05 — Exclusão de Conta
+
+* Ator principal: usuário autenticado
+* Endpoint: DELETE /api/auth/conta
+* Descrição: Desativa a conta do usuário sem exclusão física do registro
+* Regras de negócio derivadas do código (AuthService.deletarConta):
+  - Implementação como soft delete: user.setAtivo(false) + userRepository.save
+  - Todos os refresh tokens do usuário são revogados antes da desativação via
+    refreshTokenService.revokeByUser(user), que internamente executa
+    refreshTokenRepository.deleteByUser(user)
+  - O usuário não consegue fazer login após a desativação (isEnabled() retorna
+    false, pois delega para getAtivo())
+
+
+## RF-06 — Gerenciamento de Perfil
+
+* Ator principal: usuário autenticado
+* Endpoints:
+  - GET /api/perfil — retorna dados do perfil do usuário autenticado
+  - PUT /api/perfil — atualiza dados via UpdatePerfilDTO
+  - PUT /api/perfil/senha — altera senha via AlterarSenhaDTO
+* Regras de negócio derivadas do código:
+  - O campo senha na entidade User é protegido com @JsonProperty(access =
+    Access.WRITE_ONLY), garantindo que nunca seja serializado nas respostas
+  - AlterarSenhaDTO é o DTO específico para troca de senha, separado dos dados
+    de perfil
+
+
+## RF-07 — Criação de Solicitação de Serviço
+
+* Ator principal: ROLE_CLIENTE autenticado
+* Endpoint: POST /api/solicitacoes
+* Corpo esperado: SolicitacaoServicoDTO
+* Descrição: Abre uma nova solicitação vinculada ao cliente autenticado
+* Regras de negócio derivadas do código (SolicitacaoServicoService.criar):
+  - O cliente é validado por userRepository.findByIdAndTipo(clienteId,
+    TipoUsuario.CLIENTE); se o usuário não for CLIENTE, lança BusinessException
+    ("Apenas clientes podem criar solicitações")
+  - A categoria é validada por categoriaRepository.findById(dto.getCategoriaId());
+    lança ResourceNotFoundException se não existir
+  - Campos obrigatórios: categoriaId, descricao (TEXT), cidade, estado
+  - Status inicial definido automaticamente como ABERTA pelo DEFAULT do banco
+  - O campo dataCriacao é preenchido pelo @PrePersist da entidade
+    SolicitacaoServico
+  - Retorno: SolicitacaoServicoDTO com HTTP 201
+
+
+## RF-08 — Listagem de Solicitações Abertas para Prestadores
+
+* Ator principal: qualquer usuário autenticado (tipicamente ROLE_PRESTADOR)
+* Endpoint: GET /api/solicitacoes/abertas
+* Parâmetros opcionais de filtro: categoriaId, cidade, estado (todos @RequestParam
+  required = false)
+* Parâmetro de paginação: Pageable (page, size, sort via Spring Data)
+* Descrição: Retorna página de solicitações com status ABERTA, com suporte a
+  filtros combinados
+* Regras de negócio derivadas do código (SolicitacaoServicoService.buscarAbertas):
+  - Se categoriaId + cidade + estado presentes: usa query
+    findByCategoriaAndLocalizacaoAndStatus
+  - Se apenas categoriaId presente: usa findByCategoriaAndStatus
+  - Caso contrário: usa findByStatus com StatusSolicitacao.ABERTA
+  - Cada SolicitacaoServicoDTO inclui as flags booleanas foiAvaliadoPeloCliente
+    (CLIENTE_AVALIA_PRESTADOR) e foiAvaliadoPeloPrestador
+    (PRESTADOR_AVALIA_CLIENTE), calculadas via
+    avaliacaoRepository.existsBySolicitacaoIdAndTipo
+
+
+## RF-09 — Envio de Proposta
+
+* Ator principal: ROLE_PRESTADOR autenticado com perfil criado
+* Endpoint: POST /api/propostas
+* Corpo esperado: PropostaDTO
+* Descrição: Permite que o prestador envie uma proposta para uma solicitação aberta
+* Regras de negócio derivadas do código (PropostaService.criar):
+  - O prestador é resolvido a partir do usuarioId autenticado via
+    prestadorRepository.findByUsuarioId(usuarioId); lança
+    ResourceNotFoundException("Prestador não encontrado") se não houver perfil
+    de prestador criado
+  - A solicitação deve existir (lança ResourceNotFoundException) e ter status
+    ABERTA (lança BusinessException("Esta solicitação não está mais aberta para
+    propostas"))
+  - Unicidade da proposta verificada por
+    propostaRepository.existsBySolicitacaoIdAndPrestadorId; lança
+    BusinessException("Você já enviou uma proposta para esta solicitação")
+  - Campos obrigatórios: solicitacaoId, valor (NUMERIC 10,2), mensagem (opcional)
+  - Status inicial ENVIADA definido pelo DEFAULT do banco
+  - O campo dataEnvio é preenchido pelo @PrePersist da entidade Proposta
+  - Retorno: PropostaDTO com HTTP 201
+
+
+## RF-10 — Aceitar ou Recusar Proposta
+
+* Ator principal: ROLE_CLIENTE dono da solicitação
+* Endpoints:
+  - PATCH /api/propostas/{id}/aceitar
+  - PATCH /api/propostas/{id}/recusar
+* Descrição: Permite ao cliente processar cada proposta recebida
+* Regras de negócio — aceitar (PropostaService.aceitarProposta):
+  - Proposta buscada por id; lança ResourceNotFoundException se não existir
+  - Verificação de posse: proposta.getSolicitacao().getCliente().getId()
+    deve ser igual ao clienteId autenticado; caso contrário BusinessException
+    ("Apenas o cliente dono da solicitação pode aceitar propostas")
+  - Proposta deve ter status ENVIADA; caso contrário BusinessException
+    ("Esta proposta já foi processada")
+  - Ao aceitar: proposta.setStatus(StatusProposta.ACEITA) e
+    proposta.getSolicitacao().setStatus(StatusSolicitacao.EM_ANDAMENTO)
+  - Ambas as entidades são persistidas separadamente (propostaRepository.save e
+    solicitacaoRepository.save)
+  - As demais propostas da mesma solicitação permanecem com status ENVIADA
+    (sem alteração automática)
+* Regras de negócio — recusar (PropostaService.recusarProposta):
+  - Mesmas validações de posse e status que o aceite
+  - Ao recusar: proposta.setStatus(StatusProposta.RECUSADA)
+  - O status da solicitação não é alterado ao recusar
+
+
+## RF-11 — Marcar Serviço como Concluído
+
+* Ator principal: ROLE_CLIENTE dono da solicitação
+* Endpoint: PATCH /api/solicitacoes/{id}/concluir
+* Descrição: Formaliza a conclusão do serviço prestado
+* Regras de negócio derivadas do código (SolicitacaoServicoService.concluirServico):
+  - Solicitação buscada por id; lança ResourceNotFoundException se não existir
+  - Verificação de posse: solicitacao.getCliente().getId() deve ser igual ao
+    clienteId autenticado; lança BusinessException("Apenas o cliente responsável
+    pode concluir a solicitação")
+  - Status deve ser EM_ANDAMENTO; lança BusinessException("Apenas solicitações
+    em andamento podem ser concluídas")
+  - Ao concluir: solicitacao.setStatus(StatusSolicitacao.CONCLUIDA)
+  - Retorno: SolicitacaoServicoDTO atualizado com HTTP 200
+
+
+## RF-12 — Avaliação do Prestador pelo Cliente
+
+* Ator principal: ROLE_CLIENTE autenticado
+* Endpoint: POST /api/avaliacoes
+* Corpo esperado: AvaliacaoDTO
+* Descrição: Cliente avalia o prestador após a conclusão do serviço
+* Regras de negócio derivadas do código (AvaliacaoService.criar):
+  - Solicitação deve ter status CONCLUIDA; lança BusinessException("Só é
+    possível avaliar solicitações concluídas")
+  - Verificação de posse: solicitacao.getCliente().getId() deve ser igual ao
+    clienteId autenticado; lança BusinessException("Você não pode avaliar
+    esta solicitação")
+  - Unicidade por (solicitacaoId, CLIENTE_AVALIA_PRESTADOR) verificada por
+    avaliacaoRepository.existsBySolicitacaoIdAndTipo; lança BusinessException
+    ("Esta solicitação já foi avaliada")
+  - O campo nota é validado por @Min(1) @Max(5) em AvaliacaoDTO
+  - Tipo da avaliação definido como TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR
+  - Após salvar: atualizarMediaPrestador recalcula prestador.avaliacaoMedia e
+    prestador.totalAvaliacoes buscando todas as avaliações do tipo
+    CLIENTE_AVALIA_PRESTADOR via Pageable.unpaged()
+  - Retorno: AvaliacaoDTO com HTTP 201
+
+
+## RF-13 — Avaliação do Cliente pelo Prestador
+
+* Ator principal: ROLE_PRESTADOR autenticado
+* Endpoint: POST /api/avaliacoes/para-cliente
+* Corpo esperado: AvaliacaoDTO
+* Descrição: Prestador avalia o cliente após a conclusão do serviço
+* Regras de negócio derivadas do código (AvaliacaoService.criarPorPrestador):
+  - O prestador é resolvido por prestadorRepository.findByUsuarioId(
+    prestadorUserId)
+  - Solicitação deve ter status CONCLUIDA
+  - Verificação de participação: propostaRepository.findBySolicitacaoIdAndPrestadorId
+    deve retornar uma proposta com status ACEITA; caso contrário BusinessException
+    ("Você não prestou este serviço")
+  - Unicidade por (solicitacaoId, PRESTADOR_AVALIA_CLIENTE) verificada por
+    avaliacaoRepository.existsBySolicitacaoIdAndTipo; lança BusinessException
+    ("Você já avaliou o cliente desta solicitação")
+  - Tipo da avaliação definido como TipoAvaliacao.PRESTADOR_AVALIA_CLIENTE
+  - Após salvar: atualizarMediaCliente recalcula user.avaliacaoMedia e
+    user.totalAvaliacoes via avaliacaoRepository.findByClienteIdAndTipo com
+    TipoAvaliacao.PRESTADOR_AVALIA_CLIENTE e Pageable.unpaged()
+  - Retorno: AvaliacaoDTO com HTTP 201
+
+
+## RF-14 — Gerenciamento de Categorias
+
+* Ator principal: ROLE_ADMIN para escrita; público para leitura
+* Endpoints:
+  - GET /api/categorias e GET /api/categorias/{id} — acesso público (permitAll
+    no SecurityFilterChain via requestMatchers(HttpMethod.GET, "/api/categorias/**"))
+  - POST /api/categorias — restrito a ROLE_ADMIN (hasRole("ADMIN"))
+  - PUT /api/categorias/{id} — restrito a ROLE_ADMIN
+  - DELETE /api/categorias/{id} — restrito a ROLE_ADMIN
+* Regras de negócio:
+  - O campo nome é UNIQUE no banco (constraint da tabela categorias em
+    V1__initial_schema.sql)
+  - O campo descricao é TEXT e permite nulo
+
+
+================================================================================
+# 3. REQUISITOS NÃO FUNCIONAIS
+================================================================================
+
+## RNF-01 — Autenticação Stateless com JWT
+
+* Biblioteca: JJWT 0.12.3
+* Nenhum estado de sessão é mantido no servidor: SessionCreationPolicy.STATELESS
+  configurado em SecurityConfig.securityFilterChain
+* Cada requisição autenticada passa pelo JwtAuthenticationFilter
+  (extends OncePerRequestFilter)
+
+## RNF-02 — Segurança de Senhas
+
+* Todas as senhas são armazenadas com BCryptPasswordEncoder, instanciado como
+  @Bean em SecurityConfig.passwordEncoder
+* O frontend envia a senha codificada em Base64; o backend decodifica antes de
+  aplicar o BCrypt, mantendo a senha em texto plano fora dos logs e respostas
+
+## RNF-03 — CORS Parametrizado
+
+* Origem permitida configurada via variável de ambiente ${FRONTEND_URL}, lida
+  pelo campo @Value("${app.frontend.url}") em SecurityConfig
+* Métodos permitidos: GET, POST, PUT, PATCH, DELETE, OPTIONS
+* Headers permitidos: Authorization, Content-Type
+* Header exposto: Authorization
+* Credenciais habilitadas: setAllowCredentials(true)
+* Sem nenhum valor de origem hardcoded no código-fonte
+
+## RNF-04 — Schema de Banco Versionado com Flyway
+
+* Dependências: flyway-core + flyway-database-postgresql
+* ddl-auto: none — o Hibernate não altera o schema; toda alteração é feita por
+  migrations Flyway
+* baseline-on-migrate: true e baseline-version: 1 para ambientes com banco
+  preexistente
+* Migrations presentes:
+  - V1__initial_schema.sql — schema inicial completo (7 tabelas)
+  - V2__add_refresh_tokens.sql — adiciona tabela refresh_tokens
+
+## RNF-05 — Soft Delete de Usuários
+
+* A exclusão de conta (RF-05) define ativo = false, sem remover o registro
+* Histórico de transações, propostas e avaliações é preservado
+* O método isEnabled() de User retorna getAtivo(), integrando com o mecanismo
+  de desabilitação de conta do Spring Security
+
+## RNF-06 — Swagger/OpenAPI Desabilitado em Produção
+
+* Em desenvolvimento: swagger-ui disponível em /swagger-ui.html e api-docs em
+  /api-docs (configurado em application.yml)
+* Em produção: application-prod.yml desabilita ambos com springdoc.swagger-ui.
+  enabled: false e springdoc.api-docs.enabled: false
+
+## RNF-07 — Ambiente Containerizado com Docker Compose
+
+* Três serviços definidos no docker-compose.yml: frontend (Node 22-alpine),
+  backend (com Dockerfile em backend/) e PostgreSQL 16-alpine
+* Variáveis de ambiente injetadas via arquivo .env no backend (dotenv-java 3.0.0
+  via DotenvConfig)
+
+## RNF-08 — Paginação em Todos os Endpoints de Listagem
+
+* Todos os endpoints que retornam coleções usam Page<T> do Spring Data
+* O parâmetro Pageable é recebido diretamente nos métodos dos controllers
+  (page, size, sort via query string)
+* O modelo TypeScript PageResponse<T> no frontend espera os campos content,
+  totalElements, totalPages, size, number
+
+
+================================================================================
+# 4. HISTÓRIAS DE USUÁRIO
+================================================================================
+
+## US-01 — Fluxo Completo de Contratação de Serviço
+
+* Como CLIENTE autenticado
+* Quero abrir uma solicitação de serviço, receber propostas e contratar um
+  prestador
+* Para resolver minha necessidade de serviço doméstico ou profissional
+
+Critérios de Aceitação (derivados das regras do SolicitacaoServicoService e
+PropostaService):
+
+* POST /api/solicitacoes com Bearer token válido retorna HTTP 201 com
+  SolicitacaoServicoDTO contendo o id da solicitação criada e status ABERTA
+* GET /api/solicitacoes/abertas retorna a solicitação na listagem paginada com
+  status ABERTA e os campos foiAvaliadoPeloCliente e foiAvaliadoPeloPrestador
+  como false
+* PATCH /api/propostas/{id}/aceitar executado pelo cliente dono da solicitação
+  altera proposta.status para ACEITA e solicitacao.status para EM_ANDAMENTO;
+  as demais propostas da mesma solicitação permanecem com status ENVIADA
+* PATCH /api/propostas/{id}/aceitar executado por um cliente que não seja dono
+  retorna HTTP 403 ou HTTP 400 com BusinessException
+* PATCH /api/solicitacoes/{id}/concluir com solicitacao.status == EM_ANDAMENTO
+  altera o status para CONCLUIDA e retorna HTTP 200
+* PATCH /api/solicitacoes/{id}/concluir com solicitacao.status != EM_ANDAMENTO
+  retorna erro com BusinessException("Apenas solicitações em andamento podem
+  ser concluídas")
+* Somente o cliente dono da solicitação pode executar as ações de aceitar
+  proposta e concluir serviço
+
+
+## US-02 — Fluxo do Prestador — Enviar Proposta e Avaliar Cliente
+
+* Como PRESTADOR autenticado com perfil criado
+* Quero ver solicitações abertas e enviar uma proposta com meu preço
+* Para fechar novos contratos de serviço e construir reputação na plataforma
+
+Critérios de Aceitação (derivados das regras do PropostaService e AvaliacaoService):
+
+* GET /api/solicitacoes/abertas retorna solicitações paginadas com status ABERTA;
+  suporta filtros opcionais por categoriaId, cidade e estado
+* POST /api/propostas com usuário ROLE_PRESTADOR cria a proposta com status
+  ENVIADA e retorna HTTP 201
+* POST /api/propostas com usuário ROLE_CLIENTE retorna HTTP 403 (acesso negado
+  pelo SecurityFilterChain: POST /api/prestadores/** requer ROLE_PRESTADOR;
+  a proteção de POST /api/propostas é por anyRequest().authenticated() mais a
+  validação de perfil de prestador no PropostaService)
+* Um prestador não pode enviar duas propostas para a mesma solicitação;
+  segunda tentativa lança BusinessException("Você já enviou uma proposta para
+  esta solicitação")
+* Um prestador sem perfil criado (sem registro em prestadores) recebe
+  ResourceNotFoundException("Prestador não encontrado") ao tentar enviar
+  proposta
+* Após o serviço estar com status CONCLUIDA, o prestador pode avaliar o cliente
+  via POST /api/avaliacoes/para-cliente
+* A avaliação requer que exista uma proposta com status ACEITA para o par
+  (solicitacaoId, prestadorId); caso contrário BusinessException("Você não
+  prestou este serviço")
+* A nota deve estar entre 1 e 5 (validado por @Min(1) @Max(5) em AvaliacaoDTO)
+* Após a avaliação, user.avaliacaoMedia e user.totalAvaliacoes do cliente são
+  recalculados automaticamente
+
+
+## US-03 — Sessão Resiliente com Refresh Token
+
+* Como usuário autenticado
+* Quero que minha sessão seja renovada automaticamente ao expirar
+* Para não ser deslogado no meio de uma operação na plataforma
+
+Critérios de Aceitação (derivados do RefreshTokenService e authInterceptor):
+
+* POST /api/auth/login retorna AuthResponseDTO com token (validade 24h via
+  jwt.expiration = 86400000 ms) e refreshToken (validade 7 dias via
+  jwt.refresh-expiration = 604800000 ms)
+* POST /api/auth/refresh com RefreshRequestDTO contendo refreshToken válido
+  retorna novo token e novo refreshToken (rotação: token antigo excluído por
+  deleteByUser antes de criar o novo)
+* Após uso do refresh, o token anterior não é mais aceito (deleted, não apenas
+  flagged)
+* O authInterceptor Angular (HttpInterceptorFn funcional em
+  interceptors/auth.interceptor.ts) detecta HTTP 401 em qualquer endpoint que
+  não contenha '/api/auth/' na URL
+* Ao detectar 401: o interceptor lê refreshToken do localStorage, chama
+  authService.refresh(refreshToken), e em caso de sucesso retenta a requisição
+  original com o novo token via switchMap
+* Se o refresh falhar (catchError interno): authService.logout() limpa o
+  localStorage e router.navigate(['/login']) redireciona o usuário
+* localStorage armazena três chaves: 'token' (JWT), 'refreshToken' e
+  'currentUser' (AuthResponse serializado em JSON)

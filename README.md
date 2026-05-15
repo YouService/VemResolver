@@ -109,6 +109,10 @@ Criados automaticamente pelo `DataSeeder` apenas nos perfis `dev` / padrão (nun
 | [`docs/REGRAS-DE-NEGOCIO.md`](docs/REGRAS-DE-NEGOCIO.md) | Fluxo completo do marketplace, estados, autorizações |
 | [`docs/API.md`](docs/API.md) | Contratos OpenAPI dos endpoints principais |
 | [`docs/LEVANTAMENTO.md`](docs/LEVANTAMENTO.md) | Levantamento técnico — estado atual, débitos e plano de ação |
+| [`docs/01-requisitos-e-visao.txt`](docs/01-requisitos-e-visao.txt) | Documento oficial de requisitos — RF-01 a RF-14, RNF-01 a RNF-08, histórias de usuário |
+| [`docs/02-arquitetura-e-banco.txt`](docs/02-arquitetura-e-banco.txt) | Arquitetura de software — camadas, Docker, segurança, modelo de dados completo |
+| [`docs/03-implementacao-e-apis.txt`](docs/03-implementacao-e-apis.txt) | Guia de implementação — contratos de API, DTOs, serviços Angular, boas práticas |
+| [`docs/04-testes-e-qualidade.txt`](docs/04-testes-e-qualidade.txt) | Plano de testes — inventário atual, gaps críticos, esqueletos de testes prioritários |
 
 ---
 

@@ -1,0 +1,533 @@
+# DOCUMENTO DE ARQUITETURA E BANCO DE DADOS — VemResolver
+# Versão 1.0 — Gerado em 2026-05-15
+# Baseado no código-fonte real do repositório (branch main)
+
+================================================================================
+# 1. DOCUMENTO DE ARQUITETURA DE SOFTWARE (DAS)
+================================================================================
+
+## 1.1 Visão Geral do Sistema
+
+VemResolver é um monólito modular com separação clara em dois processos
+independentes:
+
+* Processo backend: Spring Boot (JAR executável), responsável por toda a lógica
+  de negócio, persistência e segurança, expondo uma API REST/JSON
+* Processo frontend: Angular Single Page Application, responsável pela interface
+  do usuário, servida como arquivos estáticos (Node 22-alpine no container)
+* Banco de dados: PostgreSQL 16-alpine, acessado exclusivamente pelo backend via
+  Spring Data JPA/Hibernate
+
+A comunicação entre frontend e backend ocorre exclusivamente via HTTP/REST com
+payloads JSON. Não há GraphQL, WebSocket ou chamadas diretas ao banco pelo
+frontend.
+
+## 1.2 Stack Tecnológica Detalhada
+
+### Backend
+
+* Java 21 (LTS) — versão de compilação e execução
+* Spring Boot 3.2.1
+  - spring-boot-starter-web (servlet container Tomcat embutido)
+  - spring-boot-starter-data-jpa (Spring Data JPA + Hibernate)
+  - spring-boot-starter-security (Spring Security)
+  - spring-boot-starter-validation (Bean Validation / Jakarta Validation)
+  - spring-boot-starter-mail (JavaMail para envio de e-mail)
+* Spring Security com JWT stateless (JJWT 0.12.3 — io.jsonwebtoken)
+* Spring Data JPA com dialeto org.hibernate.dialect.PostgreSQLDialect
+* Flyway Core + flyway-database-postgresql (migrações versionadas)
+* Springdoc OpenAPI 2.3.0 (Swagger UI gerado automaticamente)
+* Lombok (geração de boilerplate: @Data, @NoArgsConstructor, @AllArgsConstructor,
+  @RequiredArgsConstructor via anotações)
+* dotenv-java 3.0.0 (carregamento de variáveis de ambiente do arquivo .env via
+  DotenvConfig)
+* Maven 3.9+ (gerenciador de build e dependências)
+
+### Frontend
+
+* Angular 19.2 com standalone components (sem NgModules tradicionais)
+* TypeScript 5.7
+* Tailwind CSS 3.4 (utilitários CSS aplicados inline nos templates)
+* Angular Material 19.2 (uso de MatIconModule nos componentes)
+* RxJS 7.8 (BehaviorSubject, Observable, tap, switchMap, catchError, throwError)
+* Angular CLI 19.2 (scaffolding e build)
+
+### Infraestrutura
+
+* Docker + Docker Compose 29.x
+* PostgreSQL 16-alpine (container de banco de dados)
+* Node 22-alpine (container do frontend — serve os arquivos estáticos)
+* Backend com Dockerfile próprio em backend/Dockerfile
+
+
+## 1.3 Arquitetura de Camadas — Backend
+
+O backend segue o padrão MVC em quatro camadas com pacotes raiz em
+com.marketplace.servicos:
+
+### Camada de Apresentação — com.marketplace.servicos.controller
+
+* Responsabilidade: receber requisições HTTP, delegar ao service, retornar
+  DTOs serializados em JSON
+* Não contém lógica de negócio; não acessa repositórios diretamente
+* Todos os endpoints documentados com anotações @Operation e @Tag do Springdoc
+* Controllers presentes:
+  - AuthController — /api/auth (register, login, verify, refresh, deletarConta)
+  - AvaliacaoController — /api/avaliacoes (criar, criarParaCliente, listarPorPrestador,
+    listarPorCliente)
+  - CategoriaController — /api/categorias (CRUD completo)
+  - PerfilController — /api/perfil (buscarPerfil, atualizarPerfil, alterarSenha)
+  - PrestadorController — /api/prestadores (perfil do prestador)
+  - PropostaController — /api/propostas (criar, listarPorSolicitacao, listarMinhas,
+    aceitar, recusar)
+  - SolicitacaoServicoController — /api/solicitacoes (criar, buscarPorId, atualizar,
+    listarMinhas, buscarAbertas, atualizarStatus, concluir, deletar)
+
+### Camada de Servico — com.marketplace.servicos.service
+
+* Responsabilidade: regras de negócio, orquestração de transações, validações,
+  mapeamento entre entidades e DTOs
+* Métodos de escrita anotados com @Transactional; métodos somente-leitura sem
+  anotação explícita (usa transação padrão do Spring Data)
+* Lança BusinessException para violações de regra de negócio e
+  ResourceNotFoundException para entidades não encontradas
+* Services presentes:
+  - AuthService — registro, verificação de conta, login, refresh, exclusão de conta
+  - AvaliacaoService — avaliação do prestador pelo cliente e do cliente pelo
+    prestador; recalculo de médias
+  - CategoriaService — CRUD de categorias
+  - EmailService (interface) — contrato de envio de e-mail
+    * ConsoleEmailService — implementação de desenvolvimento (imprime no console)
+    * SmtpEmailService — implementação de produção (usa spring-boot-starter-mail)
+  - PerfilService — leitura e atualização de perfil de usuário
+  - PrestadorService — criação e gerenciamento do perfil de prestador
+  - PropostaService — criação, listagem, aceite e recusa de propostas
+  - RefreshTokenService — geração, validação com rotação e revogação de refresh
+    tokens
+  - SolicitacaoServicoService — criação, atualização, listagem, conclusão e
+    exclusão de solicitações
+  - UserService — operações auxiliares sobre a entidade User
+
+### Camada de Persistência — com.marketplace.servicos.repository
+
+* Interfaces que estendem JpaRepository<T, Long>
+* Queries JPQL customizadas via @Query onde o Spring Data não consegue inferir
+  a consulta pelo nome do método (ex: deleteByUser em RefreshTokenRepository)
+* Repositories presentes:
+  - AvaliacaoRepository — inclui existsBySolicitacaoIdAndTipo,
+    findByPrestadorIdAndTipo, findByClienteIdAndTipo
+  - CategoriaRepository
+  - PrestadorRepository — inclui findByUsuarioId
+  - PropostaRepository — inclui existsBySolicitacaoIdAndPrestadorId,
+    findBySolicitacaoId, findByPrestadorId, findBySolicitacaoIdAndPrestadorId
+  - RefreshTokenRepository — inclui findByToken, deleteByUser
+  - SolicitacaoServicoRepository — inclui findByClienteId, findByStatus,
+    findByCategoriaAndStatus, findByCategoriaAndLocalizacaoAndStatus
+  - UserRepository — inclui findByEmail, findByIdAndTipo,
+    existsByCpfAndAtivoTrue, existsByEmailAndAtivoTrue
+  - VerificationTokenRepository — inclui findByToken
+
+### Camada de Modelo — com.marketplace.servicos.model
+
+* Entidades JPA puras: sem lógica de negócio; somente mapeamentos ORM e
+  callbacks de ciclo de vida (@PrePersist)
+* Entidades presentes:
+  - User — tabela usuarios; implementa UserDetails do Spring Security
+  - Categoria — tabela categorias
+  - Prestador — tabela prestadores; relação @OneToOne com User via usuario_id
+  - Proposta — tabela propostas
+  - SolicitacaoServico — tabela solicitacoes_servico
+  - Avaliacao — tabela avaliacoes; usa @CreationTimestamp do Hibernate para
+    dataCriacao
+  - RefreshToken — tabela refresh_tokens
+  - VerificationToken — usa LocalDateTime.now().plusMinutes(60 * 24) para
+    expiryDate no construtor (método calculateExpiryDate)
+* Enums:
+  - TipoUsuario — valores: CLIENTE, PRESTADOR, ADMIN
+  - StatusSolicitacao — valores: ABERTA, EM_ANDAMENTO, CONCLUIDA, CANCELADA
+  - StatusProposta — valores: ENVIADA, ACEITA, RECUSADA
+  - TipoAvaliacao — valores: CLIENTE_AVALIA_PRESTADOR, PRESTADOR_AVALIA_CLIENTE
+
+
+## 1.4 Arquitetura do Frontend Angular
+
+### Estrutura de src/app
+
+* components/ — 25+ componentes standalone organizados por funcionalidade:
+  - AuthController: login.component.ts, register/register.component.ts,
+    verify-account.component.ts
+  - Cliente: cliente-dashboard.component.ts, cliente-nova-solicitacao.component.ts,
+    cliente-editar-solicitacao.component.ts, cliente-propostas-recebidas.component.ts,
+    cliente-avaliacao.component.ts, cliente-perfil.component.ts
+  - Prestador: prestador-dashboard.component.ts,
+    prestador-enviar-proposta.component.ts, prestador-avaliacao.component.ts,
+    prestador-perfil/prestador-perfil.component.ts
+  - Publico: home/home.component.ts, sobre-nos.component.ts,
+    termos-uso.component.ts, politica-privacidade.component.ts,
+    seguranca.component.ts, seja-profissional.component.ts
+  - Compartilhado: navbar.component.ts, footer/footer.component.ts,
+    seletor-uf.component.ts, cookie-banner.component.ts,
+    notification-container/notification-container.component.ts,
+    global-snack-bar/global-snack-bar.component.ts
+  - A maioria dos componentes usa templates inline; HomeComponent e
+    PrestadorPerfilComponent possuem arquivos de template separados
+
+* services/ — serviços Angular com @Injectable providedIn: 'root':
+  - AuthService — gestão de estado de autenticação, chamadas a /api/auth,
+    /api/perfil
+  - AvaliacaoService — chamadas a /api/avaliacoes
+  - CategoriaService — chamadas a /api/categorias
+  - NotificationService — gerenciamento de notificações in-app
+  - PrestadorService — chamadas a /api/prestadores
+  - PropostaService — chamadas a /api/propostas
+  - SnackService — exibição de mensagens de feedback (snackbar)
+  - SolicitacaoService — chamadas a /api/solicitacoes
+  - UserService — chamadas a /api/perfil
+  - ViaCEPService — consulta à API externa ViaCEP para autocompletar endereço
+
+* interceptors/
+  - auth.interceptor.ts — HttpInterceptorFn funcional (sem classe); injeta o
+    Bearer token em toda requisição e trata HTTP 401 com retry via refresh token
+
+* guards/
+  - auth.guard.ts — exporta três CanActivateFn funcionais:
+    * authGuard — verifica isAuthenticated()
+    * clienteGuard — verifica isAuthenticated() && isCliente()
+    * prestadorGuard — verifica isAuthenticated() && isPrestador()
+
+* models/
+  - models.ts — arquivo único com todas as interfaces e enums TypeScript:
+    TipoUsuario, StatusSolicitacao, StatusProposta, TipoAvaliacao, User,
+    AuthResponse, LoginRequest, RegisterRequest, UpdatePerfilRequest,
+    AlterarSenhaRequest, Categoria, Prestador, SolicitacaoServico, Proposta,
+    Avaliacao, PageResponse<T>
+  - notification.model.ts — interface de notificação in-app
+  - menu-data.ts — dados estáticos do menu de navegação
+
+* validators/
+  - custom.validators.ts — validadores reativos customizados
+
+* directives/
+  - mask.directive.ts — diretiva para máscaras de campo (CPF, telefone)
+  - uppercase.directive.ts — diretiva para converter input em maiúsculas
+
+### Padrão de Estado (AuthService)
+
+* Estado do usuário mantido por BehaviorSubject<AuthResponse | null> no campo
+  privado currentUserSubject
+* currentUser$ (Observable) exposto para componentes subscreverem via async pipe
+* Persistência em localStorage com três chaves:
+  - 'token' — JWT do access token
+  - 'refreshToken' — token de renovação
+  - 'currentUser' — AuthResponse serializado em JSON
+* Na inicialização do serviço, getUserFromStorage() restaura o estado do
+  localStorage para o BehaviorSubject
+* isAuthenticated() verifica expiração do JWT decodificando o payload (atob de
+  token.split('.')[1]) e compara payload.exp * 1000 com Date.now(); se expirado
+  mas refreshToken presente, retorna true (o interceptor renova na próxima chamada)
+
+
+## 1.5 Segurança
+
+### Cadeia de Filtros (SecurityFilterChain — SecurityConfig)
+
+* CSRF: desabilitado (API stateless)
+* Sessão: SessionCreationPolicy.STATELESS
+* Regras de autorização por path+método:
+  - /api/auth/** — permitAll
+  - GET /api/categorias/** — permitAll
+  - POST, PUT, DELETE /api/categorias/** — hasRole("ADMIN")
+  - /swagger-ui/**, /api-docs/**, /swagger-ui.html — permitAll
+  - GET /api/prestadores/** — permitAll
+  - POST /api/prestadores/** — hasRole("PRESTADOR")
+  - qualquer outra requisição — authenticated()
+* Headers de segurança: frameOptions().deny() (anti-clickjacking);
+  xssProtection desabilitado em favor de padrões modernos
+
+### Fluxo de Autenticação
+
+1. Cliente envia POST /api/auth/login com LoginDTO (email, senha)
+2. AuthService.login() chama authenticationManager.authenticate() com
+   UsernamePasswordAuthenticationToken(email, senha)
+3. DaoAuthenticationProvider delega para CustomUserDetailsService.
+   loadUserByUsername(email) que executa userRepository.findByEmail(email)
+4. Se as credenciais são válidas e user.isEnabled() (ativo == true): autenticado
+5. JwtTokenProvider.generateToken() gera o JWT assinado com HMAC-SHA (chave
+   derivada de ${JWT_SECRET} decodificado em Base64)
+6. RefreshTokenService.generateRefreshToken() cria o registro em refresh_tokens
+7. Resposta: AuthResponseDTO com token (JWT 24h) e refreshToken (7 dias)
+
+### Fluxo de Validacao de Token em Cada Requisição
+
+1. JwtAuthenticationFilter.doFilterInternal() extrai o header Authorization
+2. Se presente e começar com "Bearer ": extrai o token (substring(7)) e chama
+   jwtTokenProvider.extractUsername(token)
+3. Se username extraído e SecurityContext vazio: carrega UserDetails via
+   CustomUserDetailsService e valida o token com jwtTokenProvider.validateToken
+4. Se válido: popula o SecurityContext com UsernamePasswordAuthenticationToken
+5. filterChain.doFilter() segue o processamento normal
+
+### Renovação (Refresh)
+
+1. Cliente envia POST /api/auth/refresh com RefreshRequestDTO
+2. RefreshTokenService.validateAndRotate() busca o token, verifica revoked e
+   expiryDate
+3. refreshTokenRepository.deleteByUser(user) exclui o token atual
+4. Novo RefreshToken é criado e persistido
+5. JwtTokenProvider.generateToken() gera novo JWT
+6. Retorno: AuthResponseDTO com novo token e novo refreshToken
+
+### CORS
+
+* Configurado em SecurityConfig.corsConfigurationSource()
+* Origins via frontendUrl (@Value("${app.frontend.url}"))
+* Métodos: GET, POST, PUT, PATCH, DELETE, OPTIONS
+* Headers permitidos: Authorization, Content-Type
+* Header exposto: Authorization
+* allowCredentials: true
+
+
+================================================================================
+# 2. MODELO DE BANCO DE DADOS
+================================================================================
+
+Schema criado e mantido por Flyway. Definicoes literais conforme os arquivos
+V1__initial_schema.sql e V2__add_refresh_tokens.sql.
+
+## Tabela: usuarios
+
+* id — BIGSERIAL, PRIMARY KEY
+* nome — VARCHAR(255), NOT NULL
+* login — VARCHAR(255), NOT NULL, UNIQUE (preenchido com o mesmo valor do email)
+* email — VARCHAR(255), NOT NULL, UNIQUE
+* senha — VARCHAR(255), NOT NULL (hash BCrypt; nunca o texto plano)
+* tipo — VARCHAR(50), NOT NULL (enum Java TipoUsuario: CLIENTE, PRESTADOR, ADMIN)
+* telefone — VARCHAR(255), nullable
+* cpf — VARCHAR(255), nullable (normalizado: somente dígitos via
+  DocumentUtils.somenteNumeroCpf)
+* rg — VARCHAR(255), nullable
+* orgao_expedidor — VARCHAR(255), nullable
+* data_expedicao_rg — VARCHAR(255), nullable (armazenado como String, não DATE)
+* cep — VARCHAR(255), nullable
+* endereco — VARCHAR(255), nullable
+* cidade — VARCHAR(255), nullable
+* estado — VARCHAR(255), nullable
+* numero — VARCHAR(255), nullable
+* complemento — VARCHAR(255), nullable
+* data_cadastro — TIMESTAMP(0), NOT NULL, preenchida pelo @PrePersist
+  (LocalDateTime.now().withNano(0))
+* ativo — BOOLEAN, NOT NULL, DEFAULT TRUE (false até o e-mail ser verificado;
+  false após soft delete)
+* avaliacao_media — FLOAT8, NOT NULL, DEFAULT 0.0 (recalculada após cada
+  avaliação do tipo PRESTADOR_AVALIA_CLIENTE)
+* total_avaliacoes — INTEGER, NOT NULL, DEFAULT 0
+
+
+## Tabela: categorias
+
+* id — BIGSERIAL, PRIMARY KEY
+* nome — VARCHAR(255), NOT NULL, UNIQUE (constraint de banco)
+* descricao — TEXT, nullable
+
+
+## Tabela: prestadores
+
+* id — BIGSERIAL, PRIMARY KEY
+* usuario_id — BIGINT, NOT NULL, UNIQUE — FK para usuarios.id
+  (constraint fk_prestador_usuario; relacao 1:1 entre Prestador e User)
+* descricao_perfil — TEXT, nullable
+* cidade — VARCHAR(255), nullable
+* estado — VARCHAR(255), nullable
+* avaliacao_media — FLOAT8, NOT NULL, DEFAULT 0.0 (recalculada após cada
+  avaliação do tipo CLIENTE_AVALIA_PRESTADOR)
+* total_avaliacoes — INTEGER, NOT NULL, DEFAULT 0
+
+Relacionamentos de prestadores:
+  * prestadores.usuario_id -> usuarios.id (N:1, mas UNIQUE faz ser 1:1 efetivo)
+  * prestadores.id <- prestador_categorias.prestador_id (1:N via tabela de
+    junção)
+  * prestadores.id <- propostas.prestador_id (1:N)
+  * prestadores.id <- avaliacoes.prestador_id (1:N)
+
+
+## Tabela: prestador_categorias (tabela de juncao N:N)
+
+* prestador_id — BIGINT, NOT NULL — FK para prestadores.id
+  (constraint fk_pc_prestador)
+* categoria_id — BIGINT, NOT NULL — FK para categorias.id
+  (constraint fk_pc_categoria)
+* PRIMARY KEY composta: (prestador_id, categoria_id)
+
+Semântica: um prestador pode atuar em múltiplas categorias; uma categoria pode
+ter múltiplos prestadores associados.
+
+
+## Tabela: solicitacoes_servico
+
+* id — BIGSERIAL, PRIMARY KEY
+* cliente_id — BIGINT, NOT NULL — FK para usuarios.id (constraint fk_ss_cliente;
+  relação N:1 — um cliente pode ter várias solicitações)
+* categoria_id — BIGINT, NOT NULL — FK para categorias.id (constraint
+  fk_ss_categoria; relação N:1)
+* descricao — TEXT, NOT NULL
+* cidade — VARCHAR(255), NOT NULL
+* estado — VARCHAR(255), NOT NULL
+* status — VARCHAR(50), NOT NULL, DEFAULT 'ABERTA' (enum Java StatusSolicitacao:
+  ABERTA, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
+* data_criacao — TIMESTAMP, NOT NULL, preenchida pelo @PrePersist da entidade
+  SolicitacaoServico
+
+Relacionamentos de solicitacoes_servico:
+  * solicitacoes_servico.cliente_id -> usuarios.id
+  * solicitacoes_servico.categoria_id -> categorias.id
+  * solicitacoes_servico.id <- propostas.solicitacao_id (1:N)
+  * solicitacoes_servico.id <- avaliacoes.solicitacao_id (1:N)
+
+
+## Tabela: propostas
+
+* id — BIGSERIAL, PRIMARY KEY
+* solicitacao_id — BIGINT, NOT NULL — FK para solicitacoes_servico.id
+  (constraint fk_prop_solicitacao; relação N:1)
+* prestador_id — BIGINT, NOT NULL — FK para prestadores.id
+  (constraint fk_prop_prestador; relação N:1)
+* valor — NUMERIC(10,2), NOT NULL
+* mensagem — TEXT, nullable
+* status — VARCHAR(50), NOT NULL, DEFAULT 'ENVIADA' (enum Java StatusProposta:
+  ENVIADA, ACEITA, RECUSADA)
+* data_envio — TIMESTAMP, NOT NULL, preenchida pelo @PrePersist da entidade
+  Proposta
+
+Unicidade de propostas: não há UNIQUE constraint declarada no DDL; a unicidade
+por (solicitacao_id, prestador_id) é garantida por validação em
+PropostaService.criar via
+propostaRepository.existsBySolicitacaoIdAndPrestadorId(solicitacao.getId(),
+prestador.getId()).
+
+
+## Tabela: avaliacoes
+
+* id — BIGSERIAL, PRIMARY KEY
+* solicitacao_id — BIGINT, NOT NULL — FK para solicitacoes_servico.id
+  (constraint fk_aval_solicitacao; relação N:1)
+* prestador_id — BIGINT, NOT NULL — FK para prestadores.id
+  (constraint fk_aval_prestador; relação N:1)
+* cliente_id — BIGINT, NOT NULL — FK para usuarios.id
+  (constraint fk_aval_cliente; relação N:1)
+* tipo — VARCHAR(50), NOT NULL, DEFAULT 'CLIENTE_AVALIA_PRESTADOR' (enum Java
+  TipoAvaliacao: CLIENTE_AVALIA_PRESTADOR, PRESTADOR_AVALIA_CLIENTE)
+* nota — INTEGER, NOT NULL (validado por @Min(1) @Max(5) em AvaliacaoDTO antes
+  da persistência)
+* comentario — TEXT, nullable
+* data_criacao — TIMESTAMP, NOT NULL, updatable = false, preenchida pela
+  anotação @CreationTimestamp do Hibernate
+
+Unicidade de avaliacoes: não há UNIQUE constraint no DDL; a unicidade por
+(solicitacao_id, tipo) é garantida por validação em AvaliacaoService via
+avaliacaoRepository.existsBySolicitacaoIdAndTipo antes de cada insert.
+
+
+## Tabela: verification_token
+
+* id — BIGSERIAL, PRIMARY KEY
+* token — VARCHAR(255) (UUID gerado por UUID.randomUUID().toString() em
+  AuthService.register)
+* user_id — BIGINT, NOT NULL — FK para usuarios.id (constraint fk_vt_user;
+  relação 1:1 com User via @OneToOne em VerificationToken)
+* expiry_date — TIMESTAMP (LocalDateTime.now().plusMinutes(60 * 24) = 24 horas
+  calculado no construtor de VerificationToken.calculateExpiryDate)
+
+Ciclo de vida: o registro é excluído por verificationTokenRepository.delete após
+verificação bem-sucedida.
+
+
+## Tabela: refresh_tokens (criada em V2__add_refresh_tokens.sql)
+
+* id — BIGSERIAL, PRIMARY KEY
+* token — VARCHAR(255), NOT NULL, UNIQUE (UUID gerado por
+  UUID.randomUUID().toString() em RefreshTokenService.generateRefreshToken)
+* user_id — BIGINT, NOT NULL — FK para usuarios.id (constraint fk_rt_user;
+  relação N:1 — historicamente pode haver múltiplos por usuário, mas apenas um
+  ativo é mantido pois deleteByUser é chamado antes de criar o novo)
+* expiry_date — TIMESTAMP, NOT NULL (LocalDateTime.now().plusSeconds(
+  refreshExpiration / 1000) onde refreshExpiration padrão é 604800000 ms =
+  604800 segundos = 7 dias)
+* revoked — BOOLEAN, NOT NULL, DEFAULT FALSE (verificado em validateAndRotate;
+  token com revoked = true é excluído ao ser detectado)
+
+
+================================================================================
+# 3. FLUXO DE SEQUÊNCIA TEXTUAL — Contratação de Prestador (Aceitar Proposta)
+================================================================================
+
+Este fluxo descreve em detalhe o que acontece internamente quando um cliente
+autenticado aceita uma proposta via PATCH /api/propostas/{id}/aceitar.
+
+1. O cliente envia a requisição:
+   PATCH /api/propostas/42/aceitar
+   Authorization: Bearer <jwt_token>
+
+2. A requisição chega ao JwtAuthenticationFilter.doFilterInternal():
+   * O header Authorization é lido e o prefixo "Bearer " removido
+   * JwtTokenProvider.extractUsername(token) extrai o subject (email do usuário)
+     do payload JWT via JJWT
+   * Como o SecurityContext está vazio, CustomUserDetailsService.
+     loadUserByUsername(email) busca o usuário no banco via
+     userRepository.findByEmail(email)
+   * JwtTokenProvider.validateToken(token, userDetails) verifica assinatura e
+     expiração
+   * UsernamePasswordAuthenticationToken é criado e populado no SecurityContext
+   * filterChain.doFilter() passa o controle adiante
+
+3. O SecurityFilterChain verifica a autorização:
+   * O path /api/propostas/{id}/aceitar não corresponde a nenhuma regra
+     específica, caindo em anyRequest().authenticated()
+   * Como o SecurityContext foi populado no passo 2, a requisição é autorizada
+
+4. PropostaController.aceitar() é invocado:
+   * @AuthenticationPrincipal User user é resolvido a partir do SecurityContext
+   * O método delega: propostaService.aceitarProposta(42L, user.getId())
+
+5. PropostaService.aceitarProposta(42L, clienteId) executa dentro de uma
+   transação @Transactional:
+
+   a. Busca a proposta:
+      proposta = propostaRepository.findById(42L)
+      Se não existir: lança ResourceNotFoundException("Proposta não encontrada")
+
+   b. Verifica posse:
+      proposta.getSolicitacao().getCliente().getId() deve ser igual a clienteId
+      Se diferente: lança BusinessException("Apenas o cliente dono da
+      solicitação pode aceitar propostas")
+
+   c. Verifica status:
+      proposta.getStatus() deve ser StatusProposta.ENVIADA
+      Se diferente: lança BusinessException("Esta proposta já foi processada")
+
+   d. Atualiza o status da proposta:
+      proposta.setStatus(StatusProposta.ACEITA)
+
+   e. Atualiza o status da solicitação (via referência lazy já carregada):
+      proposta.getSolicitacao().setStatus(StatusSolicitacao.EM_ANDAMENTO)
+
+   f. Persiste a proposta:
+      proposta = propostaRepository.save(proposta)
+
+   g. Persiste a solicitação separadamente:
+      solicitacaoRepository.save(proposta.getSolicitacao())
+
+   h. Converte para DTO e retorna:
+      return toDTO(proposta) — PropostaDTO com todos os campos preenchidos,
+      incluindo a flag foiAvaliadoPeloPrestador calculada via
+      avaliacaoRepository.existsBySolicitacaoIdAndTipo
+
+6. PropostaController retorna:
+   ResponseEntity<PropostaDTO> com HTTP 200 e o PropostaDTO no corpo
+
+7. O cliente recebe a resposta:
+   * PropostaDTO com status = ACEITA
+   * A solicitação associada passa a aparecer como EM_ANDAMENTO nos dashboards
+     (GET /api/solicitacoes/minhas e GET /api/solicitacoes/abertas já não a
+     incluem nos resultados ABERTA)
+   * As demais propostas da mesma solicitação permanecem com status ENVIADA —
+     o cliente pode recusá-las individualmente via PATCH /api/propostas/{id}/recusar

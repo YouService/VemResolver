@@ -1,0 +1,689 @@
+# 03 - Implementacao e APIs
+# VemResolver — Backend Spring Boot 3.4.1 / Java 21
+
+
+# PARTE A — GUIA DE ESTILO E CLEAN CODE
+# ============================================================
+
+## A.1 Praticas Observadas e Pontos Positivos
+
+* Separacao de camadas respeitada
+  * Controllers delegam para Services sem conter logica de negocio
+  * PropostaController injeta apenas PropostaService; SolicitacaoServicoController injeta
+    apenas SolicitacaoServicoService — nenhum repositorio e injetado diretamente em controller
+  * Services acessam repositorios e lancam excecoes de dominio; Controllers apenas transformam
+    ResponseEntity
+
+* DTOs usados em todas as entradas e saidas da API
+  * Entidades JPA (User, Proposta, SolicitacaoServico, Avaliacao, Categoria, Prestador) nunca
+    sao expostas diretamente como body de resposta
+  * DTOs concretos em uso: AuthResponseDTO, RegisterDTO, LoginDTO, RefreshRequestDTO,
+    UpdatePerfilDTO, AlterarSenhaDTO, SolicitacaoServicoDTO, PropostaDTO, AvaliacaoDTO,
+    PrestadorDTO, CategoriaDTO
+  * Excecao documentada: PerfilController.buscarPerfil() e atualizarPerfil() retornam a
+    entidade User (com senha zerada manualmente via user.setSenha(null) antes do retorno)
+
+* Excecoes de dominio especificas
+  * BusinessException — violacoes de regra de negocio, mapeada para HTTP 400 pelo
+    GlobalExceptionHandler
+  * ResourceNotFoundException — entidade nao encontrada, mapeada para HTTP 404
+  * BadCredentialsException do Spring Security — mapeada para HTTP 401 com mensagem
+    "Email ou senha invalidos"
+
+* GlobalExceptionHandler (@RestControllerAdvice) centraliza todos os handlers
+  * Handlers declarados: ResourceNotFoundException, BusinessException,
+    BadCredentialsException, MethodArgumentNotValidException, Exception (fallback 500)
+  * Retorna ErrorResponse com campos: timestamp, status, error, message, path, errors
+    (lista de erros de campo, preenchida apenas em MethodArgumentNotValidException)
+
+* @Transactional nos metodos que persistem dados
+  * AuthService.register(), verifyAccount() e deletarConta() anotados com @Transactional
+  * RefreshTokenService.generateRefreshToken(), validateAndRotate() e revokeByUser()
+    anotados com @Transactional
+
+* Bean Validation nos DTOs
+  * SolicitacaoServicoDTO: @NotNull em categoriaId, @NotBlank em descricao, cidade, estado
+  * PropostaDTO: @NotNull em solicitacaoId e valor, @Positive em valor
+  * AvaliacaoDTO: @NotNull em solicitacaoId e nota, @Min(1) e @Max(5) em nota
+  * PrestadorDTO: @NotNull em usuarioId e cidade, @NotEmpty em categoriasIds
+  * RegisterDTO: @NotBlank em nome, email e senha, @NotNull em tipo, @Email em email
+  * AlterarSenhaDTO: @NotBlank em senhaAtual, novaSenha e confirmarSenha, @Size(min=6)
+    em novaSenha
+  * RefreshRequestDTO: @NotBlank em refreshToken
+  * Todos os controllers usam @Valid no parametro @RequestBody
+
+* Controle de acesso em camadas
+  * SecurityFilterChain em SecurityConfig define regras por metodo HTTP e path:
+    - /api/auth/** — permitAll()
+    - GET /api/categorias/** — permitAll()
+    - POST, PUT, DELETE /api/categorias/** — hasRole("ADMIN")
+    - GET /api/prestadores/** — permitAll()
+    - POST /api/prestadores/** — hasRole("PRESTADOR")
+    - qualquer outra requisicao — authenticated()
+  * @PreAuthorize("hasRole('PRESTADOR')") em PrestadorController.criarOuAtualizar()
+  * @PreAuthorize("hasRole('ADMIN')") em CategoriaController.criar(), atualizar(), deletar()
+  * @EnableMethodSecurity habilitado em SecurityConfig
+
+* Injecao via construtor em todos os services e controllers
+  * Nenhum uso de @Autowired em campo — todos os beans recebem dependencias pelo construtor
+  * Exemplos: AuthService(UserRepository, VerificationTokenRepository, EmailService,
+    PasswordEncoder, JwtTokenProvider, AuthenticationManager, RefreshTokenService),
+    PropostaController(PropostaService), CategoriaController(CategoriaService)
+
+* Lombok nos modelos e DTOs
+  * @Data, @NoArgsConstructor, @AllArgsConstructor em: AuthResponseDTO, SolicitacaoServicoDTO,
+    PropostaDTO, AvaliacaoDTO, PrestadorDTO, CategoriaDTO, UpdatePerfilDTO, AlterarSenhaDTO
+  * @ToString.Exclude em User.senha para nao vazar hash em logs
+  * RegisterDTO nao usa @Data — getters/setters escritos manualmente (compatibilidade com
+    construtor customizado)
+
+* Senha protegida em serializacao
+  * User.senha: @JsonProperty(access = Access.WRITE_ONLY)
+  * RegisterDTO.senha: @JsonProperty(access = Access.WRITE_ONLY)
+  * A senha recebida no register vem como Base64 da senha real; DecodeValueUtils.decodeBase64()
+    faz o decode antes do encode com BCrypt
+
+* CORS configurado em SecurityConfig.corsConfigurationSource()
+  * Origem permitida: valor da propriedade app.frontend.url (ex.: http://localhost:4200)
+  * Metodos permitidos: GET, POST, PUT, PATCH, DELETE, OPTIONS
+  * Headers permitidos: Authorization, Content-Type
+  * allowCredentials: true
+
+* Rotacao de refresh token implementada em RefreshTokenService
+  * generateRefreshToken() deleta tokens existentes do usuario antes de criar novo
+    (deleteByUser chamado antes de save)
+  * validateAndRotate() verifica revoked e expiryDate; deleta token antigo e cria novo
+  * revokeByUser() deleta todos os tokens do usuario (chamado em deletarConta())
+
+
+## A.2 Pontos de Melhoria Identificados
+
+* System.out.println em AuthService (AuthService.java linhas 127-134, 142-165)
+  * AuthService.register() usa System.out.println("Tentando enviar e-mail de verificacao
+    para: " + user.getEmail()) e System.err.println("ALERTA: Falha ao enviar e-mail...")
+  * AuthService.verifyAccount() usa System.out.println("=== DEBUG VERIFICACAO ==="),
+    System.out.println("Token recebido: " + token), System.out.println("Data de expiracao:
+    " + verificationToken.getExpiryDate()) e System.out.println("Conta verificada!")
+  * Em producao esses logs aparecem no stdout sem nivel de log configuravel
+  * Acao: declarar private static final Logger log = LoggerFactory.getLogger(AuthService.class)
+    e substituir por log.info(), log.warn(), log.error() com os respectivos niveis
+
+* Campo senhaRegister como estado de instancia em AuthService (AuthService.java linha 40)
+  * private String senhaRegister = null declarado como campo da classe, que e singleton
+    (@Service)
+  * A linha 78 faz senhaRegister = DecodeValueUtils.decodeBase64(registerDTO.getSenha())
+    atribuindo ao campo de instancia em vez de variavel local
+  * Em requisicoes concorrentes, um thread pode ler o valor escrito por outro thread antes
+    de usar a senha
+  * Acao: mover para variavel local dentro de register():
+    String senhaRegister = DecodeValueUtils.decodeBase64(registerDTO.getSenha());
+
+* Comentarios de bloco de historico/implementacao em AuthService (AuthService.java
+  linhas 77, 125, 135)
+  * "// removendo a senha do payload. Ela sera tratada separadamente..."
+  * "// --- CORRECAO AQUI: Bloco try-catch para e-mail ---"
+  * "// -------------------------------------------------"
+  * Comentarios que documentam decisoes de implementacao ou correcoes pertencem ao
+    commit message; no codigo so devem ficar comentarios que explicam o "por que"
+    nao obvio de algo que permanece assim intencionalmente
+
+* CPF hardcoded em FluxoPrincipalTest (FluxoPrincipalTest.java linha 194)
+  * cadastrarUsuario() usa CPF fixo "111.111.111-11" para CLIENTE e "222.222.222-22"
+    para PRESTADOR
+  * O @BeforeEach deleta por email mas nao por CPF; se um usuario com CPF diferente mas
+    mesmo CPF ja existir no banco, o teste falha com BusinessException "CPF ja cadastrado"
+  * Acao: gerar CPFs unicos por execucao no @BeforeEach, por exemplo usando UUID truncado
+    ou numero sequencial controlado por AtomicLong
+
+* Rotas /servicos inexistentes referenciadas no frontend
+  * HomeComponent.buscarServico() e selecionarCategoria() chamam
+    this.router.navigate(['/servicos'])
+  * Esta rota nao esta declarada em app.routes.ts; o roteador cai no wildcard e
+    redireciona para ''
+  * Acao: implementar o componente e a rota /servicos, ou corrigir o destino para uma
+    rota existente (/prestadores ou similar)
+
+* Templates HTML inline em componentes Angular
+  * Aproximadamente 20 componentes definem template: `...` diretamente no decorador
+    @Component (ClienteDashboardComponent, PrestadorDashboardComponent, LoginComponent,
+    entre outros)
+  * Isso dificulta navegacao no IDE, diff em pull requests e syntax highlighting
+  * Padrao recomendado: templateUrl apontando para arquivo .html separado, ja seguido
+    por HomeComponent e PrestadorPerfilComponent
+
+
+## A.3 Convencoes a Seguir
+
+* Nomes de endpoints
+  * Paths: kebab-case (/nova-solicitacao, /para-cliente, /aceitar, /recusar, /concluir)
+  * Parametros de query: camelCase (categoriaId, minAvaliacao)
+  * Path variables: camelCase ({solicitacaoId}, {prestadorId}, {clienteId})
+
+* Retornos de listagem
+  * Sempre Page<T> com Pageable como parametro do metodo
+  * Nunca List<T> em endpoints publicos de listagem
+  * Exemplos: listarTodas(Pageable pageable), buscar(..., Pageable pageable),
+    listarPorSolicitacao(Long solicitacaoId, Pageable pageable)
+
+* Criacao de recursos
+  * HTTP 201 Created via ResponseEntity.status(HttpStatus.CREATED).body(dto)
+  * Usado em: POST /api/auth/register, POST /api/solicitacoes, POST /api/propostas,
+    POST /api/avaliacoes, POST /api/categorias
+
+* Atualizacao de estado (PATCH)
+  * HTTP 200 com o recurso atualizado completo
+  * PATCH /api/propostas/{id}/aceitar retorna PropostaDTO com status ACEITA
+  * PATCH /api/propostas/{id}/recusar retorna PropostaDTO com status RECUSADA
+  * PATCH /api/solicitacoes/{id}/concluir retorna SolicitacaoServicoDTO com status CONCLUIDA
+
+* Erros de negocio
+  * HTTP 400 via BusinessException lancada no Service, capturada pelo GlobalExceptionHandler
+  * Mensagens de erro em portugues, descritivas (ex.: "cliente responsavel",
+    "em andamento", "CPF ja cadastrado em nosso sistema")
+
+* Nao encontrado
+  * HTTP 404 via ResourceNotFoundException lancada no Service
+
+* Acesso negado
+  * HTTP 403 gerenciado pelo Spring Security, sem corpo de mensagem de erro customizado
+
+
+# PARTE B — CONTRATOS DAS APIs (FORMATO OPENAPI TEXTUAL)
+# ============================================================
+
+## AUTH — /api/auth
+
+POST /api/auth/register
+  Descricao: Registra novo usuario (CLIENTE ou PRESTADOR), persiste com ativo=false e
+             envia e-mail de verificacao com token UUID
+  Autenticacao: publica (permitAll() no SecurityFilterChain)
+  Body — RegisterDTO:
+    * nome (String, @NotBlank)
+    * email (String, @NotBlank, @Email)
+    * senha (String, @NotBlank, @JsonProperty WRITE_ONLY — deve ser Base64 da senha real)
+    * tipo (TipoUsuario: CLIENTE | PRESTADOR, @NotNull)
+    * telefone (String, opcional)
+    * cpf (String, opcional — obrigatorio pela regra de negocio no AuthService.register())
+    * rg (String, opcional)
+    * orgaoExpedidor (String, opcional)
+    * dataExpedicaoRg (String, formato DD/MM/AAAA, opcional)
+    * cep (String, opcional)
+    * endereco (String, opcional)
+    * cidade (String, opcional)
+    * estado (String, opcional)
+    * numero (String, opcional)
+    * complemento (String, opcional)
+  Resposta 201 — AuthResponseDTO:
+    * token: null (conta ainda nao ativa, JWT nao gerado)
+    * refreshToken: null
+    * tipo: "Bearer"
+    * userId (Long)
+    * nome (String)
+    * email (String)
+    * tipoUsuario (TipoUsuario)
+  Erros possiveis:
+    * 400 — "Este CPF ja esta cadastrado em nosso sistema..."
+    * 400 — "Este email ja esta cadastrado em nosso sistema..."
+    * 400 — "E necessario fornecer o identificador: CPF."
+    * 400 — "E necessario fornecer o identificador: Email."
+    * 400 — erros de validacao Bean Validation (campo nome, email, senha, tipo)
+
+POST /api/auth/login
+  Descricao: Autentica usuario por email e senha; retorna par de tokens (JWT + refresh token)
+  Autenticacao: publica (permitAll() no SecurityFilterChain)
+  Body — LoginDTO:
+    * email (String)
+    * senha (String — plaintext, nao Base64; o frontend envia sem codificacao adicional
+      neste endpoint)
+  Resposta 200 — AuthResponseDTO:
+    * token (String — JWT com validade de 24h)
+    * refreshToken (String — UUID v4, validade configurada por jwt.refresh-expiration,
+      padrao 604800000 ms = 7 dias)
+    * tipo: "Bearer"
+    * userId (Long)
+    * nome (String)
+    * email (String)
+    * tipoUsuario (TipoUsuario)
+  Erros possiveis:
+    * 401 — "Email ou senha invalidos" (BadCredentialsException via AuthenticationManager)
+    * 400 — "Sua conta ainda nao foi ativada. Verifique seu email." (ativo=false)
+
+POST /api/auth/refresh
+  Descricao: Renova o access token usando o refresh token; rotaciona o refresh token
+             (token antigo e deletado, novo UUID e gerado e persistido)
+  Autenticacao: publica (permitAll() no SecurityFilterChain via /api/auth/**)
+  Body — RefreshRequestDTO:
+    * refreshToken (String, @NotBlank)
+  Resposta 200 — AuthResponseDTO:
+    * token (String — novo JWT 24h)
+    * refreshToken (String — novo UUID; token antigo revogado)
+    * userId (Long)
+    * nome (String)
+    * email (String)
+    * tipoUsuario (TipoUsuario)
+  Erros possiveis:
+    * 400 — "Refresh token invalido" (nao encontrado no banco)
+    * 400 — "Refresh token expirado. Faca login novamente." (revoked=true ou
+      expiryDate antes de LocalDateTime.now())
+
+GET /api/auth/verify
+  Descricao: Ativa a conta do usuario via token UUID enviado por e-mail;
+             seta ativo=true no User e deleta o VerificationToken
+  Autenticacao: publica
+  Query parameter:
+    * token (String — UUID do VerificationToken)
+  Resposta 200 — String:
+    * "Conta verificada com sucesso! Voce ja pode fazer login."
+  Erros possiveis:
+    * 400 — "Token de verificacao invalido." (token nao encontrado)
+    * 400 — "O link de verificacao expirou. Solicite um novo." (expiryDate expirado)
+
+DELETE /api/auth/conta
+  Descricao: Desativa a conta do usuario autenticado (soft delete: ativo=false) e
+             revoga todos os seus refresh tokens via RefreshTokenService.revokeByUser()
+  Autenticacao: Bearer JWT (anyRequest().authenticated())
+  Body: nenhum
+  Principal: @AuthenticationPrincipal User user — o usuario e obtido pelo ID do principal
+  Resposta 204: sem corpo
+  Erros possiveis:
+    * 400 — "Usuario nao encontrado"
+    * 401 — token JWT ausente ou invalido
+
+
+## PERFIL — /api/perfil
+
+GET /api/perfil
+  Descricao: Retorna os dados completos do usuario autenticado; campo senha e zerado
+             manualmente (user.setSenha(null)) antes do retorno
+  Autenticacao: Bearer JWT
+  Resposta 200 — User (entidade JPA, senha=null):
+    * id (Long)
+    * nome (String)
+    * login (String)
+    * email (String)
+    * tipo (TipoUsuario)
+    * telefone (String)
+    * cpf (String)
+    * rg (String)
+    * orgaoExpedidor (String)
+    * dataExpedicaoRg (String)
+    * cep (String)
+    * endereco (String)
+    * cidade (String)
+    * estado (String)
+    * numero (String)
+    * complemento (String)
+    * dataCadastro (LocalDateTime)
+    * ativo (Boolean)
+    * avaliacaoMedia (Double)
+    * totalAvaliacoes (Integer)
+  Nota: campo senha omitido na resposta por @JsonProperty(access = WRITE_ONLY) na
+        entidade User
+
+PUT /api/perfil
+  Descricao: Atualiza dados editaveis do perfil do usuario autenticado
+  Autenticacao: Bearer JWT
+  Body — UpdatePerfilDTO:
+    * nome (String, @NotBlank)
+    * email (String, @NotBlank, @Email)
+    * telefone (String, opcional)
+    * cep (String, opcional)
+    * endereco (String, opcional)
+    * cidade (String, opcional)
+    * estado (String, opcional)
+    * rg (String, opcional)
+    * orgaoExpedidor (String, opcional)
+    * dataExpedicaoRg (String, opcional)
+  Resposta 200 — User atualizado (senha=null)
+  Erros possiveis:
+    * 400 — erros de validacao Bean Validation
+    * 401 — token JWT ausente ou invalido
+
+PUT /api/perfil/senha
+  Descricao: Altera a senha do usuario autenticado
+  Autenticacao: Bearer JWT
+  Body — AlterarSenhaDTO:
+    * senhaAtual (String, @NotBlank)
+    * novaSenha (String, @NotBlank, @Size(min=6))
+    * confirmarSenha (String, @NotBlank)
+  Resposta 200: void (sem corpo)
+  Erros possiveis:
+    * 400 — senha atual incorreta
+    * 400 — erros de validacao Bean Validation
+    * 401 — token JWT ausente ou invalido
+
+
+## SOLICITACOES — /api/solicitacoes
+
+POST /api/solicitacoes
+  Descricao: Cria uma nova solicitacao de servico associada ao usuario autenticado como
+             cliente
+  Autenticacao: Bearer JWT (anyRequest().authenticated())
+  Body — SolicitacaoServicoDTO:
+    * categoriaId (Long, @NotNull)
+    * descricao (String, @NotBlank)
+    * cidade (String, @NotBlank)
+    * estado (String, @NotBlank)
+  Principal: @AuthenticationPrincipal User user — clienteId e extraido de user.getId()
+  Resposta 201 — SolicitacaoServicoDTO:
+    * id (Long)
+    * clienteId (Long)
+    * clienteNome (String)
+    * categoriaId (Long)
+    * categoriaNome (String)
+    * descricao (String)
+    * cidade (String)
+    * estado (String)
+    * status (StatusSolicitacao: ABERTA)
+    * dataCriacao (LocalDateTime)
+    * foiAvaliadoPeloCliente (Boolean)
+    * foiAvaliadoPeloPrestador (Boolean)
+  Erros possiveis:
+    * 400 — erros de validacao Bean Validation
+    * 404 — categoria nao encontrada
+
+GET /api/solicitacoes/minhas
+  Descricao: Lista as solicitacoes do cliente autenticado, paginada
+  Autenticacao: Bearer JWT
+  Query parameters (Pageable): page, size, sort
+  Resposta 200 — Page<SolicitacaoServicoDTO>
+
+GET /api/solicitacoes/abertas
+  Descricao: Lista solicitacoes com status ABERTA; permite filtros opcionais por
+             categoriaId, cidade e estado
+  Autenticacao: Bearer JWT
+  Query parameters:
+    * categoriaId (Long, opcional)
+    * cidade (String, opcional)
+    * estado (String, opcional)
+    * Pageable: page, size, sort
+  Resposta 200 — Page<SolicitacaoServicoDTO>
+
+GET /api/solicitacoes/{id}
+  Descricao: Busca solicitacao por ID
+  Autenticacao: Bearer JWT
+  Path variable: id (Long)
+  Resposta 200 — SolicitacaoServicoDTO
+  Erros possiveis:
+    * 404 — solicitacao nao encontrada
+
+PUT /api/solicitacoes/{id}
+  Descricao: Atualiza dados de uma solicitacao existente
+  Autenticacao: Bearer JWT
+  Path variable: id (Long)
+  Body — SolicitacaoServicoDTO (campos editaveis)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 200 — SolicitacaoServicoDTO atualizado
+
+PATCH /api/solicitacoes/{id}/concluir
+  Descricao: Marca o servico como concluido; valida que o usuario autenticado e o cliente
+             dono da solicitacao e que o status atual e EM_ANDAMENTO
+  Autenticacao: Bearer JWT
+  Path variable: id (Long)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 200 — SolicitacaoServicoDTO com status CONCLUIDA
+  Erros possiveis:
+    * 400 — "Somente o cliente responsavel pode concluir o servico."
+    * 400 — "O servico precisa estar em andamento para ser concluido."
+    * 404 — solicitacao nao encontrada
+
+PATCH /api/solicitacoes/{id}/status
+  Descricao: Muda status manualmente (uso administrativo/interno)
+  Autenticacao: Bearer JWT
+  Path variable: id (Long)
+  Query parameter: status (StatusSolicitacao)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 200 — SolicitacaoServicoDTO
+
+DELETE /api/solicitacoes/{id}
+  Descricao: Cancela/exclui uma solicitacao
+  Autenticacao: Bearer JWT
+  Path variable: id (Long)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 204: sem corpo
+
+
+## PROPOSTAS — /api/propostas
+
+POST /api/propostas
+  Descricao: Envia uma proposta para uma solicitacao com status ABERTA; o prestadorId
+             e resolvido pelo PropostaService a partir do usuarioId do principal
+  Autenticacao: Bearer JWT (anyRequest().authenticated(); regra de negocio valida
+                que o usuario e PRESTADOR dentro do service)
+  Body — PropostaDTO:
+    * solicitacaoId (Long, @NotNull)
+    * valor (BigDecimal, @NotNull, @Positive)
+    * mensagem (String, opcional)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 201 — PropostaDTO:
+    * id (Long)
+    * solicitacaoId (Long)
+    * prestadorId (Long)
+    * prestadorNome (String)
+    * valor (BigDecimal)
+    * mensagem (String)
+    * status (StatusProposta: ENVIADA)
+    * dataEnvio (LocalDateTime)
+    * solicitacaoDescricao (String)
+    * solicitacaoStatus (StatusSolicitacao)
+    * clienteNome (String)
+    * clienteId (Long)
+    * cidade (String)
+    * estado (String)
+    * categoriaNome (String)
+    * foiAvaliadoPeloPrestador (Boolean)
+  Erros possiveis:
+    * 400 — solicitacao nao esta ABERTA
+    * 400 — prestador ja enviou proposta para esta solicitacao (duplicata)
+    * 404 — prestador nao encontrado (usuario nao tem perfil de Prestador)
+
+GET /api/propostas/solicitacao/{solicitacaoId}
+  Descricao: Lista propostas de uma solicitacao, paginada
+  Autenticacao: Bearer JWT
+  Path variable: solicitacaoId (Long)
+  Query parameters (Pageable): page, size, sort
+  Resposta 200 — Page<PropostaDTO>
+
+GET /api/propostas/minhas
+  Descricao: Lista as propostas do prestador autenticado, paginada
+  Autenticacao: Bearer JWT
+  Query parameters (Pageable): page, size, sort
+  Principal: @AuthenticationPrincipal User user
+  Resposta 200 — Page<PropostaDTO>
+
+PATCH /api/propostas/{id}/aceitar
+  Descricao: Aceita uma proposta; muda proposta.status para ACEITA e
+             solicitacao.status para EM_ANDAMENTO
+  Autenticacao: Bearer JWT (deve ser o cliente dono da solicitacao)
+  Path variable: id (Long)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 200 — PropostaDTO com status ACEITA
+  Erros possiveis:
+    * 400 — usuario nao e o cliente dono da solicitacao
+    * 400 — proposta ja foi processada (status != ENVIADA)
+    * 404 — proposta nao encontrada
+
+PATCH /api/propostas/{id}/recusar
+  Descricao: Recusa uma proposta; muda proposta.status para RECUSADA
+  Autenticacao: Bearer JWT (deve ser o cliente dono da solicitacao)
+  Path variable: id (Long)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 200 — PropostaDTO com status RECUSADA
+  Erros possiveis:
+    * 400 — usuario nao e o cliente dono da solicitacao
+    * 400 — proposta ja foi processada
+    * 404 — proposta nao encontrada
+
+
+## AVALIACOES — /api/avaliacoes
+
+POST /api/avaliacoes
+  Descricao: Cliente avalia o prestador apos o servico ser concluido;
+             tipo da avaliacao e CLIENTE_AVALIA_PRESTADOR
+  Autenticacao: Bearer JWT
+  Body — AvaliacaoDTO:
+    * solicitacaoId (Long, @NotNull)
+    * prestadorId (Long)
+    * nota (Integer, @NotNull, @Min(1), @Max(5))
+    * comentario (String, opcional)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 201 — AvaliacaoDTO:
+    * id (Long)
+    * solicitacaoId (Long)
+    * prestadorId (Long)
+    * clienteId (Long)
+    * clienteNome (String)
+    * tipo (TipoAvaliacao: CLIENTE_AVALIA_PRESTADOR)
+    * nomeAvaliador (String)
+    * nomeAvaliado (String)
+    * nota (Integer)
+    * comentario (String)
+    * dataCriacao (LocalDateTime)
+  Erros possiveis:
+    * 400 — solicitacao nao esta CONCLUIDA
+    * 400 — usuario autenticado nao e o cliente responsavel pela solicitacao
+    * 400 — solicitacao ja foi avaliada por este cliente (foiAvaliadoPeloCliente=true)
+
+POST /api/avaliacoes/para-cliente
+  Descricao: Prestador avalia o cliente apos o servico ser concluido;
+             tipo da avaliacao e PRESTADOR_AVALIA_CLIENTE
+  Autenticacao: Bearer JWT
+  Body — AvaliacaoDTO:
+    * solicitacaoId (Long, @NotNull)
+    * nota (Integer, @NotNull, @Min(1), @Max(5))
+    * comentario (String, opcional)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 201 — AvaliacaoDTO com tipo PRESTADOR_AVALIA_CLIENTE
+  Nota: AvaliacaoController.criarParaCliente() retorna HttpStatus.CREATED (201), nao 200
+        como documentado na especificacao original
+  Erros possiveis:
+    * 400 — solicitacao nao esta CONCLUIDA
+    * 400 — prestador nao realizou este servico (sem proposta com status ACEITA
+      vinculada a esta solicitacao)
+    * 400 — prestador ja avaliou esta solicitacao (foiAvaliadoPeloPrestador=true)
+
+GET /api/avaliacoes/prestador/{prestadorId}
+  Descricao: Lista avaliacoes recebidas por um prestador (tipo CLIENTE_AVALIA_PRESTADOR),
+             paginada
+  Autenticacao: publica
+  Path variable: prestadorId (Long)
+  Query parameters (Pageable): page, size, sort
+  Resposta 200 — Page<AvaliacaoDTO>
+
+GET /api/avaliacoes/cliente/{clienteId}
+  Descricao: Lista avaliacoes recebidas por um cliente (tipo PRESTADOR_AVALIA_CLIENTE),
+             paginada
+  Autenticacao: publica
+  Path variable: clienteId (Long)
+  Query parameters (Pageable): page, size, sort
+  Resposta 200 — Page<AvaliacaoDTO>
+
+
+## PRESTADORES — /api/prestadores
+
+GET /api/prestadores
+  Descricao: Lista prestadores com filtros opcionais, paginada
+  Autenticacao: publica (GET /api/prestadores/** — permitAll() no SecurityFilterChain)
+  Query parameters:
+    * categoriaId (Long, opcional)
+    * cidade (String, opcional)
+    * estado (String, opcional)
+    * minAvaliacao (Double, opcional)
+    * Pageable: page, size, sort
+  Resposta 200 — Page<PrestadorDTO>:
+    * id (Long)
+    * usuarioId (Long)
+    * categoriasIds (List<Long>)
+    * descricaoPerfil (String)
+    * cidade (String)
+    * estado (String)
+    * avaliacaoMedia (Double)
+    * totalAvaliacoes (Integer)
+
+GET /api/prestadores/{id}
+  Descricao: Busca prestador por ID do perfil Prestador (nao pelo usuarioId)
+  Autenticacao: publica
+  Path variable: id (Long)
+  Resposta 200 — PrestadorDTO
+  Erros possiveis:
+    * 404 — prestador nao encontrado
+
+GET /api/prestadores/me
+  Descricao: Retorna o perfil Prestador do usuario autenticado, buscando pelo usuarioId
+             via PrestadorService.buscarPorUsuarioId()
+  Autenticacao: Bearer JWT
+  Principal: @AuthenticationPrincipal User user
+  Resposta 200 — PrestadorDTO
+  Erros possiveis:
+    * 404 — perfil de prestador nao encontrado para este usuario
+
+POST /api/prestadores
+  Descricao: Cria ou atualiza o perfil de prestador do usuario autenticado;
+             dto.setUsuarioId(user.getId()) e chamado no controller antes de delegar
+             ao service
+  Autenticacao: Bearer JWT, ROLE_PRESTADOR obrigatorio (@PreAuthorize("hasRole('PRESTADOR')")
+                e regra no SecurityFilterChain)
+  Body — PrestadorDTO:
+    * usuarioId (Long, @NotNull — sobrescrito pelo controller com user.getId())
+    * categoriasIds (List<Long>, @NotEmpty)
+    * descricaoPerfil (String, opcional)
+    * cidade (String, @NotNull)
+    * estado (String, @NotNull)
+  Principal: @AuthenticationPrincipal User user
+  Resposta 200 — PrestadorDTO
+  Erros possiveis:
+    * 400 — categorias inexistentes na lista de categoriasIds
+    * 403 — usuario sem ROLE_PRESTADOR
+    * 404 — usuario nao encontrado com tipo PRESTADOR
+
+
+## CATEGORIAS — /api/categorias
+
+GET /api/categorias
+  Descricao: Lista todas as categorias, paginada
+  Autenticacao: publica (GET /api/categorias/** — permitAll() no SecurityFilterChain)
+  Query parameters (Pageable): page, size, sort
+  Resposta 200 — Page<CategoriaDTO>:
+    * id (Long)
+    * nome (String)
+    * descricao (String)
+
+GET /api/categorias/{id}
+  Descricao: Busca categoria por ID
+  Autenticacao: publica
+  Path variable: id (Long)
+  Resposta 200 — CategoriaDTO
+  Erros possiveis:
+    * 404 — categoria nao encontrada
+
+POST /api/categorias
+  Descricao: Cria nova categoria
+  Autenticacao: Bearer JWT, ROLE_ADMIN obrigatorio (@PreAuthorize("hasRole('ADMIN')")
+                e regra no SecurityFilterChain)
+  Body — CategoriaDTO:
+    * nome (String, @NotBlank — coluna UNIQUE na tabela)
+    * descricao (String, opcional)
+  Resposta 201 — CategoriaDTO criada
+  Erros possiveis:
+    * 400 — erros de validacao Bean Validation
+    * 403 — usuario sem ROLE_ADMIN
+    * 500 — violacao de unique constraint (nome duplicado)
+
+PUT /api/categorias/{id}
+  Descricao: Atualiza categoria existente
+  Autenticacao: Bearer JWT, ROLE_ADMIN obrigatorio
+  Path variable: id (Long)
+  Body — CategoriaDTO
+  Resposta 200 — CategoriaDTO atualizada
+  Erros possiveis:
+    * 403 — usuario sem ROLE_ADMIN
+    * 404 — categoria nao encontrada
+
+DELETE /api/categorias/{id}
+  Descricao: Remove categoria
+  Autenticacao: Bearer JWT, ROLE_ADMIN obrigatorio
+  Path variable: id (Long)
+  Resposta 204: sem corpo
+  Erros possiveis:
+    * 403 — usuario sem ROLE_ADMIN
+    * 404 — categoria nao encontrada
