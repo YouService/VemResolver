@@ -32,15 +32,15 @@ public class PropostaService {
     }
     
     @Transactional
-    public PropostaDTO criar(PropostaDTO dto, Long prestadorId) {
+    public PropostaDTO criar(PropostaDTO dto, Long usuarioId) {
         SolicitacaoServico solicitacao = solicitacaoRepository.findById(dto.getSolicitacaoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
-        
+
         if (solicitacao.getStatus() != StatusSolicitacao.ABERTA) {
             throw new BusinessException("Esta solicitação não está mais aberta para propostas");
         }
-        
-        Prestador prestador = prestadorRepository.findById(prestadorId)
+
+        Prestador prestador = prestadorRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Prestador não encontrado"));
         
         if (propostaRepository.existsBySolicitacaoIdAndPrestadorId(solicitacao.getId(), prestador.getId())) {
@@ -65,6 +65,13 @@ public class PropostaService {
     public Page<PropostaDTO> listarPorPrestador(Long prestadorId, Pageable pageable) {
         return propostaRepository.findByPrestadorId(prestadorId, pageable)
                 .map(this::toDTO);
+    }
+
+    public Page<PropostaDTO> listarMinhas(Long usuarioId, Pageable pageable) {
+        Long prestadorId = prestadorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Prestador não encontrado"))
+                .getId();
+        return listarPorPrestador(prestadorId, pageable);
     }
     
     @Transactional
