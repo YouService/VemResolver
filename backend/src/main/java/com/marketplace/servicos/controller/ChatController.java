@@ -1,0 +1,55 @@
+package com.marketplace.servicos.controller;
+
+import com.marketplace.servicos.dto.MensagemChatDTO;
+import com.marketplace.servicos.model.User;
+import com.marketplace.servicos.service.ChatService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/chat")
+@SecurityRequirement(name = "bearer-jwt")
+@Tag(name = "Chat", description = "Chat interno entre cliente e prestador")
+public class ChatController {
+
+    private final ChatService chatService;
+
+    public ChatController(ChatService chatService) {
+        this.chatService = chatService;
+    }
+
+    @GetMapping("/{solicitacaoId}")
+    @Operation(summary = "Listar mensagens do chat de um contrato")
+    public ResponseEntity<List<MensagemChatDTO>> listar(
+            @PathVariable Long solicitacaoId,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(chatService.listarMensagens(solicitacaoId, user.getId()));
+    }
+
+    @PostMapping("/{solicitacaoId}")
+    @Operation(summary = "Enviar mensagem no chat")
+    public ResponseEntity<MensagemChatDTO> enviar(
+            @PathVariable Long solicitacaoId,
+            @Valid @RequestBody MensagemChatDTO dto,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(chatService.enviarMensagem(solicitacaoId, user.getId(), dto.getTexto()));
+    }
+
+    @PatchMapping("/{solicitacaoId}/ler")
+    @Operation(summary = "Marcar mensagens recebidas como lidas")
+    public ResponseEntity<Void> marcarComoLidas(
+            @PathVariable Long solicitacaoId,
+            @AuthenticationPrincipal User user) {
+        chatService.marcarComoLidas(solicitacaoId, user.getId());
+        return ResponseEntity.noContent().build();
+    }
+}

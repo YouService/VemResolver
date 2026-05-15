@@ -197,3 +197,13 @@ export interface PageResponse<T> {
   size: number;
   number: number;
 }
+
+export interface MensagemChat {
+  id?: number;
+  solicitacaoId: number;
+  remetenteId?: number;
+  remetenteNome?: string;
+  texto: string;
+  dataEnvio?: string;
+  lida?: boolean;
+}

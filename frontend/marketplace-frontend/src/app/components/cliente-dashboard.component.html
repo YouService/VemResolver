@@ -161,6 +161,11 @@
                         </a>
                       }
                       @if (solicitacao.status === 'EM_ANDAMENTO') {
+                        <a
+                          [routerLink]="['/chat/solicitacao', solicitacao.id]"
+                          class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm">
+                          💬 Chat
+                        </a>
                         <button
                           (click)="confirmarConclusao(solicitacao)"
                           class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm">
@@ -295,7 +300,11 @@
               </div>
             }
             @if (solicitacaoSelecionada?.status === 'EM_ANDAMENTO') {
-              <div class="p-6 border-t bg-gray-50 flex justify-end">
+              <div class="p-6 border-t bg-gray-50 flex gap-3 justify-end">
+                <a [routerLink]="['/chat/solicitacao', solicitacaoSelecionada!.id]" (click)="fecharModal()"
+                   class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+                  💬 Chat
+                </a>
                 <button
                   (click)="confirmarConclusao(solicitacaoSelecionada!)"
                   class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">

@@ -42,7 +42,24 @@
       "Bash(New-Item -ItemType Directory -Force -Path \"C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\resources\\\\db\\\\migration\")",
       "Bash(Out-Null)",
       "Bash(Write-Output \"OK\")",
-      "Bash(mvn dependency:tree -Dincludes=org.flywaydb)"
+      "Bash(mvn dependency:tree -Dincludes=org.flywaydb)",
+      "Bash(docker restart marketplace-backend *)",
+      "Bash(kill %1)",
+      "Bash(docker-compose up *)",
+      "Bash(docker exec *)",
+      "WebFetch(domain:www.getninjas.com.br)",
+      "WebFetch(domain:www.cronoshare.com.br)",
+      "WebSearch",
+      "WebFetch(domain:blog.getninjas.com.br)",
+      "WebFetch(domain:suporte.cronoshare.com.br)",
+      "Bash(Get-ChildItem -Path \"C:\\\\dev\\\\workspace\\\\vemresolver\" -Recurse -Directory -Force)",
+      "Bash(Select-Object -First 30 FullName)",
+      "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos *)",
+      "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\resources\\\\db\\\\migration *)",
+      "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\\\\model *)",
+      "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\\\\controller *)",
+      "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\\\\repository *)",
+      "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\\\\service *)"
     ]
   }
 }

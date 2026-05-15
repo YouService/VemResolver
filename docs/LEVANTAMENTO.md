@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-15 (P3 concluída; análise competitiva P4 adicionada)  
+> **Última atualização:** 2026-05-15 (P4.1 — Chat Interno implementado)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -468,7 +468,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 | Funcionalidade | GetNinjas | Cronoshare | VemResolver |
 |---|:---:|:---:|:---:|
-| Chat interno (cliente ↔ prestador) | ✅ | ✅ | ❌ |
+| Chat interno (cliente ↔ prestador) | ✅ | ✅ | ✅ |
 | Portfólio de fotos de trabalhos realizados | ✅ | ✅ | ❌ |
 | Perfil público e URL compartilhável | ✅ | ✅ | ❌ |
 | Onboarding guiado com progress bar de perfil | ✅ | ✅ | ❌ |
@@ -498,7 +498,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 | # | Funcionalidade | Justificativa | Impacto | Esforço |
 |---|---|---|---|---|
-| P4.1 | **Chat interno** entre cliente e prestador após aceitação de proposta | Sem canal interno, partes trocam contato fora — risco de abandono e sem histórico | Alto | Médio |
+| P4.1 | **Chat interno** entre cliente e prestador após aceitação de proposta | Sem canal interno, partes trocam contato fora — risco de abandono e sem histórico | Alto | Médio | ✅ Entregue em 2026-05-15 |
 | P4.2 | **Portfólio de fotos** no perfil do prestador (até 10 imagens) | Principal elemento de conversão em serviços visuais (pintura, reforma, cozinha) | Alto | Baixo |
 | P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Reduz taxa de prestadores inativos por perfil incompleto | Médio-Alto | Baixo |
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo |
@@ -561,6 +561,14 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
+### Prioridade 4 — Competitividade (parcial)
+
+| Item | Branch | Data |
+|------|--------|------|
+| P4.1: Chat interno — `MensagemChat` entity + `ChatService` + `ChatController` + `V5__add_mensagens_chat.sql`; `ChatComponent` Angular com polling 30s, envio otimista, modo somente leitura para contratos encerrados; botão "Chat" integrado nos dashboards do cliente e do prestador; 10 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-10) | `feature/uc01-chat-interno` | 2026-05-15 |
+
+---
+
 ### Prioridade 3 — Evolução do produto
 
 | Item | Branch | Data |
@@ -576,4 +584,4 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
-*Atualizado em 2026-05-15 (hotfix admin login + análise competitiva P4) — sincronizado com README.md.*
+*Atualizado em 2026-05-15 (P4.1 Chat Interno entregue) — sincronizado com README.md.*
