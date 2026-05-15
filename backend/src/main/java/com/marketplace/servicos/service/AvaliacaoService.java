@@ -152,6 +152,7 @@ public class AvaliacaoService {
         dto.setTipo(avaliacao.getTipo());
         dto.setNota(avaliacao.getNota());
         dto.setComentario(avaliacao.getComentario());
+        dto.setDataCriacao(avaliacao.getDataCriacao());
 
         if (avaliacao.getTipo() == TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR) {
             dto.setNomeAvaliador(avaliacao.getCliente().getNome());

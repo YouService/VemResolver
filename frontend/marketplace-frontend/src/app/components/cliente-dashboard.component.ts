@@ -480,7 +480,9 @@ export class ClienteDashboardComponent implements OnInit {
 
   editarSolicitacao() {
     if (this.solicitacaoSelecionada) {
-      this.router.navigate(['/cliente/editar-solicitacao', this.solicitacaoSelecionada.id]);
+      const id = this.solicitacaoSelecionada.id;
+      this.fecharModal();
+      this.router.navigate(['/cliente/editar-solicitacao', id]);
     }
   }
 
