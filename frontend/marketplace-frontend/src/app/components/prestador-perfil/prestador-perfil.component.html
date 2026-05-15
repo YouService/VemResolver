@@ -142,6 +142,23 @@
           </div>
         </div>
 
+        <!-- Geolocalização -->
+        <div class="mb-6">
+          <label class="block text-gray-700 font-semibold mb-2">Localização (opcional)</label>
+          <p class="text-sm text-gray-500 mb-3">Permita que clientes próximos encontrem você por raio de distância</p>
+          <button type="button" (click)="obterLocalizacao()"
+            [disabled]="usandoLocalizacao"
+            class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-medium text-sm disabled:opacity-50">
+            {{ usandoLocalizacao ? 'Obtendo localização...' : '📍 Usar minha localização atual' }}
+          </button>
+          @if (erroLocalizacao) {
+            <p class="text-red-500 text-sm mt-2">{{ erroLocalizacao }}</p>
+          }
+          @if (perfilForm.get('latitude')?.value) {
+            <p class="text-green-600 text-sm mt-2">Localização salva (lat: {{ perfilForm.get('latitude')?.value | number:'1.4-4' }}, lng: {{ perfilForm.get('longitude')?.value | number:'1.4-4' }})</p>
+          }
+        </div>
+
         <!-- Error Message -->
         @if (errorMessage) {
           <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">

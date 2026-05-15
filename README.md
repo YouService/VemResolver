@@ -177,18 +177,18 @@ vemresolver/
 - ✅ B5: Todos os `console.error` sem feedback visual foram substituídos por mensagens de erro exibidas ao usuário — banners de erro nos dashboards, erros de CEP no perfil, erro de carregamento de categorias na home
 - ✅ B1: Rate limiting em `POST /api/auth/login` — `LoginRateLimitFilter` bloqueia IPs com mais de 10 tentativas por minuto com HTTP 429
 
+### Prioridade 3 — Evolução do produto (concluída)
+
+- ✅ Migração de todos os templates HTML inline para arquivos `.html` separados — 19 componentes migrados
+- ✅ Sistema de notificações em tempo real — polling a cada 30 s; sino com badge no navbar; painel dropdown com "Marcar todas como lidas"; triggers automáticos em proposta enviada, aceita, serviço concluído e avaliação recebida
+- ✅ Painel administrativo — estatísticas globais (usuários, solicitações, prestadores, avaliações), tabela de usuários paginada com ativação/desativação inline; endpoint `GET /api/admin/stats`, restrito a `ROLE_ADMIN`
+- ✅ Busca geolocalizada de prestadores por raio — `navigator.geolocation` no frontend; Haversine no backend (`GET /api/prestadores/proximo?lat&lng&raioKm`); prestador salva coordenadas via botão "Usar minha localização atual" no perfil; `V3__add_notificacoes_e_geolocalizacao.sql` adiciona `latitude`/`longitude` e tabela `notificacoes`
+
 ---
 
 ## O que fazer a seguir
 
-### Prioridade 3 — Evolução do produto (maior esforço)
-
-| Tarefa | Área | Esforço |
-|--------|------|---------|
-| Migrar templates HTML inline dos componentes legados para arquivos `.html` separados | Frontend | Médio |
-| Sistema de notificações em tempo real (polling ou WebSocket) | Full-stack | Grande |
-| Painel administrativo para gerenciar usuários, categorias e denúncias | Full-stack | Grande |
-| Busca geolocalizada de prestadores por raio de distância | Full-stack | Grande |
+Todas as prioridades 1, 2 e 3 foram concluídas. O produto está pronto para deploy em staging.
 
 ---
 

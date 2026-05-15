@@ -59,4 +59,15 @@ public class PrestadorController {
         dto.setUsuarioId(user.getId());
         return ResponseEntity.ok(prestadorService.criarOuAtualizar(dto));
     }
+
+    @GetMapping("/proximo")
+    @Operation(summary = "Buscar prestadores proximos por lat/lng e raio em km")
+    public ResponseEntity<Page<PrestadorDTO>> buscarProximos(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "50") double raioKm,
+            @RequestParam(required = false) Long categoriaId,
+            Pageable pageable) {
+        return ResponseEntity.ok(prestadorService.buscarProximos(lat, lng, raioKm, categoriaId, pageable));
+    }
 }

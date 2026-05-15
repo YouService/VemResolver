@@ -103,6 +103,10 @@ export class AuthService {
     return this.currentUserSubject.value?.tipoUsuario === TipoUsuario.PRESTADOR;
   }
 
+  isAdmin(): boolean {
+    return this.currentUserSubject.value?.tipoUsuario === TipoUsuario.ADMIN;
+  }
+
   buscarPerfil(): Observable<User> {
     return this.http.get<User>(`${environment.apiUrl}/perfil`);
   }
