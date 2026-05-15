@@ -182,7 +182,7 @@ vemresolver/
 
 ### Prioridade 4 — Competitividade (em andamento)
 
-- ✅ **P4.1 Chat interno** entre cliente e prestador — disponível após aceitação de proposta; mensagens em tempo real via polling 30s; histórico somente leitura após encerramento; botão "💬 Chat" integrado nos dashboards; 10 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-10)
+- ✅ **P4.1 Chat interno** entre cliente e prestador — um chat privado por proposta (pré e pós aceite); polling 30s; somente leitura após encerramento ou proposta recusada; botão "💬 Chat" integrado nos dashboards e na tela de propostas recebidas; 11 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-11)
 
 ### Prioridade 3 — Evolução do produto (concluída)
 
@@ -201,7 +201,7 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 
 | # | Funcionalidade | Justificativa | Impacto | Esforço |
 |---|---|---|---|---|
-| P4.1 | **Chat interno** entre cliente e prestador após aceitação de proposta | Sem canal de comunicação dentro da plataforma, cliente e prestador trocam contato por fora — risco de abandono e sem histórico | Alto | Médio | ✅ Entregue |
+| P4.1 | **Chat interno** — um chat por proposta, disponível antes e após o aceite | Permite negociação antes do aceite; mantém histórico dentro da plataforma; abre caminho para monetização por contato | Alto | Médio | ✅ Entregue |
 | P4.2 | **Portfólio de fotos** no perfil do prestador (até 10 imagens de trabalhos realizados) | Fotos são o principal elemento de conversão em serviços visuais (pintura, reforma, cozinha) | Alto | Baixo |
 | P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Prestadores sem guia visual ficam com perfis fracos; reduz taxa de prestadores cadastrados mas inativos | Médio-Alto | Baixo |
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar serviço | Prestador não tem URL pública para divulgar fora da plataforma; gera tráfego orgânico de volta | Médio-Alto | Baixo |
