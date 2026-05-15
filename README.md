@@ -169,6 +169,7 @@ vemresolver/
 - ✅ Refresh token com rotação — sessão renova automaticamente; `POST /api/auth/refresh`; token de 7 dias
 - ✅ `isAuthenticated()` decodifica o JWT para checar expiração real no client
 - ✅ Flyway substitui `ddl-auto: update` — schema versionado em `db/migration/`; `baseline-on-migrate` para DBs existentes
+- ✅ `V4` migration — `ADMIN` adicionado ao `CHECK CONSTRAINT` de `usuarios.tipo`; `DataSeeder` corrigido para verificar cada usuário de teste individualmente por e-mail (antes usava `count() == 0` e nunca criava o admin em bancos com dados)
 
 ### Melhorias de UX (Prioridade 2 — concluída)
 
