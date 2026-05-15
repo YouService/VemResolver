@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-15 (P3 concluída)  
+> **Última atualização:** 2026-05-15 (P3 concluída; análise competitiva P4 adicionada)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -460,7 +460,51 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 
 ## 8. O QUE FALTA IMPLEMENTAR
 
-Todas as prioridades (1, 2 e 3) foram concluídas. O produto está pronto para deploy em staging.
+### Análise Competitiva — GetNinjas e Cronoshare (2026-05-15)
+
+Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getninjas.com.br/) e [Cronoshare](https://www.cronoshare.com.br/).
+
+#### Gap Analysis
+
+| Funcionalidade | GetNinjas | Cronoshare | VemResolver |
+|---|:---:|:---:|:---:|
+| Chat interno (cliente ↔ prestador) | ✅ | ✅ | ❌ |
+| Portfólio de fotos de trabalhos realizados | ✅ | ✅ | ❌ |
+| Perfil público e URL compartilhável | ✅ | ✅ | ❌ |
+| Onboarding guiado com progress bar de perfil | ✅ | ✅ | ❌ |
+| Notificações por e-mail transacionais | ✅ | ✅ | ❌ |
+| Badge de destaque / profissional verificado | — | ✅ (Top 5%) | ❌ |
+| Avaliação multidimensional | — | ✅ (0–10 + dimensões) | ❌ (só 1–5) |
+| Verificação de identidade (documento + selfie) | ✅ (IdWall) | ✅ (manual) | ❌ |
+| Mais de 100 categorias de serviço | ✅ (500+) | ✅ (200+) | ❌ (19) |
+
+#### Diferenciais identificados
+
+**GetNinjas:**
+- Verificação de identidade com IA (IdWall) — 21% dos cadastros reprovados, comunicado como dado de confiança
+- Link de avaliações compartilhável fora da plataforma
+- Academia Ninja: vídeos de capacitação gratuitos para prestadores
+- Modelo pay-per-lead: prestador compra "moedas" para desbloquear dados do cliente
+- Selos de confiança na home (RA1000 Reclame Aqui + IdWall)
+
+**Cronoshare:**
+- Acreditações e certificações verificadas por humanos (CREA, CRO, OAB) com badge no perfil
+- Badge "Profissional Top" para os melhores 5% por categoria
+- Créditos sem expiração (diferencial sobre GetNinjas)
+- Garantia de reembolso parcial de crédito se lead não converter
+- Revisão humana de cada solicitação antes de distribuir — filtra spam
+
+### Prioridade 4 — Competitividade (backlog)
+
+| # | Funcionalidade | Justificativa | Impacto | Esforço |
+|---|---|---|---|---|
+| P4.1 | **Chat interno** entre cliente e prestador após aceitação de proposta | Sem canal interno, partes trocam contato fora — risco de abandono e sem histórico | Alto | Médio |
+| P4.2 | **Portfólio de fotos** no perfil do prestador (até 10 imagens) | Principal elemento de conversão em serviços visuais (pintura, reforma, cozinha) | Alto | Baixo |
+| P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Reduz taxa de prestadores inativos por perfil incompleto | Médio-Alto | Baixo |
+| P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo |
+| P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio |
+| P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio |
 
 ---
 
@@ -530,4 +574,4 @@ Todas as prioridades (1, 2 e 3) foram concluídas. O produto está pronto para d
 
 ---
 
-*Atualizado em 2026-05-15 (hotfix admin login) — sincronizado com README.md.*
+*Atualizado em 2026-05-15 (hotfix admin login + análise competitiva P4) — sincronizado com README.md.*
