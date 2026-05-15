@@ -97,7 +97,7 @@ export const routes: Routes = [
     canActivate: [clienteGuard]
   },
   {
-    path: 'chat/solicitacao/:id',
+    path: 'chat/proposta/:id',
     component: ChatComponent,
     canActivate: [authGuard]
   },

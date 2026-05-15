@@ -26,6 +26,14 @@ public class PropostaController {
         this.propostaService = propostaService;
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar proposta por ID")
+    public ResponseEntity<PropostaDTO> buscarPorId(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(propostaService.buscarPorId(id, user.getId()));
+    }
+
     @PostMapping
     @Operation(summary = "Enviar proposta para uma solicitação")
     public ResponseEntity<PropostaDTO> criar(

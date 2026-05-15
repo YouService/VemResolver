@@ -73,6 +73,18 @@ public class PropostaService {
         return toDTO(proposta);
     }
 
+    @Transactional(readOnly = true)
+    public PropostaDTO buscarPorId(Long propostaId, Long usuarioId) {
+        Proposta proposta = propostaRepository.findById(propostaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Proposta não encontrada"));
+        Long clienteId = proposta.getSolicitacao().getCliente().getId();
+        Long prestadorUsuarioId = proposta.getPrestador().getUsuario().getId();
+        if (!usuarioId.equals(clienteId) && !usuarioId.equals(prestadorUsuarioId)) {
+            throw new BusinessException("Acesso negado");
+        }
+        return toDTO(proposta);
+    }
+
     public Page<PropostaDTO> listarPorSolicitacao(Long solicitacaoId, Pageable pageable) {
         return propostaRepository.findBySolicitacaoId(solicitacaoId, pageable)
                 .map(this::toDTO);

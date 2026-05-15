@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class MensagemChatDTO {
 
     private Long id;
-    private Long solicitacaoId;
+    private Long propostaId;
     private Long remetenteId;
     private String remetenteNome;
 

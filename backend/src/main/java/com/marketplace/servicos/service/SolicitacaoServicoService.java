@@ -190,6 +190,8 @@ public class SolicitacaoServicoService {
             avaliacaoRepository.existsBySolicitacaoIdAndTipo(solicitacao.getId(), TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR));
         dto.setFoiAvaliadoPeloPrestador(
             avaliacaoRepository.existsBySolicitacaoIdAndTipo(solicitacao.getId(), TipoAvaliacao.PRESTADOR_AVALIA_CLIENTE));
+        propostaRepository.findBySolicitacaoIdAndStatus(solicitacao.getId(), StatusProposta.ACEITA)
+                .ifPresent(p -> dto.setPropostaAceitaId(p.getId()));
         return dto;
     }
 }

@@ -156,6 +156,7 @@ export interface SolicitacaoServico {
   dataCriacao?: Date;
   foiAvaliadoPeloCliente?: boolean;
   foiAvaliadoPeloPrestador?: boolean;
+  propostaAceitaId?: number;
 }
 
 export interface Proposta {
@@ -200,7 +201,7 @@ export interface PageResponse<T> {
 
 export interface MensagemChat {
   id?: number;
-  solicitacaoId: number;
+  propostaId: number;
   remetenteId?: number;
   remetenteNome?: string;
   texto: string;

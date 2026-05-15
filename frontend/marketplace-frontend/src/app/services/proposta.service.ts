@@ -12,6 +12,10 @@ export class PropostaService {
 
   constructor(private http: HttpClient) {}
 
+  buscarPorId(id: number): Observable<Proposta> {
+    return this.http.get<Proposta>(`${this.apiUrl}/${id}`);
+  }
+
   criar(proposta: Proposta): Observable<Proposta> {
     return this.http.post<Proposta>(this.apiUrl, proposta);
   }

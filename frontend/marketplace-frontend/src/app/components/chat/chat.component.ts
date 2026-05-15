@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
-import { SolicitacaoService } from '../../services/solicitacao.service';
+import { PropostaService } from '../../services/proposta.service';
 import { AuthService } from '../../services/auth.service';
-import { MensagemChat, StatusSolicitacao } from '../../models/models';
+import { MensagemChat, StatusProposta, StatusSolicitacao } from '../../models/models';
 
 @Component({
   selector: 'app-chat',
@@ -15,7 +15,7 @@ import { MensagemChat, StatusSolicitacao } from '../../models/models';
   templateUrl: './chat.component.html'
 })
 export class ChatComponent implements OnInit, OnDestroy {
-  solicitacaoId!: number;
+  propostaId!: number;
   currentUserId!: number;
 
   mensagens: MensagemChat[] = [];
@@ -35,25 +35,27 @@ export class ChatComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     public router: Router,
     private chatService: ChatService,
-    private solicitacaoService: SolicitacaoService,
+    private propostaService: PropostaService,
     private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
-    this.solicitacaoId = Number(idParam);
+    this.propostaId = Number(idParam);
     this.currentUserId = this.authService.getCurrentUser()?.userId ?? 0;
 
-    this.solicitacaoService.buscarPorId(this.solicitacaoId).subscribe({
-      next: (sol) => {
-        this.contratoDescricao = sol.descricao ?? '';
-        this.clienteNome = sol.clienteNome ?? '';
+    this.propostaService.buscarPorId(this.propostaId).subscribe({
+      next: (proposta) => {
+        this.contratoDescricao = proposta.solicitacaoDescricao ?? '';
+        this.clienteNome = proposta.clienteNome ?? '';
+        this.prestadorNome = proposta.prestadorNome ?? '';
         this.contratoEncerrado =
-          sol.status === StatusSolicitacao.CONCLUIDA ||
-          sol.status === StatusSolicitacao.CANCELADA;
+          proposta.status === StatusProposta.RECUSADA ||
+          proposta.solicitacaoStatus === StatusSolicitacao.CONCLUIDA ||
+          proposta.solicitacaoStatus === StatusSolicitacao.CANCELADA;
       },
       error: () => {
-        this.erro = 'Não foi possível carregar os dados do contrato.';
+        this.erro = 'Não foi possível carregar os dados da proposta.';
       }
     });
 
@@ -68,9 +70,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   carregarMensagens(): void {
-    if (!this.solicitacaoId) return;
+    if (!this.propostaId) return;
     this.carregando = true;
-    this.chatService.listar(this.solicitacaoId).subscribe({
+    this.chatService.listar(this.propostaId).subscribe({
       next: (msgs) => {
         this.mensagens = msgs;
         this.carregando = false;
@@ -79,7 +81,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         ).length;
         this.novasMensagens = naoLidas;
         if (naoLidas > 0) {
-          this.chatService.marcarComoLidas(this.solicitacaoId).subscribe();
+          this.chatService.marcarComoLidas(this.propostaId).subscribe();
         }
         setTimeout(() => this.scrollParaFim(), 50);
       },
@@ -99,7 +101,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.erro = '';
 
     const msgOtimista: MensagemChat = {
-      solicitacaoId: this.solicitacaoId,
+      propostaId: this.propostaId,
       texto,
       remetenteId: this.currentUserId,
       remetenteNome: 'Você',
@@ -111,7 +113,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.textoMensagem = '';
     setTimeout(() => this.scrollParaFim(), 50);
 
-    this.chatService.enviar(this.solicitacaoId, texto).subscribe({
+    this.chatService.enviar(this.propostaId, texto).subscribe({
       next: (msgReal) => {
         this.mensagens = [...this.mensagens.slice(0, -1), msgReal];
         this.enviando = false;

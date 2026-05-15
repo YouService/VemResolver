@@ -36,4 +36,5 @@ public class SolicitacaoServicoDTO {
 
     private Boolean foiAvaliadoPeloCliente;
     private Boolean foiAvaliadoPeloPrestador;
+    private Long propostaAceitaId;
 }
