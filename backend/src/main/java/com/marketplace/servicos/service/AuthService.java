@@ -2,8 +2,10 @@ package com.marketplace.servicos.service;
 
 import com.marketplace.servicos.dto.AuthResponseDTO;
 import com.marketplace.servicos.dto.LoginDTO;
+import com.marketplace.servicos.dto.RefreshRequestDTO;
 import com.marketplace.servicos.dto.RegisterDTO;
 import com.marketplace.servicos.exception.BusinessException;
+import com.marketplace.servicos.model.RefreshToken;
 import com.marketplace.servicos.model.User;
 import com.marketplace.servicos.model.VerificationToken;
 import com.marketplace.servicos.repository.UserRepository;
@@ -33,18 +35,21 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
 
     private String senhaRegister = null; // Senha padrão para reativação de contas inativas
-    
+
     public AuthService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository,
                       EmailService emailService, PasswordEncoder passwordEncoder,
-                      JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager) {
+                      JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager,
+                      RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
+        this.refreshTokenService = refreshTokenService;
     }
     
     @Transactional
@@ -173,15 +178,24 @@ public class AuthService {
         }
 
         String token = jwtTokenProvider.generateToken(user);
-        
-        return new AuthResponseDTO(token, user.getId(), user.getNome(), user.getEmail(), user.getTipo());
+        RefreshToken rt = refreshTokenService.generateRefreshToken(user);
+
+        return new AuthResponseDTO(token, rt.getToken(), user.getId(), user.getNome(), user.getEmail(), user.getTipo());
+    }
+
+    public AuthResponseDTO refresh(RefreshRequestDTO dto) {
+        RefreshToken rt = refreshTokenService.validateAndRotate(dto.getRefreshToken());
+        User user = rt.getUser();
+        String newToken = jwtTokenProvider.generateToken(user);
+        return new AuthResponseDTO(newToken, rt.getToken(), user.getId(), user.getNome(), user.getEmail(), user.getTipo());
     }
     
     @Transactional
     public void deletarConta(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
-        
+
+        refreshTokenService.revokeByUser(user);
         user.setAtivo(false);
         userRepository.save(user);
     }

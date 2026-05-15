@@ -50,6 +50,7 @@ export interface AuthResponse {
   nome: string;
   email: string;
   tipoUsuario: TipoUsuario;
+  refreshToken?: string;
 }
 
 export interface LoginRequest {

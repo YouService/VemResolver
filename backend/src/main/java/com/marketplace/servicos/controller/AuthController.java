@@ -2,6 +2,7 @@ package com.marketplace.servicos.controller;
 
 import com.marketplace.servicos.dto.AuthResponseDTO;
 import com.marketplace.servicos.dto.LoginDTO;
+import com.marketplace.servicos.dto.RefreshRequestDTO;
 import com.marketplace.servicos.dto.RegisterDTO;
 import com.marketplace.servicos.model.User;
 import com.marketplace.servicos.service.AuthService;
@@ -43,6 +44,12 @@ public class AuthController {
     public ResponseEntity<String> verifyAccount(@RequestParam("token") String token) {
         authService.verifyAccount(token);
         return ResponseEntity.ok("Conta verificada com sucesso! Você já pode fazer login.");
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Renovar access token usando refresh token")
+    public ResponseEntity<AuthResponseDTO> refresh(@Valid @RequestBody RefreshRequestDTO dto) {
+        return ResponseEntity.ok(authService.refresh(dto));
     }
 
     @DeleteMapping("/conta")

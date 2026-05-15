@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-15  
+> **Última atualização:** 2026-05-15 (P1 concluída)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -397,13 +397,13 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | M1 | `PropostaController` injeta `PrestadorRepository` diretamente | `PropostaController.java` | ✅ **Resolvido** em 2026-05-15 — `PrestadorRepository` removido do controller; `criar()` e `listarMinhas()` movidos para `PropostaService` |
 | M2 | `POST /api/avaliacoes` sem validação de que o serviço foi concluído | `AvaliacaoService.java` | ✅ **Resolvido** — valida status CONCLUIDA |
 | M3 | Sem proteção contra avaliação duplicada | `AvaliacaoService.java` | ✅ **Resolvido** — unicidade por (solicitacaoId, TipoAvaliacao) |
-| M4 | JWT expira em 24h sem refresh token | `JwtTokenProvider.java` | ❌ **Pendente** |
-| M5 | `isAuthenticated()` não valida expiração do JWT | `auth.service.ts` | ❌ **Pendente** |
+| M4 | JWT expira em 24h sem refresh token | `JwtTokenProvider.java` | ✅ **Resolvido** em 2026-05-15 — `RefreshToken` entity + `RefreshTokenService` com rotação; `POST /api/auth/refresh`; interceptor Angular re-tenta com novo token |
+| M5 | `isAuthenticated()` não valida expiração do JWT | `auth.service.ts` | ✅ **Resolvido** em 2026-05-15 — decodifica payload JWT (`atob`), checa `exp * 1000 > Date.now()`; retorna `true` se JWT válido ou se há refresh token |
 | M6 | `canActivate: [clienteGuard, prestadorGuard]` em `/meu-perfil` bloqueava prestadores | `app.routes.ts` | ✅ **Resolvido** — rota `/meu-perfil` substituída por `/cliente/perfil` e `/prestador/perfil` separadas |
 | M7 | Contadores no dashboard do prestador hardcoded em `0` | `prestador-dashboard.component.ts` | ✅ **Resolvido** — stats reais |
 | M8 | Botão "Ver Detalhes e Enviar Proposta" sem handler | `prestador-dashboard.component.ts` | ✅ **Resolvido** — navega para `/prestador/solicitacao/:id` |
 | M9 | Botão "Editar" na modal do cliente apenas fecha o modal | `cliente-dashboard.component.ts` | ✅ **Resolvido** em 2026-05-15 — `fecharModal()` chamado antes de `router.navigate()` em `editarSolicitacao()` |
-| M10 | `ddl-auto: update` sem controle de migração (sem Flyway/Liquibase) | `application.yml` | ❌ **Pendente** |
+| M10 | `ddl-auto: update` sem controle de migração (sem Flyway/Liquibase) | `application.yml` | ✅ **Resolvido** em 2026-05-15 — Flyway adicionado; `ddl-auto: none`; `V1__initial_schema.sql` + `V2__add_refresh_tokens.sql`; `baseline-on-migrate: true` para DBs existentes |
 | M11 | `Avaliacao` sem campo `dataCriacao` | `Avaliacao.java` | ✅ **Resolvido** em 2026-05-15 — campo `dataCriacao` com `@CreationTimestamp` adicionado; `AvaliacaoDTO` e `toDTO()` atualizados |
 
 ### BAIXO
@@ -455,14 +455,6 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 ---
 
 ## 8. O QUE FALTA IMPLEMENTAR
-
-### Prioridade 1 — Qualidade e segurança (recomendado antes de produção)
-
-| # | Tarefa | Arquivo | Esforço |
-|---|--------|---------|---------|
-| M4 | Implementar refresh token — JWT atual expira em 24h sem renovação automática | `JwtTokenProvider.java` | Médio |
-| M5 | `isAuthenticated()` no Angular só verifica presença do token no `localStorage`, não a expiração | `auth.service.ts` | Pequeno |
-| M10 | Substituir `ddl-auto: update` por Flyway ou Liquibase — controle seguro de migrações de schema | `application.yml` | Médio |
 
 ### Prioridade 2 — Melhorias de UX (próximas iterações)
 
@@ -529,7 +521,10 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | M9: botão "Editar" no modal do cliente fechava sem navegar | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
 | M1: `PropostaController` injetava `PrestadorRepository` diretamente (violação de camadas) | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
 | M11: entidade `Avaliacao` sem `dataCriacao` — impossível ordenar avaliações | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
+| M4: JWT sem refresh token — usuário deslogado após 24h | `feature/prioridade1-jwt-refresh-flyway` | 2026-05-15 |
+| M5: `isAuthenticated()` só verificava presença do token, não a expiração | `feature/prioridade1-jwt-refresh-flyway` | 2026-05-15 |
+| M10: `ddl-auto: update` sem controle de versão do schema | `feature/prioridade1-jwt-refresh-flyway` | 2026-05-15 |
 
 ---
 
-*Atualizado em 2026-05-15 — sincronizado com README.md.*
+*Atualizado em 2026-05-15 (P1 concluída) — sincronizado com README.md.*
