@@ -2,7 +2,6 @@ package com.marketplace.servicos.controller;
 
 import com.marketplace.servicos.dto.PropostaDTO;
 import com.marketplace.servicos.model.User;
-import com.marketplace.servicos.repository.PrestadorRepository;
 import com.marketplace.servicos.service.PropostaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -22,22 +21,17 @@ import org.springframework.web.bind.annotation.*;
 public class PropostaController {
     
     private final PropostaService propostaService;
-    private final PrestadorRepository prestadorRepository;
-    
-    public PropostaController(PropostaService propostaService, PrestadorRepository prestadorRepository) {
+
+    public PropostaController(PropostaService propostaService) {
         this.propostaService = propostaService;
-        this.prestadorRepository = prestadorRepository;
     }
-    
+
     @PostMapping
     @Operation(summary = "Enviar proposta para uma solicitação")
     public ResponseEntity<PropostaDTO> criar(
             @Valid @RequestBody PropostaDTO dto,
             @AuthenticationPrincipal User user) {
-        Long prestadorId = prestadorRepository.findByUsuarioId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Prestador não encontrado"))
-                .getId();
-        PropostaDTO criada = propostaService.criar(dto, prestadorId);
+        PropostaDTO criada = propostaService.criar(dto, user.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(criada);
     }
     
@@ -54,10 +48,7 @@ public class PropostaController {
     public ResponseEntity<Page<PropostaDTO>> listarMinhas(
             @AuthenticationPrincipal User user,
             Pageable pageable) {
-        Long prestadorId = prestadorRepository.findByUsuarioId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Prestador não encontrado"))
-                .getId();
-        return ResponseEntity.ok(propostaService.listarPorPrestador(prestadorId, pageable));
+        return ResponseEntity.ok(propostaService.listarMinhas(user.getId(), pageable));
     }
     
     @PatchMapping("/{id}/aceitar")
