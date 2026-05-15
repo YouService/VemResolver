@@ -141,10 +141,15 @@
                     </div>
                   </div>
 
-                  <div class="mt-3 pt-3 border-t border-yellow-200">
+                  <div class="mt-3 pt-3 border-t border-yellow-200 flex items-center justify-between">
                     <p class="text-xs text-gray-500">
                       O cliente irá marcar o serviço como concluído quando finalizado.
                     </p>
+                    <a
+                      [routerLink]="['/chat/solicitacao', proposta.solicitacaoId]"
+                      class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition ml-2 whitespace-nowrap">
+                      💬 Chat
+                    </a>
                   </div>
                 </div>
               }

@@ -180,6 +180,10 @@ vemresolver/
 - ✅ B5: Todos os `console.error` sem feedback visual foram substituídos por mensagens de erro exibidas ao usuário — banners de erro nos dashboards, erros de CEP no perfil, erro de carregamento de categorias na home
 - ✅ B1: Rate limiting em `POST /api/auth/login` — `LoginRateLimitFilter` bloqueia IPs com mais de 10 tentativas por minuto com HTTP 429
 
+### Prioridade 4 — Competitividade (em andamento)
+
+- ✅ **P4.1 Chat interno** entre cliente e prestador — disponível após aceitação de proposta; mensagens em tempo real via polling 30s; histórico somente leitura após encerramento; botão "💬 Chat" integrado nos dashboards; 10 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-10)
+
 ### Prioridade 3 — Evolução do produto (concluída)
 
 - ✅ Migração de todos os templates HTML inline para arquivos `.html` separados — 19 componentes migrados
@@ -197,7 +201,7 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 
 | # | Funcionalidade | Justificativa | Impacto | Esforço |
 |---|---|---|---|---|
-| P4.1 | **Chat interno** entre cliente e prestador após aceitação de proposta | Sem canal de comunicação dentro da plataforma, cliente e prestador trocam contato por fora — risco de abandono e sem histórico | Alto | Médio |
+| P4.1 | **Chat interno** entre cliente e prestador após aceitação de proposta | Sem canal de comunicação dentro da plataforma, cliente e prestador trocam contato por fora — risco de abandono e sem histórico | Alto | Médio | ✅ Entregue |
 | P4.2 | **Portfólio de fotos** no perfil do prestador (até 10 imagens de trabalhos realizados) | Fotos são o principal elemento de conversão em serviços visuais (pintura, reforma, cozinha) | Alto | Baixo |
 | P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Prestadores sem guia visual ficam com perfis fracos; reduz taxa de prestadores cadastrados mas inativos | Médio-Alto | Baixo |
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar serviço | Prestador não tem URL pública para divulgar fora da plataforma; gera tráfego orgânico de volta | Médio-Alto | Baixo |
