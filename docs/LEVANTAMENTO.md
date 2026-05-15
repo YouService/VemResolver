@@ -525,7 +525,9 @@ Todas as prioridades (1, 2 e 3) foram concluídas. O produto está pronto para d
 | Busca geolocalizada — `GET /api/prestadores/proximo` com Haversine, `BuscaPrestadoresComponent`, coordenadas no perfil do prestador | `feature/prioridade3-evolucao-produto` | 2026-05-15 |
 | Sino de notificações no navbar — polling 30 s, badge de contagem, dropdown "Marcar todas como lidas" | `feature/prioridade3-evolucao-produto` | 2026-05-15 |
 | `AuthServiceTest` corrigido — `@Mock RefreshTokenService` e stub de `generateRefreshToken` adicionados | `feature/prioridade3-evolucao-produto` | 2026-05-15 |
+| Login do admin falhava com "login/senha inválidos" — `CHECK CONSTRAINT usuarios_tipo_check` criado pelo Hibernate só permitia `CLIENTE` e `PRESTADOR`; `V4__add_admin_tipo_usuario.sql` recria o constraint incluindo `ADMIN` | `main` | 2026-05-15 |
+| `DataSeeder` nunca criava o admin em bancos com dados existentes (`count() == 0` impedia a inserção); corrigido para verificar cada e-mail individualmente | `main` | 2026-05-15 |
 
 ---
 
-*Atualizado em 2026-05-15 (P3 concluída) — sincronizado com README.md.*
+*Atualizado em 2026-05-15 (hotfix admin login) — sincronizado com README.md.*
