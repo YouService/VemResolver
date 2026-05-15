@@ -1,0 +1,801 @@
+# DOCUMENTO DE ARQUITETURA E BANCO DE DADOS — VemResolver
+# Versão 1.0 — Gerado em 2026-05-15
+# Baseado no código-fonte real do repositório (branch main)
+
+================================================================================
+# 1. ARQUITETURA DE SOFTWARE (DAS)
+================================================================================
+
+## 1.1 Visão Geral das Camadas
+
+O VemResolver é estruturado em dois processos independentes que se comunicam
+exclusivamente via HTTP/REST com payloads JSON.
+
+### Backend — Spring Boot (pacote raiz `com.marketplace.servicos`)
+
+A aplicação backend segue o padrão MVC em quatro camadas verticais:
+
+* Camada Controller (`com.marketplace.servicos.controller`) — recebe requisições
+  HTTP, delega ao service correspondente e retorna DTOs serializados em JSON.
+  Não contém lógica de negócio e não acessa repositórios diretamente.
+
+* Camada Service (`com.marketplace.servicos.service`) — encapsula todas as
+  regras de negócio, orquestração de transações, validações e mapeamento entre
+  entidades e DTOs. Métodos de escrita usam `@Transactional`. Lança
+  `BusinessException` para violações de regra e `ResourceNotFoundException`
+  para entidades ausentes.
+
+* Camada Repository (`com.marketplace.servicos.repository`) — interfaces que
+  estendem `JpaRepository<T, Long>`. Queries JPQL customizadas via `@Query`
+  quando o Spring Data não consegue inferir a consulta pelo nome do método.
+
+* Camada Model/Entity (`com.marketplace.servicos.model`) — entidades JPA puras
+  com mapeamentos ORM e callbacks de ciclo de vida (`@PrePersist`,
+  `@CreationTimestamp`). Sem lógica de negócio nesta camada.
+
+Pacotes de suporte transversal:
+
+* `com.marketplace.servicos.config` — beans de configuração Spring
+* `com.marketplace.servicos.security` — filtro JWT e provedor de tokens
+* `com.marketplace.servicos.dto` — objetos de transferência de dados
+* `com.marketplace.servicos.exception` — hierarquia de exceções e handler global
+* `com.marketplace.servicos.utils` — utilitários estáticos (CPF, decode)
+
+### Frontend — Angular 19 (diretório `src/app`)
+
+* Componentes (`components/`) — camada de apresentação; componentes standalone
+  que consomem serviços via injeção de dependência e exibem/coletam dados do
+  usuário.
+
+* Serviços (`services/`) — camada de acesso a dados remotos; encapsulam
+  `HttpClient` e expõem `Observable` para os componentes. Gerenciam estado
+  local via `BehaviorSubject`.
+
+* Interceptors (`interceptors/`) — cross-cutting; injetam o Bearer token em
+  todas as requisições e tratam respostas HTTP 401 com renovação automática
+  de sessão.
+
+* Guards (`guards/`) — controle de acesso às rotas; verificam autenticação e
+  tipo de usuário antes de ativar uma rota.
+
+
+## 1.2 Módulos e Pacotes Backend
+
+Todos os pacotes estão sob `com.marketplace.servicos`:
+
+* `controller` — recebe e responde requisições HTTP REST. Contém
+  `AuthController`, `AvaliacaoController`, `CategoriaController`,
+  `PerfilController`, `PrestadorController`, `PropostaController` e
+  `SolicitacaoServicoController`.
+
+* `service` — lógica de negócio e orquestração. Contém `AuthService`,
+  `AvaliacaoService`, `CategoriaService`, `EmailService` (interface),
+  `ConsoleEmailService`, `SmtpEmailService`, `PerfilService`,
+  `PrestadorService`, `PropostaService`, `RefreshTokenService`,
+  `SolicitacaoServicoService` e `UserService`.
+
+* `repository` — acesso ao banco de dados via Spring Data JPA. Contém
+  `AvaliacaoRepository`, `CategoriaRepository`, `PrestadorRepository`,
+  `PropostaRepository`, `RefreshTokenRepository`,
+  `SolicitacaoServicoRepository`, `UserRepository` e
+  `VerificationTokenRepository`.
+
+* `model` — entidades JPA e enumerações. Contém `User`, `Categoria`,
+  `Prestador`, `SolicitacaoServico`, `Proposta`, `Avaliacao`,
+  `VerificationToken`, `RefreshToken`, `TipoUsuario`, `StatusSolicitacao`,
+  `StatusProposta` e `TipoAvaliacao`.
+
+* `dto` — objetos de transferência de dados (entrada e saída). Contém
+  `LoginDTO`, `RegisterDTO`, `AuthResponseDTO`, `RefreshRequestDTO`,
+  `CategoriaDTO`, `PrestadorDTO`, `SolicitacaoServicoDTO`, `PropostaDTO`,
+  `AvaliacaoDTO`, `UpdatePerfilDTO` e `AlterarSenhaDTO`.
+
+* `config` — configuração de beans Spring. Contém `SecurityConfig`,
+  `OpenApiConfig`, `DataSeeder`, `DotenvConfig`, `MailConfig`,
+  `EncodingFilter` e `WebConfig`.
+
+* `security` — infraestrutura de segurança JWT. Contém
+  `JwtAuthenticationFilter`, `JwtTokenProvider` e
+  `CustomUserDetailsService`.
+
+* `exception` — tratamento centralizado de erros. Contém
+  `BusinessException`, `ResourceNotFoundException`, `ErrorResponse` e
+  `GlobalExceptionHandler`.
+
+* `utils` — utilitários estáticos. Contém `DocumentUtils` (normalização de
+  CPF) e `DecodeValueUtils`.
+
+
+## 1.3 Módulos e Componentes Frontend
+
+### Rotas definidas em `app.routes.ts`
+
+Rotas públicas (sem guard):
+
+* `''` — `HomeComponent`
+* `'login'` — `LoginComponent`
+* `'register'` — `RegisterComponent`
+* `'verificar-conta'` — `VerifyAccountComponent`
+* `'termos-uso'` — `TermosUsoComponent`
+* `'politica-privacidade'` — `PoliticaPrivacidadeComponent`
+* `'seja-um-profissional'` — `SejaProfissionalComponent`
+* `'seguranca'` — `SegurancaComponent`
+* `'sobre-nos'` — `SobreNosComponent`
+* `'notification-demo'` — `NotificationDemoComponent`
+* `'**'` — redireciona para `''`
+
+Rotas protegidas pelo `clienteGuard`:
+
+* `'cliente/dashboard'` — `ClienteDashboardComponent`
+* `'cliente/nova-solicitacao'` — `ClienteNovaSolicitacaoComponent`
+* `'cliente/editar-solicitacao/:id'` — `ClienteEditarSolicitacaoComponent`
+* `'cliente/perfil'` — `ClientePerfilComponent`
+* `'cliente/solicitacao/:id/propostas'` — `ClientePropostasRecebidasComponent`
+* `'cliente/solicitacao/:id/avaliacao'` — `ClienteAvaliacaoComponent`
+
+Rotas protegidas pelo `prestadorGuard`:
+
+* `'prestador/dashboard'` — `PrestadorDashboardComponent`
+* `'prestador/perfil'` — `PrestadorPerfilComponent`
+* `'prestador/solicitacao/:id'` — `PrestadorEnviarPropostaComponent`
+* `'prestador/solicitacao/:id/avaliacao'` — `PrestadorAvaliacaoComponent`
+
+### Guards (`guards/auth.guard.ts`)
+
+O arquivo exporta três funções do tipo `CanActivateFn` (guards funcionais,
+sem classe):
+
+* `authGuard` — permite acesso se `authService.isAuthenticated()` retornar
+  verdadeiro; redireciona para `'/login'` caso contrário.
+
+* `clienteGuard` — permite acesso se o usuário estiver autenticado e
+  `authService.isCliente()` retornar verdadeiro; redireciona para `'/'`
+  caso contrário.
+
+* `prestadorGuard` — permite acesso se o usuário estiver autenticado e
+  `authService.isPrestador()` retornar verdadeiro; redireciona para `'/'`
+  caso contrário.
+
+### Serviços Angular (`services/`)
+
+Todos declarados com `@Injectable({ providedIn: 'root' })`:
+
+* `AuthService` — gerencia estado de autenticação (via `BehaviorSubject`),
+  persiste token/refreshToken/currentUser no `localStorage`, expõe
+  `isAuthenticated()`, `isCliente()`, `isPrestador()`. Realiza chamadas a
+  `/api/auth` e `/api/perfil`.
+
+* `AvaliacaoService` — chamadas a `/api/avaliacoes`.
+
+* `CategoriaService` — chamadas a `/api/categorias`.
+
+* `NotificationService` — gerenciamento de notificações in-app.
+
+* `PrestadorService` — chamadas a `/api/prestadores`.
+
+* `PropostaService` — chamadas a `/api/propostas`.
+
+* `SnackService` — exibição de mensagens de feedback via snackbar.
+
+* `SolicitacaoService` — chamadas a `/api/solicitacoes`.
+
+* `UserService` — chamadas a `/api/perfil`.
+
+* `ViaCEPService` — consulta à API externa ViaCEP para autocompletar
+  endereço a partir do CEP informado.
+
+### Interceptor (`interceptors/auth.interceptor.ts`)
+
+O `authInterceptor` é implementado como `HttpInterceptorFn` funcional (sem
+classe, sem `implements HttpInterceptor`). Ele é registrado diretamente no
+array `provideHttpClient(withInterceptors([authInterceptor]))` do
+`app.config.ts`.
+
+Comportamento:
+
+* Lê `localStorage.getItem('token')` a cada requisição.
+* Se o token existir, clona a requisição adicionando o header
+  `Authorization: Bearer <token>`.
+* Encaminha a requisição clonada (ou original, se não houver token) via
+  `next(authReq)`.
+* Em caso de resposta HTTP 401 em qualquer endpoint que não seja
+  `/api/auth/`, tenta renovar a sessão: chama `authService.refresh(refreshToken)`,
+  clona a requisição original com o novo token e a reenvia via `next(retryReq)`.
+* Se a renovação falhar, chama `authService.logout()` e redireciona para
+  `'/login'`.
+
+O `apiUrl` base é definido em `environment.ts` como
+`'http://localhost:8080/api'`.
+
+
+## 1.4 Infraestrutura Docker Compose
+
+O arquivo `docker-compose.yml` (versão `3.8`) define três serviços e uma
+rede bridge chamada `marketplace-network`.
+
+### Serviço `postgres`
+
+* Imagem: `postgres:16-alpine`
+* Container: `marketplace-postgres`
+* Variáveis de ambiente internas do PostgreSQL:
+  - `POSTGRES_DB`: `marketplace_db`
+  - `POSTGRES_USER`: `postgres`
+  - `POSTGRES_PASSWORD`: `postgres`
+* Porta publicada: `5432:5432`
+* Volume persistente: `postgres_data` montado em `/var/lib/postgresql/data`
+* Rede: `marketplace-network`
+
+### Serviço `backend`
+
+* Build: contexto `./backend`, Dockerfile em `backend/Dockerfile`
+* Container: `marketplace-backend`
+* Depende de: `postgres` (declarado via `depends_on`)
+* Variáveis de ambiente injetadas ao container:
+  - `DB_URL`: `jdbc:postgresql://postgres:5432/marketplace_db`
+  - `DB_USERNAME`: `postgres`
+  - `DB_PASSWORD`: `postgres`
+  - `JWT_SECRET`: chave HMAC em Base64 (256 bits)
+  - `JWT_EXPIRATION`: `86400000` (24 horas em ms)
+  - `MAIL_HOST`: `smtp.gmail.com`
+  - `MAIL_PORT`: `587`
+  - `MAIL_USERNAME`: `dev@localhost`
+  - `MAIL_PASSWORD`: `dev`
+  - `FRONTEND_URL`: `http://localhost:4200`
+* Nota: `JWT_REFRESH_EXPIRATION` usa o default definido em `application.yml`
+  (`${JWT_REFRESH_EXPIRATION:604800000}`), que é 7 dias em ms. Não está
+  declarada explicitamente no `docker-compose.yml`.
+* Porta publicada: `8080:8080`
+* Rede: `marketplace-network`
+* Política de reinício: `unless-stopped`
+
+### Serviço `frontend`
+
+* Imagem: `node:22-alpine` (sem Dockerfile próprio; usa a imagem oficial)
+* Container: `marketplace-frontend`
+* Diretório de trabalho: `/app`
+* Volume: `./frontend/marketplace-frontend` montado em `/app`
+* Comando de inicialização: `sh -c "npm install && npm start"`
+* Porta publicada: `4200:4200`
+* Rede: `marketplace-network`
+* Política de reinício: `unless-stopped`
+
+### Rede e dependências
+
+* Rede `marketplace-network` com driver `bridge` — todos os três serviços
+  participam da mesma rede, permitindo que o backend resolva o hostname
+  `postgres` diretamente (usado em `DB_URL`).
+* O serviço `backend` declara `depends_on: postgres`, garantindo que o
+  container do banco seja iniciado antes do backend. O `frontend` não
+  declara dependência explícita.
+
+
+## 1.5 Segurança — SecurityFilterChain
+
+### Configuração declarada em `SecurityConfig`
+
+A classe `SecurityConfig` é anotada com `@Configuration`,
+`@EnableWebSecurity` e `@EnableMethodSecurity`. Utiliza
+`SessionCreationPolicy.STATELESS` — nenhuma sessão HTTP é criada ou
+mantida no servidor.
+
+### Regras de autorização (`authorizeHttpRequests`)
+
+Endpoints públicos (`permitAll`):
+
+* `/api/auth/**` — todos os verbos HTTP (login, register, verify, refresh,
+  deletarConta)
+* `GET /api/categorias/**` — leitura de categorias
+* `/swagger-ui/**`, `/api-docs/**`, `/swagger-ui.html` — documentação
+  OpenAPI/Swagger
+* `GET /api/prestadores/**` — consulta pública de perfis de prestadores
+
+Endpoints que requerem `ROLE_ADMIN`:
+
+* `POST /api/categorias/**` — criação de categoria
+* `PUT /api/categorias/**` — atualização de categoria
+* `DELETE /api/categorias/**` — exclusão de categoria
+
+Endpoints que requerem `ROLE_PRESTADOR`:
+
+* `POST /api/prestadores/**` — criação/atualização do perfil de prestador
+
+Endpoints que requerem autenticação genérica (`authenticated()`):
+
+* Qualquer outra requisição não coberta pelas regras anteriores
+  (`anyRequest().authenticated()`) — inclui todos os endpoints de
+  `/api/solicitacoes`, `/api/propostas`, `/api/avaliacoes`, `/api/perfil`.
+
+### `JwtAuthenticationFilter` e sua posição na cadeia
+
+`JwtAuthenticationFilter` estende `OncePerRequestFilter`, garantindo
+execução única por requisição. É registrado via
+`addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)`,
+portanto executa antes do filtro de autenticação padrão do Spring Security.
+
+Lógica interna de `doFilterInternal()`:
+
+* Lê o header `Authorization` da requisição.
+* Se o valor começar com `"Bearer "`, extrai o token (a partir do caractere
+  7) e chama `jwtTokenProvider.extractUsername(token)`.
+* Se o username foi extraído com sucesso e o `SecurityContextHolder` ainda
+  não possui autenticação, carrega o `UserDetails` via
+  `CustomUserDetailsService.loadUserByUsername()`.
+* Chama `jwtTokenProvider.validateToken(token, userDetails)`.
+* Se válido, cria um `UsernamePasswordAuthenticationToken` com as
+  authorities do usuário e o popula no `SecurityContextHolder`.
+* Independente do resultado, sempre chama `filterChain.doFilter()` para
+  continuar o processamento.
+
+### Geração e validação de tokens em `JwtTokenProvider`
+
+`JwtTokenProvider` é um `@Component` que lê `${jwt.secret}` e
+`${jwt.expiration}` via `@Value`.
+
+Geração (`generateToken()`):
+
+* Constrói o JWT com `Jwts.builder()` da biblioteca JJWT 0.12.x.
+* Define `subject` como o email do usuário (`userDetails.getUsername()`).
+* Define `issuedAt` como `new Date()` e `expiration` como
+  `now + expiration` (default 86400000 ms = 24 horas).
+* Assina com `Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret))`.
+
+Validação (`validateToken()`):
+
+* Chama `extractUsername(token)` para obter o subject.
+* Chama `isTokenExpired(token)` que compara `extractExpiration(token)`
+  com `new Date()`.
+* Retorna `true` apenas se o username coincidir com
+  `userDetails.getUsername()` e o token não estiver expirado.
+
+Extração de claims (`extractAllClaims()`):
+
+* Usa `Jwts.parser().setSigningKey(getSignKey()).build()
+  .parseClaimsJws(token).getBody()`.
+* Lança exceção se a assinatura for inválida ou o token malformado; a
+  exceção é capturada silenciosamente em `JwtAuthenticationFilter`.
+
+### Configuração CORS
+
+Definida em `corsConfigurationSource()` dentro de `SecurityConfig`:
+
+* Origins permitidas: valor de `${app.frontend.url}` (injetado via
+  `@Value`)
+* Métodos: GET, POST, PUT, PATCH, DELETE, OPTIONS
+* Headers permitidos: `Authorization`, `Content-Type`
+* Header exposto: `Authorization`
+* `allowCredentials`: `true`
+* Padrão de URL mapeado: `/**`
+
+
+================================================================================
+# 2. MODELO DE DADOS
+================================================================================
+
+## 2.1 Entidades e Tabelas
+
+### Tabela `usuarios` → classe `User`
+
+Anotações JPA: `@Entity`, `@Table(name = "usuarios")`. Implementa
+`UserDetails` do Spring Security.
+
+Campos e colunas:
+
+* `id` — `BIGSERIAL PRIMARY KEY` → `Long id` com
+  `@Id @GeneratedValue(strategy = GenerationType.IDENTITY)`
+* `nome` — `VARCHAR(255) NOT NULL` → `String nome` com
+  `@Column(nullable = false)`
+* `login` — `VARCHAR(255) NOT NULL UNIQUE` → `String login` com
+  `@Column(nullable = false, unique = true)`
+* `email` — `VARCHAR(255) NOT NULL UNIQUE` → `String email` com
+  `@Column(nullable = false, unique = true)`. Usado como `getUsername()`
+  para o Spring Security.
+* `senha` — `VARCHAR(255) NOT NULL` → `String senha` com
+  `@Column(nullable = false)`. Anotado com `@JsonProperty(access = WRITE_ONLY)`
+  e `@ToString.Exclude`.
+* `tipo` — `VARCHAR(50) NOT NULL` → `TipoUsuario tipo` com
+  `@Enumerated(EnumType.STRING) @Column(nullable = false)`
+* `telefone` — `VARCHAR(255)` → `String telefone` (nullable)
+* `cpf` — `VARCHAR(255)` → `String cpf` (nullable)
+* `rg` — `VARCHAR(255)` → `String rg` (nullable)
+* `orgao_expedidor` — `VARCHAR(255)` → `String orgaoExpedidor` (nullable)
+* `data_expedicao_rg` — `VARCHAR(255)` → `String dataExpedicaoRg` com
+  `@Column(name = "data_expedicao_rg")` (nullable; armazenado como String)
+* `cep` — `VARCHAR(255)` → `String cep` (nullable)
+* `endereco` — `VARCHAR(255)` → `String endereco` (nullable)
+* `cidade` — `VARCHAR(255)` → `String cidade` (nullable)
+* `estado` — `VARCHAR(255)` → `String estado` (nullable)
+* `numero` — `VARCHAR(255)` → `String numero` (nullable)
+* `complemento` — `VARCHAR(255)` → `String complemento` (nullable)
+* `data_cadastro` — `TIMESTAMP(0)` → `LocalDateTime dataCadastro` com
+  `@Column(name = "data_cadastro", columnDefinition = "TIMESTAMP(0)")`.
+  Preenchida pelo `@PrePersist` via `LocalDateTime.now().withNano(0)`.
+* `ativo` — `BOOLEAN NOT NULL DEFAULT TRUE` → `Boolean ativo` com
+  `@Column(nullable = false)`. Controla `isEnabled()`.
+* `avaliacao_media` — `FLOAT8 NOT NULL DEFAULT 0.0` → `Double avaliacaoMedia`
+  com `@Column(nullable = false)`
+* `total_avaliacoes` — `INTEGER NOT NULL DEFAULT 0` → `Integer totalAvaliacoes`
+  com `@Column(nullable = false)`
+
+`getAuthorities()` retorna `List.of(new SimpleGrantedAuthority("ROLE_" + tipo.name()))`.
+
+
+### Tabela `categorias` → classe `Categoria`
+
+Anotações JPA: `@Entity`, `@Table(name = "categorias")`.
+
+Campos e colunas:
+
+* `id` — `BIGSERIAL PRIMARY KEY` → `Long id` com
+  `@Id @GeneratedValue(strategy = GenerationType.IDENTITY)`
+* `nome` — `VARCHAR(255) NOT NULL UNIQUE` → `String nome` com
+  `@Column(nullable = false, unique = true)`
+* `descricao` — `TEXT` → `String descricao` com
+  `@Column(columnDefinition = "TEXT")` (nullable)
+
+
+### Tabela `prestadores` → classe `Prestador`
+
+Anotações JPA: `@Entity`, `@Table(name = "prestadores")`.
+
+Campos e colunas:
+
+* `id` — `BIGSERIAL PRIMARY KEY` → `Long id` com
+  `@Id @GeneratedValue(strategy = GenerationType.IDENTITY)`
+* `usuario_id` — `BIGINT NOT NULL UNIQUE` → `User usuario` com
+  `@OneToOne @JoinColumn(name = "usuario_id", nullable = false, unique = true)`
+  (constraint `fk_prestador_usuario`)
+* `descricao_perfil` — `TEXT` → `String descricaoPerfil` com
+  `@Column(columnDefinition = "TEXT")` (nullable)
+* `cidade` — `VARCHAR(255)` → `String cidade` (nullable)
+* `estado` — `VARCHAR(255)` → `String estado` (nullable)
+* `avaliacao_media` — `FLOAT8 NOT NULL DEFAULT 0.0` → `Double avaliacaoMedia`
+  com `@Column(nullable = false)`
+* `total_avaliacoes` — `INTEGER NOT NULL DEFAULT 0` → `Integer totalAvaliacoes`
+  com `@Column(nullable = false)`
+
+Relacionamento N:N com `Categoria` via:
+
+```
+@ManyToMany
+@JoinTable(
+    name = "prestador_categorias",
+    joinColumns = @JoinColumn(name = "prestador_id"),
+    inverseJoinColumns = @JoinColumn(name = "categoria_id")
+)
+private List<Categoria> categorias = new ArrayList<>();
+```
+
+
+### Tabela `prestador_categorias` (tabela de junção N:N)
+
+Não possui classe Java dedicada — gerenciada pelo `@ManyToMany` de `Prestador`.
+
+Colunas e constraints:
+
+* `prestador_id` — `BIGINT NOT NULL` — FK para `prestadores.id`
+  (constraint `fk_pc_prestador`)
+* `categoria_id` — `BIGINT NOT NULL` — FK para `categorias.id`
+  (constraint `fk_pc_categoria`)
+* `PRIMARY KEY (prestador_id, categoria_id)` — chave composta
+
+
+### Tabela `solicitacoes_servico` → classe `SolicitacaoServico`
+
+Anotações JPA: `@Entity`, `@Table(name = "solicitacoes_servico")`.
+
+Campos e colunas:
+
+* `id` — `BIGSERIAL PRIMARY KEY` → `Long id` com
+  `@Id @GeneratedValue(strategy = GenerationType.IDENTITY)`
+* `cliente_id` — `BIGINT NOT NULL` → `User cliente` com
+  `@ManyToOne @JoinColumn(name = "cliente_id", nullable = false)`
+  (constraint `fk_ss_cliente`)
+* `categoria_id` — `BIGINT NOT NULL` → `Categoria categoria` com
+  `@ManyToOne @JoinColumn(name = "categoria_id", nullable = false)`
+  (constraint `fk_ss_categoria`)
+* `descricao` — `TEXT NOT NULL` → `String descricao` com
+  `@Column(nullable = false, columnDefinition = "TEXT")`
+* `cidade` — `VARCHAR(255) NOT NULL` → `String cidade` com
+  `@Column(nullable = false)`
+* `estado` — `VARCHAR(255) NOT NULL` → `String estado` com
+  `@Column(nullable = false)`
+* `status` — `VARCHAR(50) NOT NULL DEFAULT 'ABERTA'` → `StatusSolicitacao status`
+  com `@Enumerated(EnumType.STRING) @Column(nullable = false)`. Inicializado
+  por `@PrePersist` se nulo.
+* `data_criacao` — `TIMESTAMP NOT NULL` → `LocalDateTime dataCriacao` com
+  `@Column(nullable = false)`. Preenchida pelo `@PrePersist`.
+
+
+### Tabela `propostas` → classe `Proposta`
+
+Anotações JPA: `@Entity`, `@Table(name = "propostas")`.
+
+Campos e colunas:
+
+* `id` — `BIGSERIAL PRIMARY KEY` → `Long id` com
+  `@Id @GeneratedValue(strategy = GenerationType.IDENTITY)`
+* `solicitacao_id` — `BIGINT NOT NULL` → `SolicitacaoServico solicitacao` com
+  `@ManyToOne @JoinColumn(name = "solicitacao_id", nullable = false)`
+  (constraint `fk_prop_solicitacao`)
+* `prestador_id` — `BIGINT NOT NULL` → `Prestador prestador` com
+  `@ManyToOne @JoinColumn(name = "prestador_id", nullable = false)`
+  (constraint `fk_prop_prestador`)
+* `valor` — `NUMERIC(10,2) NOT NULL` → `BigDecimal valor` com
+  `@Column(nullable = false, precision = 10, scale = 2)`
+* `mensagem` — `TEXT` → `String mensagem` com
+  `@Column(columnDefinition = "TEXT")` (nullable)
+* `status` — `VARCHAR(50) NOT NULL DEFAULT 'ENVIADA'` → `StatusProposta status`
+  com `@Enumerated(EnumType.STRING) @Column(nullable = false)`. Inicializado
+  por `@PrePersist` se nulo.
+* `data_envio` — `TIMESTAMP NOT NULL` → `LocalDateTime dataEnvio` com
+  `@Column(nullable = false)`. Preenchida pelo `@PrePersist`.
+
+
+### Tabela `avaliacoes` → classe `Avaliacao`
+
+Anotações JPA: `@Entity`, `@Table(name = "avaliacoes")`.
+
+Campos e colunas:
+
+* `id` — `BIGSERIAL PRIMARY KEY` → `Long id` com
+  `@Id @GeneratedValue(strategy = GenerationType.IDENTITY)`
+* `solicitacao_id` — `BIGINT NOT NULL` → `SolicitacaoServico solicitacao` com
+  `@ManyToOne @JoinColumn(name = "solicitacao_id", nullable = false)`
+  (constraint `fk_aval_solicitacao`)
+* `prestador_id` — `BIGINT NOT NULL` → `Prestador prestador` com
+  `@ManyToOne @JoinColumn(name = "prestador_id", nullable = false)`
+  (constraint `fk_aval_prestador`)
+* `cliente_id` — `BIGINT NOT NULL` → `User cliente` com
+  `@ManyToOne @JoinColumn(name = "cliente_id", nullable = false)`
+  (constraint `fk_aval_cliente`)
+* `tipo` — `VARCHAR(50) NOT NULL DEFAULT 'CLIENTE_AVALIA_PRESTADOR'` →
+  `TipoAvaliacao tipo` com `@Enumerated(EnumType.STRING) @Column(nullable = false)`
+* `nota` — `INTEGER NOT NULL` → `Integer nota` com `@Column(nullable = false)`
+* `comentario` — `TEXT` → `String comentario` com
+  `@Column(columnDefinition = "TEXT")` (nullable)
+* `data_criacao` — `TIMESTAMP NOT NULL` → `LocalDateTime dataCriacao` com
+  `@CreationTimestamp @Column(nullable = false, updatable = false)`.
+  Preenchida automaticamente pelo Hibernate na inserção.
+
+
+### Tabela `verification_token` → classe `VerificationToken`
+
+Anotação JPA: `@Entity` (sem `@Table` explícita — Hibernate usa o nome da
+classe como nome da tabela).
+
+Campos e colunas:
+
+* `id` — `BIGSERIAL PRIMARY KEY` → `Long id` com
+  `@Id @GeneratedValue(strategy = GenerationType.IDENTITY)`
+* `token` — `VARCHAR(255)` → `String token` (nullable no DDL; preenchido no
+  construtor com UUID)
+* `user_id` — `BIGINT NOT NULL` → `User user` com
+  `@OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)`
+  `@JoinColumn(nullable = false, name = "user_id")`
+  (constraint `fk_vt_user`)
+* `expiry_date` — `TIMESTAMP` → `LocalDateTime expiryDate` (nullable no DDL;
+  preenchido pelo construtor via `calculateExpiryDate(60 * 24)` = 24 horas)
+
+
+### Tabela `refresh_tokens` → classe `RefreshToken`
+
+Criada em `V2__add_refresh_tokens.sql`. Anotações JPA: `@Entity`,
+`@Table(name = "refresh_tokens")`.
+
+Campos e colunas:
+
+* `id` — `BIGSERIAL PRIMARY KEY` → `Long id` com
+  `@Id @GeneratedValue(strategy = GenerationType.IDENTITY)`
+* `token` — `VARCHAR(255) NOT NULL UNIQUE` → `String token` com
+  `@Column(nullable = false, unique = true)`
+* `user_id` — `BIGINT NOT NULL` → `User user` com
+  `@ManyToOne(fetch = FetchType.LAZY)`
+  `@JoinColumn(name = "user_id", nullable = false)`
+  (constraint `fk_rt_user`)
+* `expiry_date` — `TIMESTAMP NOT NULL` → `LocalDateTime expiryDate` com
+  `@Column(nullable = false)`
+* `revoked` — `BOOLEAN NOT NULL DEFAULT FALSE` → `Boolean revoked` com
+  `@Column(nullable = false)`
+
+
+## 2.2 Enumerações
+
+### `TipoUsuario`
+
+Usada na coluna `tipo` da tabela `usuarios`. Armazenada como `VARCHAR(50)`
+via `@Enumerated(EnumType.STRING)`.
+
+Valores:
+
+* `CLIENTE` — usuário que contrata serviços e cria solicitações
+* `PRESTADOR` — usuário que oferece serviços e envia propostas
+* `ADMIN` — administrador da plataforma; pode gerenciar categorias
+
+A authority derivada é `"ROLE_" + tipo.name()` (ex: `ROLE_CLIENTE`,
+`ROLE_PRESTADOR`, `ROLE_ADMIN`).
+
+
+### `StatusSolicitacao`
+
+Usada na coluna `status` da tabela `solicitacoes_servico`. Armazenada como
+`VARCHAR(50)` via `@Enumerated(EnumType.STRING)`.
+
+Valores:
+
+* `ABERTA` — solicitação criada e aguardando propostas de prestadores
+* `EM_ANDAMENTO` — uma proposta foi aceita pelo cliente
+* `CONCLUIDA` — serviço finalizado; avaliações podem ser registradas
+* `CANCELADA` — solicitação encerrada sem conclusão
+
+
+### `StatusProposta`
+
+Usada na coluna `status` da tabela `propostas`. Armazenada como
+`VARCHAR(50)` via `@Enumerated(EnumType.STRING)`.
+
+Valores:
+
+* `ENVIADA` — proposta enviada pelo prestador, aguardando decisão do cliente
+* `ACEITA` — cliente aceitou a proposta; solicitação passa para `EM_ANDAMENTO`
+* `RECUSADA` — cliente recusou a proposta
+
+
+### `TipoAvaliacao`
+
+Usada na coluna `tipo` da tabela `avaliacoes`. Armazenada como
+`VARCHAR(50)` via `@Enumerated(EnumType.STRING)`.
+
+Valores:
+
+* `CLIENTE_AVALIA_PRESTADOR` — avaliação feita pelo cliente sobre o prestador;
+  recalcula `Prestador.avaliacaoMedia` e `Prestador.totalAvaliacoes`
+* `PRESTADOR_AVALIA_CLIENTE` — avaliação feita pelo prestador sobre o cliente;
+  recalcula `User.avaliacaoMedia` e `User.totalAvaliacoes`
+
+
+## 2.3 Diagrama de Sequência — Fluxo de Autenticação com Refresh
+
+### Fluxo de Login Inicial
+
+```
+Cliente Angular          Backend (Spring Boot)           Banco (PostgreSQL)
+     |                          |                               |
+     |--- POST /api/auth/login  |                               |
+     |    { email, senha }      |                               |
+     |                          |                               |
+     |                   AuthService.login()                    |
+     |                          |--- findByEmail(email) ------->|
+     |                          |<-- User entity ---------------|
+     |                          |                               |
+     |                   JwtTokenProvider.generateToken()       |
+     |                   (JWT com exp 24h, assinado HMAC-SHA)   |
+     |                          |                               |
+     |                   RefreshTokenService.generateRefreshToken()
+     |                          |--- INSERT refresh_tokens ---->|
+     |                          |<-- RefreshToken entity -------|
+     |                          |                               |
+     |<-- 200 OK                |                               |
+     |    { token, refreshToken,|                               |
+     |      user: AuthResponseDTO }                             |
+     |                          |                               |
+  [localStorage]                |                               |
+  token, refreshToken,          |                               |
+  currentUser salvos            |                               |
+```
+
+### Fluxo de Renovação via `authInterceptor` (HTTP 401)
+
+```
+Cliente Angular          authInterceptor          Backend (Spring Boot)
+     |                        |                          |
+     |-- requisição original  |                          |
+     |   (token expirado)     |                          |
+     |----------------------->|                          |
+     |                        |--- requisição com Bearer token -->|
+     |                        |<-- 401 Unauthorized --------------|
+     |                        |                          |
+     |                  [catchError: status === 401      |
+     |                   e URL não contém /api/auth/]    |
+     |                        |                          |
+     |                        |--- POST /api/auth/refresh -->|
+     |                        |    { refreshToken }          |
+     |                        |                         RefreshTokenService
+     |                        |                         .validateAndRotate()
+     |                        |                              |
+     |                        |                         deleteByUser(user)
+     |                        |                         INSERT novo refresh_tokens
+     |                        |                         generateToken() novo JWT
+     |                        |                              |
+     |                        |<-- 200 OK { token, refreshToken } -|
+     |                        |                          |
+     |                  [localStorage atualizado]        |
+     |                  novo token e refreshToken        |
+     |                        |                          |
+     |                        |--- retentativa da requisição original -->|
+     |                        |    (com novo Bearer token)               |
+     |                        |<-- 200 OK ------------------------------|
+     |<-- resposta final      |                          |
+```
+
+Se `authService.refresh()` falhar (ex: refresh token expirado ou revogado),
+o interceptor chama `authService.logout()` e redireciona para `'/login'`.
+
+
+## 2.4 Flyway — Estratégia de Migrations
+
+### Por que `ddl-auto: none`
+
+O `application.yml` define `spring.jpa.hibernate.ddl-auto: none`. Isso
+impede que o Hibernate gere ou altere o schema do banco automaticamente.
+Toda evolução do schema é de responsabilidade exclusiva do Flyway, que
+versionado e auditável. Essa escolha garante:
+
+* Controle explícito sobre cada alteração de schema em produção.
+* Histórico rastreável via tabela interna `flyway_schema_history`.
+* Sem risco de o Hibernate apagar dados em ambiente de produção via
+  `ddl-auto: create-drop`.
+
+### O que `baseline-on-migrate: true` significa
+
+Definido em `spring.flyway.baseline-on-migrate: true` com
+`baseline-version: 1`.
+
+* Em bancos de dados novos (container recém-criado): Flyway executa todas
+  as migrations a partir de `V1__` normalmente.
+* Em bancos de dados existentes que já possuem as tabelas mas não possuem
+  a tabela `flyway_schema_history`: o Flyway cria a tabela de histórico e
+  registra o baseline na versão 1 sem executar `V1__initial_schema.sql`
+  (pois considera que o estado equivalente já existe). A partir daí, apenas
+  migrations com versão superior ao baseline são executadas (ex: `V2__`).
+
+O comentário no topo de `V1__initial_schema.sql` documenta esse
+comportamento: `-- V1: schema inicial do VemResolver (baseline — não
+executado em DBs existentes)`.
+
+### Conteúdo de V1 — `V1__initial_schema.sql`
+
+Cria as seguintes tabelas com `CREATE TABLE IF NOT EXISTS`:
+
+* `usuarios` — entidade central de autenticação e perfil
+* `categorias` — categorias de serviço oferecidas na plataforma
+* `prestadores` — perfis de prestadores de serviço (1:1 com `usuarios`)
+* `prestador_categorias` — tabela de junção N:N entre prestadores e
+  categorias
+* `solicitacoes_servico` — solicitações abertas por clientes
+* `propostas` — propostas enviadas por prestadores para solicitações
+* `avaliacoes` — avaliações bidirecionais entre clientes e prestadores
+* `verification_token` — tokens de verificação de e-mail (UUID, expira em
+  24 horas)
+
+### Conteúdo de V2 — `V2__add_refresh_tokens.sql`
+
+Cria a tabela `refresh_tokens` com `CREATE TABLE IF NOT EXISTS`:
+
+* Suporta o mecanismo de renovação automática de sessão JWT.
+* A coluna `revoked BOOLEAN NOT NULL DEFAULT FALSE` permite invalidação
+  explícita sem exclusão imediata do registro.
+* A rotação ocorre em `RefreshTokenService.validateAndRotate()`:
+  `deleteByUser` exclui o token atual antes de criar o novo.
+
+### Como adicionar uma nova migration
+
+Criar um arquivo SQL em:
+
+```
+backend/src/main/resources/db/migration/V3__descricao_da_alteracao.sql
+```
+
+Regras de nomenclatura:
+
+* O prefixo deve ser `V` (maiúsculo) seguido do número de versão.
+* A versão deve ser superior à última migration existente (atualmente `V2`).
+* Após o número, usar dois underscores (`__`) seguidos de uma descrição
+  em snake_case.
+* Exemplos de nomes válidos: `V3__add_foto_perfil_usuario.sql`,
+  `V4__create_table_mensagens.sql`.
+
+Flyway detecta automaticamente novos arquivos no classpath ao inicializar
+a aplicação e executa apenas as migrations pendentes (versão maior que a
+última registrada em `flyway_schema_history`). Nunca altere uma migration
+já executada — crie sempre um novo arquivo versionado para qualquer
+modificação de schema.

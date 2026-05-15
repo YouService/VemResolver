@@ -1,0 +1,495 @@
+# 04 - Testes e Qualidade
+# VemResolver — Backend Spring Boot 3.4.1 / Java 21
+
+
+# 1. COBERTURA DE TESTES ATUAL
+# ============================================================
+
+## 1.1 Backend — Testes Existentes
+
+Localizacao base: backend/src/test/java/com/marketplace/servicos/
+
+### AuthServiceTest
+  Arquivo: service/AuthServiceTest.java
+  Framework: JUnit 5 + Mockito (@ExtendWith(MockitoExtension.class))
+  Mocks declarados com @Mock:
+    * UserRepository userRepository
+    * VerificationTokenRepository verificationTokenRepository
+    * EmailService emailService
+    * PasswordEncoder passwordEncoder
+    * JwtTokenProvider jwtTokenProvider
+    * AuthenticationManager authenticationManager
+  Alvo: @InjectMocks AuthService authService
+
+  Casos cobertos (7):
+    * register_NewUser_SavesUserAndSendsEmail
+      - Configura: existsByCpfAndAtivoTrue retorna false, existsByEmailAndAtivoTrue retorna
+        false, findByEmail retorna Optional.empty(), passwordEncoder.encode retorna
+        "encodedPwd", userRepository.save seta id=1L no User
+      - Verifica: response.getUserId() == 1L, verificationTokenRepository.save chamado
+        com qualquer VerificationToken, emailService.sendVerificationEmail chamado com
+        dto.getEmail() e qualquer String como token
+      - Nota: senha e enviada como Base64 no RegisterDTO (Base64.encode("Password123"))
+
+    * register_ExistingActiveEmail_Throws
+      - Configura: existsByCpfAndAtivoTrue retorna false, existsByEmailAndAtivoTrue retorna
+        true
+      - Verifica: assertThrows(BusinessException.class)
+
+    * verifyAccount_ValidToken_ActivatesUser
+      - Configura: verificationTokenRepository.findByToken("tok") retorna VerificationToken
+        com expiryDate = LocalDateTime.now().plusHours(1), ativo=false
+      - Verifica: ArgumentCaptor captura User salvo com ativo=true,
+        verificationTokenRepository.delete(token) chamado
+
+    * verifyAccount_InvalidToken_Throws
+      - Configura: findByToken("bad") retorna null
+      - Verifica: assertThrows(BusinessException.class)
+
+    * login_InactiveUser_Throws
+      - Configura: authenticationManager.authenticate retorna Authentication com
+        getPrincipal() = User{ativo=false}
+      - Verifica: assertThrows(BusinessException.class)
+
+    * login_ActiveUser_ReturnsToken
+      - Configura: authenticationManager.authenticate retorna Authentication com User
+        {id=5L, ativo=true}, jwtTokenProvider.generateToken retorna "jwt-token"
+      - Verifica: resp.getToken() == "jwt-token", resp.getUserId() == 5L
+      - FALHA ATUAL: RefreshTokenService nao esta mockado; AuthService.login() chama
+        refreshTokenService.generateRefreshToken(user) na linha 181, resultando em
+        NullPointerException porque refreshTokenService e null quando @InjectMocks e
+        usado sem o mock correspondente declarado
+
+    * deletarConta_UserExists_SetsInactive
+      - Configura: userRepository.findById(10L) retorna Optional.of(user{id=10L, ativo=true})
+      - Verifica: ArgumentCaptor captura User salvo com ativo=false
+      - FALHA ATUAL: AuthService.deletarConta() chama refreshTokenService.revokeByUser(user)
+        na linha 198, resultando em NullPointerException pelo mesmo motivo acima
+
+### SolicitacaoServicoServiceTest
+  Arquivo: service/SolicitacaoServicoServiceTest.java
+  Framework: JUnit 5 + Mockito (@ExtendWith(MockitoExtension.class))
+  Mocks declarados com @Mock:
+    * SolicitacaoServicoRepository solicitacaoRepository
+    * UserRepository userRepository
+    * CategoriaRepository categoriaRepository
+    * AvaliacaoRepository avaliacaoRepository
+  Alvo: @InjectMocks SolicitacaoServicoService solicitacaoService
+  Fixture (@BeforeEach): User{id=1L, nome="Joao"}, Categoria{id=1L, nome="Eletrica"},
+    SolicitacaoServico{id=10L, cliente=User{1L}, status=EM_ANDAMENTO}
+
+  Casos cobertos (5):
+    * concluirServico_EmAndamento_RetornaConcluida
+      - Configura: findById(10L) retorna solicitacao, save retorna argumento
+      - Verifica: resultado.getStatus() == StatusSolicitacao.CONCLUIDA,
+        solicitacaoRepository.save(solicitacao) chamado
+
+    * concluirServico_SolicitacaoNaoEncontrada_LancaException
+      - Configura: findById(99L) retorna Optional.empty()
+      - Verifica: assertThrows(ResourceNotFoundException.class)
+
+    * concluirServico_ClienteNaoEDono_LancaException
+      - Configura: findById(10L) retorna solicitacao, chamada com usuarioId=999L
+      - Verifica: assertThrows(BusinessException.class), ex.getMessage() contains
+        "cliente responsavel"
+
+    * concluirServico_StatusAberta_LancaException
+      - Configura: solicitacao.setStatus(ABERTA), findById(10L) retorna solicitacao
+      - Verifica: assertThrows(BusinessException.class), ex.getMessage() contains
+        "em andamento"
+
+    * concluirServico_StatusJaConcluida_LancaException
+      - Configura: solicitacao.setStatus(CONCLUIDA), findById(10L) retorna solicitacao
+      - Verifica: assertThrows(BusinessException.class)
+
+### PrestadorServiceTest
+  Arquivo: service/PrestadorServiceTest.java
+  Framework: JUnit 5 + Mockito (@ExtendWith(MockitoExtension.class))
+  Mocks declarados com @Mock:
+    * PrestadorRepository prestadorRepository
+    * UserRepository userRepository
+    * CategoriaRepository categoriaRepository
+  Alvo: @InjectMocks PrestadorService prestadorService
+  Fixture (@BeforeEach): User{id=1L, tipo=PRESTADOR, nome="Maria"},
+    Categoria{id=1L, nome="Eletricista"}
+
+  Casos cobertos (5):
+    * criarOuAtualizar_UsuarioPrestador_CriaComSucesso
+      - Configura: userRepository.findByIdAndTipo(1L, PRESTADOR) retorna usuario,
+        prestadorRepository.findByUsuarioId(1L) retorna Optional.empty(),
+        categoriaRepository.findAllById retorna List.of(categoria),
+        prestadorRepository.save seta id=10L no Prestador
+      - Verifica: resultado.getUsuarioId() == 1L, prestadorRepository.save chamado
+
+    * criarOuAtualizar_UsuarioCliente_LancaException
+      - Configura: findByIdAndTipo(2L, PRESTADOR) retorna Optional.empty()
+      - Verifica: assertThrows(ResourceNotFoundException.class),
+        prestadorRepository.save nunca chamado
+
+    * criarOuAtualizar_CategoriaInexistente_LancaBusinessException
+      - Configura: usuario encontrado, findByUsuarioId retorna empty,
+        categoriaRepository.findAllById(List.of(1L, 99L)) retorna apenas List.of(categoria)
+        (1 de 2 ids)
+      - Verifica: assertThrows(BusinessException.class), ex.getMessage() contains
+        "categorias", prestadorRepository.save nunca chamado
+
+    * buscarPorId_PrestadorExistente_RetornaDTO
+      - Configura: prestadorRepository.findById(10L) retorna Prestador{id=10L, usuario=1L}
+      - Verifica: resultado.getId() == 10L, resultado.getUsuarioId() == 1L
+
+    * buscarPorId_PrestadorInexistente_LancaException
+      - Configura: findById(99L) retorna Optional.empty()
+      - Verifica: assertThrows(ResourceNotFoundException.class)
+
+### CategoriaSecurityTest
+  Arquivo: controller/CategoriaSecurityTest.java
+  Framework: JUnit 5 + @WebMvcTest(CategoriaController.class) + Spring Security Test
+             (@WithMockUser)
+  Configuracao: @Import(SecurityConfig.class), @TestPropertySource(properties =
+    "app.frontend.url=http://localhost:4200")
+  MockBeans: CategoriaService, JwtAuthenticationFilter, CustomUserDetailsService
+  Setup (@BeforeEach): jwtAuthenticationFilter configurado para passar a requisicao
+    adiante via doAnswer (nao bloqueia nenhuma requisicao, deixa o SecurityFilterChain
+    avaliar normalmente)
+
+  Casos cobertos (6):
+    * getCategoria_SemAutenticacao_Retorna200
+      - GET /api/categorias sem token
+      - Verifica: status().isOk() (rota publica)
+
+    * postCategoria_SemAutenticacao_Retorna403
+      - POST /api/categorias sem autenticacao, com csrf()
+      - Verifica: status().isForbidden()
+
+    * postCategoria_ComoCliente_Retorna403
+      - @WithMockUser(roles = "CLIENTE"), POST /api/categorias
+      - Verifica: status().isForbidden()
+
+    * postCategoria_ComoPrestador_Retorna403
+      - @WithMockUser(roles = "PRESTADOR"), POST /api/categorias
+      - Verifica: status().isForbidden()
+
+    * putCategoria_ComoCliente_Retorna403
+      - @WithMockUser(roles = "CLIENTE"), PUT /api/categorias/1
+      - Verifica: status().isForbidden()
+
+    * deleteCategoria_ComoCliente_Retorna403
+      - @WithMockUser(roles = "CLIENTE"), DELETE /api/categorias/1
+      - Verifica: status().isForbidden()
+
+### FluxoPrincipalTest
+  Arquivo: integration/FluxoPrincipalTest.java
+  Framework: JUnit 5 + @SpringBootTest + @AutoConfigureMockMvc
+  Tipo: teste de integracao end-to-end (requer banco PostgreSQL rodando e DataSeeder
+    com pelo menos categoriaId=1 inserido)
+  Setup (@BeforeEach): deleta por email os 4 usuarios de teste (cliente001@teste.com,
+    cliente002@teste.com, prestador001@teste.com, prestador002@teste.com) via
+    UserRepository.findByEmail().ifPresent(userRepository::delete)
+
+  Fluxo coberto (metodo fluxoCompleto()):
+    1. POST /api/auth/register — cadastra 4 usuarios (2 clientes, 2 prestadores)
+       * Todos com status 201 esperado
+       * CPF fixo: "111.111.111-11" para CLIENTE, "222.222.222-22" para PRESTADOR
+         (ver secao 2 sobre problema de concorrencia)
+    2. Ativacao manual via userRepository.save(user.setAtivo(true)) para cada usuario
+       (simula clique no link de e-mail)
+    3. POST /api/auth/login — cliente001@teste.com — extrai token JWT da resposta
+    4. POST /api/solicitacoes — categoriaId=1, descricao="Preciso trocar a fiacao do
+       chuveiro urgente.", cidade="Sao Paulo", estado="SP"
+       * Verifica: status 201, jsonPath("$.descricao") correto
+       * Extrai solicitacaoId da resposta
+    5. POST /api/auth/login — prestador001@teste.com — extrai tokenPrestador
+    6. POST /api/propostas — solicitacaoId=<extraido>, valor=250.0,
+       mensagem="Faco o servico com qualidade e rapidez, disponivel amanha."
+       * Verifica: status 201
+       * Extrai propostaId da resposta
+    7. PATCH /api/propostas/{propostaId}/aceitar — cliente aceita
+       * Verifica: status 200, jsonPath("$.status") == "ACEITA"
+    8. PATCH /api/solicitacoes/{solicitacaoId}/concluir — cliente conclui
+       * Verifica: status 200, jsonPath("$.status") == "CONCLUIDA"
+
+
+## 1.2 Frontend — Testes Existentes
+
+Localizacao: frontend/marketplace-frontend/src/app/
+
+Os arquivos .spec.ts presentes (app.component.spec.ts, cliente-dashboard.component.spec.ts,
+footer.component.spec.ts, register.component.spec.ts) contem apenas o caso gerado
+automaticamente pelo Angular CLI:
+  * "should create" — verifica que o componente e instanciado sem erros de construtor
+
+Nenhum caso de teste real foi implementado no frontend. Todos os servicos Angular
+(AuthService, PropostaService, SolicitacaoService), guards (clienteGuard, prestadorGuard)
+e interceptors (authInterceptor) estao sem cobertura.
+
+
+# 2. LACUNAS CRITICAS DE COBERTURA
+# ============================================================
+
+* AuthServiceTest — testes login e deletarConta falham com NullPointerException
+  * Causa: RefreshTokenService nao esta declarado com @Mock no AuthServiceTest
+  * AuthService.login() chama refreshTokenService.generateRefreshToken(user) (linha 181)
+  * AuthService.deletarConta() chama refreshTokenService.revokeByUser(user) (linha 198)
+  * @InjectMocks nao injeta null para dependencias ausentes quando o construtor e
+    chamado diretamente — o campo fica null e explode no primeiro acesso
+  * Acao imediata: adicionar @Mock RefreshTokenService refreshTokenService ao
+    AuthServiceTest
+
+* RefreshTokenService sem testes — toda a logica critica de sessao sem cobertura
+  * generateRefreshToken(): deleteByUser chamado antes de save, token gerado com UUID,
+    expiryDate calculado a partir de jwt.refresh-expiration
+  * validateAndRotate(): verificacao de revoked e expiryDate, rotacao completa
+  * revokeByUser(): delegacao para deleteByUser
+  * Risco: regressoes nao detectadas em qualquer mudanca nesta classe
+
+* PropostaService sem testes unitarios
+  * Logica de criar(): validar status ABERTA, detectar duplicata por prestadorId +
+    solicitacaoId
+  * Logica de aceitarProposta(): validar dono, validar status ENVIADA, mudar status
+    da Proposta e da SolicitacaoServico atomicamente
+  * Logica de recusarProposta(): validar dono, validar status ENVIADA
+
+* AvaliacaoService sem testes unitarios
+  * Logica de criar(): validar status CONCLUIDA, validar dono, verificar
+    foiAvaliadoPeloCliente, atualizar avaliacaoMedia e totalAvaliacoes em Prestador
+  * Logica de criarPorPrestador(): validar proposta ACEITA vinculada, verificar
+    foiAvaliadoPeloPrestador
+
+* Interceptor Angular sem testes (authInterceptor)
+  * Ponto mais critico do fluxo de sessao no frontend
+  * Logica: injetar Bearer token, capturar 401, chamar refresh, retentar ou fazer logout
+  * Sem testes: um bug aqui derruba toda a sessao de usuario sem ser detectado
+
+* Guards Angular sem testes (clienteGuard, prestadorGuard)
+  * Nenhum spec verifica que rotas protegidas redirecionam corretamente para /login
+  * Nenhum spec verifica que um CLIENTE nao acessa rota de PRESTADOR
+
+* FluxoPrincipalTest — CPF fixo causa falha em execucoes consecutivas
+  * cadastrarUsuario() usa CPF "111.111.111-11" para clientes e "222.222.222-22" para
+    prestadores (linha 194 do FluxoPrincipalTest.java)
+  * O @BeforeEach limpa usuarios por email, mas se o banco tiver um usuario com o mesmo
+    CPF de um teste anterior ja excluido pelo email mas com CPF persistido em outro
+    registro, AuthService.register() lanca BusinessException "Este CPF ja esta
+    cadastrado"
+  * Causa raiz: CPF deveria ser gerado dinamicamente, nao fixo
+
+
+# 3. PLANO DE TESTES PRIORITARIO
+# ============================================================
+
+## Prioridade ALTA — Corrigir e implementar no ciclo atual
+
+### AuthServiceTest — correcao urgente (testes atuais quebrados)
+  Arquivo: service/AuthServiceTest.java
+
+  Adicionar mock faltante:
+    * @Mock RefreshTokenService refreshTokenService
+
+  Atualizar login_ActiveUser_ReturnsToken:
+    * Adicionar: quando refreshTokenService.generateRefreshToken(user) retorna
+      RefreshToken{token="uuid-rt"}
+    * Adicionar verificacao: resp.getRefreshToken() == "uuid-rt"
+
+  Adicionar novo caso:
+    * deletarConta_UserExists_RevogaRefreshTokensESetsInactive
+      - Configura: userRepository.findById(10L) retorna User{ativo=true}
+      - Verifica: verify(refreshTokenService).revokeByUser(user) chamado,
+        ArgumentCaptor confirma User salvo com ativo=false
+
+
+### RefreshTokenServiceTest — novo arquivo
+  Arquivo: service/RefreshTokenServiceTest.java
+  Framework: JUnit 5 + Mockito (@ExtendWith(MockitoExtension.class))
+  Mock: @Mock RefreshTokenRepository refreshTokenRepository
+  Alvo: @InjectMocks RefreshTokenService refreshTokenService
+
+  Casos a implementar:
+    * generateRefreshToken_DeveDeleteExistenteESalvarNovo
+      - Configura: refreshTokenRepository.save retorna o token passado
+      - Verifica: verify(refreshTokenRepository).deleteByUser(user) chamado antes de save,
+        resultado.getToken() nao e null, resultado.getRevoked() == false,
+        resultado.getExpiryDate() e depois de LocalDateTime.now()
+
+    * validateAndRotate_TokenValido_DeveRotacionar
+      - Configura: findByToken("valid") retorna RefreshToken{revoked=false,
+        expiryDate=now().plusDays(7), user=User{id=1L}},
+        refreshTokenRepository.save retorna novo token
+      - Verifica: verify(refreshTokenRepository).deleteByUser(user) chamado,
+        resultado.getToken() diferente de "valid" (novo UUID)
+
+    * validateAndRotate_TokenRevogado_DeveThrow
+      - Configura: findByToken("revoked") retorna RefreshToken{revoked=true}
+      - Verifica: assertThrows(BusinessException.class), verify(refreshTokenRepository)
+        .delete(existing) chamado
+
+    * validateAndRotate_TokenExpirado_DeveThrow
+      - Configura: findByToken("expired") retorna RefreshToken{revoked=false,
+        expiryDate=now().minusDays(1)}
+      - Verifica: assertThrows(BusinessException.class)
+
+    * validateAndRotate_TokenNaoEncontrado_DeveThrow
+      - Configura: findByToken("unknown") retorna Optional.empty()
+      - Verifica: assertThrows(BusinessException.class)
+
+    * revokeByUser_DeveDelegarParaDeleteByUser
+      - Verifica: verify(refreshTokenRepository).deleteByUser(user)
+
+
+### PropostaServiceTest — novo arquivo
+  Arquivo: service/PropostaServiceTest.java
+  Framework: JUnit 5 + Mockito (@ExtendWith(MockitoExtension.class))
+  Mocks esperados (verificar construtor de PropostaService):
+    * PropostaRepository propostaRepository
+    * SolicitacaoServicoRepository solicitacaoRepository
+    * PrestadorRepository prestadorRepository
+    * UserRepository userRepository
+  Alvo: @InjectMocks PropostaService propostaService
+
+  Casos a implementar:
+    * criar_SolicitacaoAberta_DeveCriarProposta
+      - Configura: solicitacao{status=ABERTA}, prestador encontrado por usuarioId,
+        propostaRepository.existsByPrestadorAndSolicitacao retorna false,
+        propostaRepository.save retorna proposta com id
+      - Verifica: resultado nao e null, resultado.getStatus() == StatusProposta.ENVIADA
+
+    * criar_SolicitacaoNaoAberta_DeveThrow
+      - Configura: solicitacao{status=EM_ANDAMENTO}
+      - Verifica: assertThrows(BusinessException.class)
+
+    * criar_DuplicadaMesmoPrestador_DeveThrow
+      - Configura: solicitacao{status=ABERTA}, prestador encontrado,
+        existsByPrestadorAndSolicitacao retorna true
+      - Verifica: assertThrows(BusinessException.class)
+
+    * aceitarProposta_ClienteNaoEDono_DeveThrow
+      - Configura: proposta encontrada, solicitacao.getCliente().getId() != usuarioId passado
+      - Verifica: assertThrows(BusinessException.class)
+
+    * aceitarProposta_PropostaJaProcessada_DeveThrow
+      - Configura: proposta{status=ACEITA} (nao ENVIADA)
+      - Verifica: assertThrows(BusinessException.class)
+
+    * aceitarProposta_HappyPath_MudaStatusSolicitacaoParaEmAndamento
+      - Configura: proposta{status=ENVIADA}, solicitacao{status=ABERTA}, cliente correto
+      - Verifica: solicitacaoRepository.save chamado com status=EM_ANDAMENTO,
+        propostaRepository.save chamado com status=ACEITA
+
+
+## Prioridade MEDIA — Proximo ciclo
+
+### AvaliacaoServiceTest — novo arquivo
+  Arquivo: service/AvaliacaoServiceTest.java
+  Framework: JUnit 5 + Mockito
+
+  Casos a implementar:
+    * criar_SolicitacaoNaoConcluida_DeveThrow
+      - Configura: solicitacao{status=EM_ANDAMENTO}
+      - Verifica: assertThrows(BusinessException.class)
+
+    * criar_AvaliacaoDuplicada_DeveThrow
+      - Configura: solicitacao{status=CONCLUIDA, foiAvaliadoPeloCliente=true}
+      - Verifica: assertThrows(BusinessException.class)
+
+    * criar_HappyPath_AtualizaMediaPrestador
+      - Configura: solicitacao{status=CONCLUIDA, foiAvaliadoPeloCliente=false},
+        usuario e o cliente correto, AvaliacaoRepository.save retorna avaliacao
+      - Verifica: Prestador salvo com avaliacaoMedia e totalAvaliacoes atualizados
+
+    * criarPorPrestador_SemPropostaAceita_DeveThrow
+      - Configura: solicitacao{status=CONCLUIDA}, nenhuma proposta com status ACEITA
+        para este prestador nesta solicitacao
+      - Verifica: assertThrows(BusinessException.class)
+
+### CategoriaSecurityTest — adicionar caso faltante
+  Arquivo: controller/CategoriaSecurityTest.java
+
+  Adicionar:
+    * postCategoria_ComoAdmin_Retorna201
+      - @WithMockUser(roles = "ADMIN")
+      - CategoriaService.criar() configurado para retornar CategoriaDTO{id=1L}
+      - Verifica: status().isCreated()
+
+### FluxoPrincipalTest — corrigir CPF fixo
+  Arquivo: integration/FluxoPrincipalTest.java
+
+  Acao:
+    * Declarar campo static AtomicLong cpfSequence = new AtomicLong(10000000001L)
+      no topo da classe
+    * Substituir CPF fixo em cadastrarUsuario() por cpfSequence.getAndIncrement()
+      formatado como String
+    * Ou usar UUID.randomUUID().toString().replaceAll("[^0-9]", "").substring(0, 11)
+      para gerar 11 digitos unicos por execucao
+
+
+## Prioridade BAIXA — Frontend (Angular Testing)
+
+### authInterceptor.spec.ts — novo arquivo
+  Local: app/interceptors/ ou app/core/
+  Framework: Angular TestBed + HttpClientTestingModule
+
+  Casos a implementar:
+    * deve injetar header Authorization com Bearer token em requisicoes autenticadas
+      - Configura: localStorage com token valido
+      - Verifica: HttpRequest interceptada tem header Authorization == "Bearer <token>"
+
+    * ao receber 401 fora de /api/auth/ deve chamar authService.refresh()
+      - Configura: primeira requisicao retorna 401, refresh() retorna novo token
+      - Verifica: authService.refresh() chamado, requisicao original refeita com
+        novo token
+
+    * se refresh falhar deve chamar authService.logout() e navegar para /login
+      - Configura: primeira requisicao retorna 401, refresh() lanca erro
+      - Verifica: authService.logout() chamado, Router.navigate(['/login']) chamado
+
+    * 401 em /api/auth/login nao deve acionar retry de refresh
+      - Configura: requisicao para /api/auth/login retorna 401
+      - Verifica: authService.refresh() nao chamado
+
+### clienteGuard.spec.ts — novo arquivo
+  Casos a implementar:
+    * usuario autenticado como CLIENTE: guard retorna true
+    * usuario autenticado como PRESTADOR: guard redireciona (retorna UrlTree ou false)
+    * usuario nao autenticado: guard redireciona para /login
+
+### prestadorGuard.spec.ts — novo arquivo
+  Casos a implementar:
+    * usuario autenticado como PRESTADOR: guard retorna true
+    * usuario autenticado como CLIENTE: guard redireciona
+    * usuario nao autenticado: guard redireciona para /login
+
+### AuthService.spec.ts — novo arquivo
+  Casos a implementar:
+    * isAuthenticated_TokenValido_RetornaTrue
+    * isAuthenticated_SemToken_RetornaFalse
+    * logout_RemoveTokenRefreshTokenECurrentUserDoLocalStorage
+    * refresh_SucessoAtulalizaLocalStorage
+
+
+# 4. COMO EXECUTAR OS TESTES EXISTENTES
+# ============================================================
+
+## Backend
+
+Todos os testes (requer banco PostgreSQL rodando para FluxoPrincipalTest):
+  cd backend
+  mvn test
+
+Apenas testes unitarios (sem banco, sem FluxoPrincipalTest):
+  cd backend
+  mvn test -Dtest="AuthServiceTest,SolicitacaoServicoServiceTest,PrestadorServiceTest,CategoriaSecurityTest"
+
+Apenas o teste de integracao:
+  cd backend
+  mvn test -Dtest="FluxoPrincipalTest"
+
+Nota sobre FluxoPrincipalTest: o DataSeeder precisa ter executado e inserido pelo menos
+uma Categoria com id=1 antes do teste rodar. O teste assume categoriaId=1 fixo ao
+criar a solicitacao.
+
+## Frontend
+
+  cd frontend/marketplace-frontend
+  npx ng test --no-watch --browsers=ChromeHeadless
+
+Nota: todos os 4 specs existentes passam apenas com o caso "should create". Nenhuma
+logica real e testada no frontend atualmente.

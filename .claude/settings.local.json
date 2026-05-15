@@ -33,7 +33,16 @@
       "PowerShell(pip install *)",
       "PowerShell(python -m pip install python-docx 2>&1 | Select-Object -Last 3)",
       "PowerShell(python -c \"import docx; print\\('ok'\\)\" 2>&1)",
-      "PowerShell(python C:/dev/workspace/vemresolver/docs/gerar_docx.py)"
+      "PowerShell(python C:/dev/workspace/vemresolver/docs/gerar_docx.py)",
+      "Bash(mvn compile *)",
+      "Bash(Get-ChildItem \"C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\" -Recurse -Name)",
+      "Bash(Sort-Object)",
+      "Bash(npx tsc *)",
+      "Bash(powershell *)",
+      "Bash(New-Item -ItemType Directory -Force -Path \"C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\resources\\\\db\\\\migration\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"OK\")",
+      "Bash(mvn dependency:tree -Dincludes=org.flywaydb)"
     ]
   }
 }
