@@ -567,17 +567,18 @@ export class ClientePerfilComponent implements OnInit {
     this.viaCEPService.buscarCEP(cep).subscribe({
       next: (endereco) => {
         if (endereco.erro) {
-          console.error('CEP não encontrado');
+          this.errorMessage = 'CEP não encontrado. Verifique o CEP digitado.';
           return;
         }
+        this.errorMessage = '';
         this.perfilForm.patchValue({
           endereco: endereco.logradouro || '',
           cidade: endereco.localidade || '',
           estado: endereco.uf || ''
         });
       },
-      error: (error) => {
-        console.error('Erro ao buscar CEP', error);
+      error: () => {
+        this.errorMessage = 'Erro ao buscar o CEP. Verifique sua conexão e tente novamente.';
       }
     });
   }

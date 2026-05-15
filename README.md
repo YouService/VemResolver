@@ -170,18 +170,16 @@ vemresolver/
 - ✅ `isAuthenticated()` decodifica o JWT para checar expiração real no client
 - ✅ Flyway substitui `ddl-auto: update` — schema versionado em `db/migration/`; `baseline-on-migrate` para DBs existentes
 
+### Melhorias de UX (Prioridade 2 — concluída)
+
+- ✅ B3: Busca e categorias na home navegam corretamente — `selecionarCategoria()` e `buscarServico()` redirecionam para cadastro/dashboard conforme o papel do usuário; `ClienteNovaSolicitacaoComponent` pré-seleciona categoria via query param `?categoriaId`
+- ✅ B4: Controles de paginação visíveis nos dashboards de cliente e prestador — botões anterior/próxima + indicador "Página X de Y"; backend já paginava, agora o frontend exibe e navega entre páginas
+- ✅ B5: Todos os `console.error` sem feedback visual foram substituídos por mensagens de erro exibidas ao usuário — banners de erro nos dashboards, erros de CEP no perfil, erro de carregamento de categorias na home
+- ✅ B1: Rate limiting em `POST /api/auth/login` — `LoginRateLimitFilter` bloqueia IPs com mais de 10 tentativas por minuto com HTTP 429
+
 ---
 
 ## O que fazer a seguir
-
-### Prioridade 2 — Melhorias de UX (próximas iterações)
-
-| # | Tarefa | Área | Esforço |
-|---|--------|------|---------|
-| B3 | Busca por categoria e barra de pesquisa na home atualmente apenas fazem `console.log` sem filtrar nada | Frontend | Médio |
-| B4 | Paginação visível em todas as listagens do frontend (backend já pagina, frontend não exibe controles) | Frontend | Médio |
-| B5 | Erros de HTTP nos componentes legados usam `console.error` sem nenhum feedback visual ao usuário | Frontend | Pequeno |
-| B1 | Sem rate limiting em `POST /api/auth/login` — vulnerável a força bruta | Backend | Pequeno |
 
 ### Prioridade 3 — Evolução do produto (maior esforço)
 

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SolicitacaoService } from '../services/solicitacao.service';
 import { CategoriaService } from '../services/categoria.service';
 import { Categoria, SolicitacaoServico } from '../models/models';
@@ -223,6 +223,7 @@ export class ClienteNovaSolicitacaoComponent implements OnInit {
     private fb: FormBuilder,
     private solicitacaoService: SolicitacaoService,
     private categoriaService: CategoriaService,
+    private route: ActivatedRoute,
     private router: Router
   ) {
     this.solicitacaoForm = this.fb.group({
@@ -238,12 +239,15 @@ export class ClienteNovaSolicitacaoComponent implements OnInit {
   }
 
   carregarCategorias() {
+    const categoriaIdParam = this.route.snapshot.queryParamMap.get('categoriaId');
     this.categoriaService.listarTodas(0, 100).subscribe({
       next: (response) => {
         this.categorias = response.content;
+        if (categoriaIdParam) {
+          this.solicitacaoForm.patchValue({ categoriaId: categoriaIdParam });
+        }
       },
-      error: (error: any) => {
-        console.error('Erro ao carregar categorias:', error);
+      error: () => {
         this.errorMessage = 'Erro ao carregar categorias';
       }
     });

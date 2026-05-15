@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CategoriaService } from '../services/categoria.service';
+import { AuthService } from '../services/auth.service';
 import { Categoria } from '../models/models';
 import { MatIconModule } from '@angular/material/icon';
 import { MaskDirective } from '../directives/mask.directive';
@@ -29,10 +30,12 @@ export class HomeComponent implements OnInit {
   @ViewChild('categoriesContainer') categoriesContainer!: ElementRef;
   categorias: Categoria[] = [];
   searchTerm: string = '';
+  errorMessage = '';
   quickRegisterForm: FormGroup;
 
   constructor(
     private categoriaService: CategoriaService,
+    private authService: AuthService,
     private fb: FormBuilder,
     private router: Router
   ) {
@@ -56,8 +59,8 @@ export class HomeComponent implements OnInit {
            this.categorias = response.content;
         }
       },
-      error: (error) => {
-        console.error('Erro ao carregar categorias:', error);
+      error: () => {
+        this.errorMessage = 'Não foi possível carregar as categorias. Tente recarregar a página.';
       }
     });
   }
@@ -91,11 +94,27 @@ export class HomeComponent implements OnInit {
   }
 
   buscarServico() {
-    console.log('Buscando:', this.searchTerm);
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/register'], { queryParams: { tipo: 'CLIENTE' } });
+      return;
+    }
+    if (this.authService.isPrestador()) {
+      this.router.navigate(['/prestador/dashboard']);
+      return;
+    }
+    this.router.navigate(['/cliente/nova-solicitacao']);
   }
 
   selecionarCategoria(categoria: Categoria) {
-    console.log('Categoria selecionada:', categoria);
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/register'], { queryParams: { tipo: 'CLIENTE', categoriaId: categoria.id } });
+      return;
+    }
+    if (this.authService.isPrestador()) {
+      this.router.navigate(['/prestador/dashboard']);
+      return;
+    }
+    this.router.navigate(['/cliente/nova-solicitacao'], { queryParams: { categoriaId: categoria.id } });
   }
 
   iniciarCadastro() {
