@@ -41,7 +41,7 @@ public class DataSeeder {
                 System.out.println("✓ Categorias iniciais criadas");
             }
             
-            if (userRepository.count() == 0) {
+            if (!userRepository.existsByEmail("joao@cliente.com")) {
                 User cliente = new User();
                 cliente.setNome("João Silva");
                 cliente.setLogin("joao");
@@ -52,7 +52,10 @@ public class DataSeeder {
                 cliente.setDataCadastro(LocalDateTime.now());
                 cliente.setAtivo(true);
                 userRepository.save(cliente);
-                
+                System.out.println("✓ Usuário de teste criado: joao@cliente.com / 123456");
+            }
+
+            if (!userRepository.existsByEmail("maria@prestador.com")) {
                 User prestador = new User();
                 prestador.setNome("Maria Santos");
                 prestador.setLogin("maria");
@@ -63,7 +66,10 @@ public class DataSeeder {
                 prestador.setDataCadastro(LocalDateTime.now());
                 prestador.setAtivo(true);
                 userRepository.save(prestador);
-                
+                System.out.println("✓ Usuário de teste criado: maria@prestador.com / 123456");
+            }
+
+            if (!userRepository.existsByEmail("admin@vemresolver.com")) {
                 User admin = new User();
                 admin.setNome("Administrador");
                 admin.setLogin("admin");
@@ -74,11 +80,7 @@ public class DataSeeder {
                 admin.setDataCadastro(LocalDateTime.now());
                 admin.setAtivo(true);
                 userRepository.save(admin);
-
-                System.out.println("✓ Usuários de teste criados:");
-                System.out.println("  Cliente: joao@cliente.com / 123456");
-                System.out.println("  Prestador: maria@prestador.com / 123456");
-                System.out.println("  Admin: admin@vemresolver.com / Admin@2025");
+                System.out.println("✓ Usuário de teste criado: admin@vemresolver.com / Admin@2025");
             }
         };
     }
