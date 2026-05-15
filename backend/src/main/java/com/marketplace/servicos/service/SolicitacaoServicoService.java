@@ -6,8 +6,11 @@ import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.*;
 import com.marketplace.servicos.repository.AvaliacaoRepository;
 import com.marketplace.servicos.repository.CategoriaRepository;
+import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import com.marketplace.servicos.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,20 +18,28 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SolicitacaoServicoService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(SolicitacaoServicoService.class);
+
     private final SolicitacaoServicoRepository solicitacaoRepository;
     private final UserRepository userRepository;
     private final CategoriaRepository categoriaRepository;
     private final AvaliacaoRepository avaliacaoRepository;
+    private final PropostaRepository propostaRepository;
+    private final NotificacaoService notificacaoService;
 
     public SolicitacaoServicoService(SolicitacaoServicoRepository solicitacaoRepository,
                                      UserRepository userRepository,
                                      CategoriaRepository categoriaRepository,
-                                     AvaliacaoRepository avaliacaoRepository) {
+                                     AvaliacaoRepository avaliacaoRepository,
+                                     PropostaRepository propostaRepository,
+                                     NotificacaoService notificacaoService) {
         this.solicitacaoRepository = solicitacaoRepository;
         this.userRepository = userRepository;
         this.categoriaRepository = categoriaRepository;
         this.avaliacaoRepository = avaliacaoRepository;
+        this.propostaRepository = propostaRepository;
+        this.notificacaoService = notificacaoService;
     }
     
     @Transactional
@@ -131,6 +142,19 @@ public class SolicitacaoServicoService {
 
         solicitacao.setStatus(StatusSolicitacao.CONCLUIDA);
         solicitacao = solicitacaoRepository.save(solicitacao);
+
+        Proposta propostaAceita = propostaRepository.findBySolicitacaoIdAndStatus(solicitacao.getId(), StatusProposta.ACEITA)
+                .orElse(null);
+        if (propostaAceita != null) {
+            notificacaoService.criar(
+                propostaAceita.getPrestador().getUsuario().getId(),
+                "O cliente marcou o serviço como concluído. Avalie sua experiência!",
+                "SERVICO_CONCLUIDO",
+                "/prestador/solicitacao/" + solicitacao.getId() + "/avaliacao"
+            );
+        }
+
+        log.info("Solicitacao id={} concluida pelo cliente id={}", id, clienteId);
         return toDTO(solicitacao);
     }
 

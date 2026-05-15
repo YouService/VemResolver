@@ -30,4 +30,6 @@ public class PrestadorDTO {
     
     private Double avaliacaoMedia;
     private Integer totalAvaliacoes;
+    private Double latitude;
+    private Double longitude;
 }

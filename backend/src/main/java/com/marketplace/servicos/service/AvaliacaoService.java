@@ -5,6 +5,8 @@ import com.marketplace.servicos.exception.BusinessException;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.*;
 import com.marketplace.servicos.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,22 +15,27 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AvaliacaoService {
 
+    private static final Logger log = LoggerFactory.getLogger(AvaliacaoService.class);
+
     private final AvaliacaoRepository avaliacaoRepository;
     private final SolicitacaoServicoRepository solicitacaoRepository;
     private final PrestadorRepository prestadorRepository;
     private final UserRepository userRepository;
     private final PropostaRepository propostaRepository;
+    private final NotificacaoService notificacaoService;
 
     public AvaliacaoService(AvaliacaoRepository avaliacaoRepository,
                             SolicitacaoServicoRepository solicitacaoRepository,
                             PrestadorRepository prestadorRepository,
                             UserRepository userRepository,
-                            PropostaRepository propostaRepository) {
+                            PropostaRepository propostaRepository,
+                            NotificacaoService notificacaoService) {
         this.avaliacaoRepository = avaliacaoRepository;
         this.solicitacaoRepository = solicitacaoRepository;
         this.prestadorRepository = prestadorRepository;
         this.userRepository = userRepository;
         this.propostaRepository = propostaRepository;
+        this.notificacaoService = notificacaoService;
     }
 
     @Transactional
@@ -65,6 +72,14 @@ public class AvaliacaoService {
         avaliacao = avaliacaoRepository.save(avaliacao);
         atualizarMediaPrestador(prestador);
 
+        notificacaoService.criar(
+            avaliacao.getPrestador().getUsuario().getId(),
+            "Você recebeu uma avaliação de " + avaliacao.getNota() + " estrelas!",
+            "AVALIACAO_RECEBIDA",
+            "/prestador/dashboard"
+        );
+
+        log.info("Avaliacao id={} criada pelo cliente id={}", avaliacao.getId(), clienteId);
         return toDTO(avaliacao);
     }
 
@@ -101,6 +116,14 @@ public class AvaliacaoService {
         avaliacao = avaliacaoRepository.save(avaliacao);
         atualizarMediaCliente(cliente);
 
+        notificacaoService.criar(
+            avaliacao.getCliente().getId(),
+            "Você recebeu uma avaliação de " + avaliacao.getNota() + " estrelas do prestador!",
+            "AVALIACAO_RECEBIDA",
+            "/cliente/dashboard"
+        );
+
+        log.info("Avaliacao id={} criada pelo prestador usuario id={}", avaliacao.getId(), prestadorUserId);
         return toDTO(avaliacao);
     }
 

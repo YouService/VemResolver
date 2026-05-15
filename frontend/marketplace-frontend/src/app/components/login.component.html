@@ -1,0 +1,33 @@
+
+    <div class="flex items-center justify-center min-h-screen bg-gray-100">
+      <mat-card class="w-full max-w-md p-6">
+        <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <mat-form-field class="w-full mb-4">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" required>
+          </mat-form-field>
+
+          <mat-form-field class="w-full mb-4">
+            <mat-label>Senha</mat-label>
+            <input matInput type="password" formControlName="senha" required>
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="submit" class="w-full mb-4"
+                  [disabled]="loginForm.invalid || loading">
+            {{ loading ? 'Entrando...' : 'Entrar' }}
+          </button>
+
+          <div class="text-center mb-6">
+            <a routerLink="/register" class="text-blue-600">Não tem conta? Cadastre-se</a>
+          </div>
+
+          <div class="mt-4 pt-6 border-t border-gray-100 text-center">
+            <p class="text-sm text-gray-600 mb-2">Você é um profissional?</p>
+            <a routerLink="/seja-um-profissional" class="text-blue-600 font-bold hover:underline">
+              Cadastre-se para conseguir clientes
+            </a>
+          </div>
+        </form>
+      </mat-card>
+    </div>

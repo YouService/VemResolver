@@ -1,0 +1,187 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white shadow-sm border-b">
+    <div class="container max-w-6xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Painel Administrativo</h1>
+          <p class="text-gray-600 mt-1">Gerenciamento de usuários e estatísticas da plataforma</p>
+        </div>
+        <a routerLink="/" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium text-sm">
+          Voltar
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container max-w-6xl mx-auto px-4 py-8">
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-600 text-sm">Total de Usuários</p>
+            @if (loadingStats) {
+              <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-2"></div>
+            } @else {
+              <p class="text-3xl font-bold text-blue-600 mt-2">{{ stats.totalUsuarios }}</p>
+            }
+          </div>
+          <div class="text-4xl">👥</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-600 text-sm">Prestadores</p>
+            @if (loadingStats) {
+              <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-2"></div>
+            } @else {
+              <p class="text-3xl font-bold text-green-600 mt-2">{{ stats.totalPrestadores }}</p>
+            }
+          </div>
+          <div class="text-4xl">🔧</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-600 text-sm">Solicitações</p>
+            @if (loadingStats) {
+              <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-2"></div>
+            } @else {
+              <p class="text-3xl font-bold text-yellow-600 mt-2">{{ stats.totalSolicitacoes }}</p>
+            }
+          </div>
+          <div class="text-4xl">📋</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-600 text-sm">Propostas</p>
+            @if (loadingStats) {
+              <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-2"></div>
+            } @else {
+              <p class="text-3xl font-bold text-purple-600 mt-2">{{ stats.totalPropostas }}</p>
+            }
+          </div>
+          <div class="text-4xl">💼</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Usuários -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-gray-900">Gerenciar Usuários</h2>
+        <button (click)="carregarUsuarios(paginaAtual)" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+          🔄 Atualizar
+        </button>
+      </div>
+
+      @if (errorMessage) {
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+          <span>{{ errorMessage }}</span>
+          <button (click)="errorMessage = ''" class="ml-3 text-red-500 hover:text-red-700 font-bold">✕</button>
+        </div>
+      }
+
+      @if (loading) {
+        <div class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p class="text-gray-600 mt-4">Carregando usuários...</p>
+        </div>
+      } @else if (usuarios.length === 0) {
+        <div class="text-center py-12">
+          <span class="text-6xl">👤</span>
+          <p class="text-gray-600 mt-4 text-lg">Nenhum usuário encontrado</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-200 text-left">
+                <th class="pb-3 pr-4 font-semibold text-gray-700">Nome</th>
+                <th class="pb-3 pr-4 font-semibold text-gray-700">E-mail</th>
+                <th class="pb-3 pr-4 font-semibold text-gray-700">Tipo</th>
+                <th class="pb-3 pr-4 font-semibold text-gray-700">Status</th>
+                <th class="pb-3 pr-4 font-semibold text-gray-700">Avaliação</th>
+                <th class="pb-3 font-semibold text-gray-700">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (usuario of usuarios; track usuario.id) {
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="py-3 pr-4">
+                    <p class="font-medium text-gray-900">{{ usuario.nome }}</p>
+                    <p class="text-xs text-gray-400">Desde {{ formatarData(usuario.dataCadastro) }}</p>
+                  </td>
+                  <td class="py-3 pr-4 text-gray-600">{{ usuario.email }}</td>
+                  <td class="py-3 pr-4">
+                    <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                      [class]="usuario.tipo === 'PRESTADOR' ? 'bg-blue-100 text-blue-800' : usuario.tipo === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-700'">
+                      {{ usuario.tipo }}
+                    </span>
+                  </td>
+                  <td class="py-3 pr-4">
+                    @if (usuario.ativo) {
+                      <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Ativo</span>
+                    } @else {
+                      <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Inativo</span>
+                    }
+                  </td>
+                  <td class="py-3 pr-4 text-gray-600">
+                    @if (usuario.totalAvaliacoes > 0) {
+                      <span class="text-yellow-500">★</span> {{ usuario.avaliacaoMedia | number:'1.1-1' }}
+                      <span class="text-gray-400 text-xs">({{ usuario.totalAvaliacoes }})</span>
+                    } @else {
+                      <span class="text-gray-400 text-xs">Sem avaliações</span>
+                    }
+                  </td>
+                  <td class="py-3">
+                    <button
+                      (click)="alterarAtivacao(usuario)"
+                      [disabled]="alterandoId === usuario.id"
+                      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      [class]="usuario.ativo ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'">
+                      @if (alterandoId === usuario.id) {
+                        Aguarde...
+                      } @else {
+                        {{ usuario.ativo ? 'Desativar' : 'Reativar' }}
+                      }
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (totalPaginas > 1) {
+          <div class="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-100">
+            <button
+              (click)="irParaPagina(paginaAtual - 1)"
+              [disabled]="paginaAtual === 0"
+              class="px-3 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+              ← Anterior
+            </button>
+            <span class="text-sm text-gray-500 mx-2">
+              Página {{ paginaAtual + 1 }} de {{ totalPaginas }}
+            </span>
+            <button
+              (click)="irParaPagina(paginaAtual + 1)"
+              [disabled]="paginaAtual === totalPaginas - 1"
+              class="px-3 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+              Próxima →
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

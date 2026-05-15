@@ -8,6 +8,8 @@ import com.marketplace.servicos.repository.AvaliacaoRepository;
 import com.marketplace.servicos.repository.PrestadorRepository;
 import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,20 +17,25 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PropostaService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(PropostaService.class);
+
     private final PropostaRepository propostaRepository;
     private final SolicitacaoServicoRepository solicitacaoRepository;
     private final PrestadorRepository prestadorRepository;
     private final AvaliacaoRepository avaliacaoRepository;
+    private final NotificacaoService notificacaoService;
 
     public PropostaService(PropostaRepository propostaRepository,
                            SolicitacaoServicoRepository solicitacaoRepository,
                            PrestadorRepository prestadorRepository,
-                           AvaliacaoRepository avaliacaoRepository) {
+                           AvaliacaoRepository avaliacaoRepository,
+                           NotificacaoService notificacaoService) {
         this.propostaRepository = propostaRepository;
         this.solicitacaoRepository = solicitacaoRepository;
         this.prestadorRepository = prestadorRepository;
         this.avaliacaoRepository = avaliacaoRepository;
+        this.notificacaoService = notificacaoService;
     }
     
     @Transactional
@@ -54,9 +61,18 @@ public class PropostaService {
         proposta.setMensagem(dto.getMensagem());
         
         proposta = propostaRepository.save(proposta);
+
+        notificacaoService.criar(
+            solicitacao.getCliente().getId(),
+            "Nova proposta de " + prestador.getUsuario().getNome() + " para sua solicitação: " + solicitacao.getDescricao().substring(0, Math.min(50, solicitacao.getDescricao().length())),
+            "NOVA_PROPOSTA",
+            "/cliente/solicitacao/" + solicitacao.getId() + "/propostas"
+        );
+
+        log.info("Proposta criada id={} para solicitacao={}", proposta.getId(), solicitacao.getId());
         return toDTO(proposta);
     }
-    
+
     public Page<PropostaDTO> listarPorSolicitacao(Long solicitacaoId, Pageable pageable) {
         return propostaRepository.findBySolicitacaoId(solicitacaoId, pageable)
                 .map(this::toDTO);
@@ -93,6 +109,14 @@ public class PropostaService {
         proposta = propostaRepository.save(proposta);
         solicitacaoRepository.save(proposta.getSolicitacao());
 
+        notificacaoService.criar(
+            proposta.getPrestador().getUsuario().getId(),
+            "Sua proposta foi aceita! Serviço: " + proposta.getSolicitacao().getDescricao().substring(0, Math.min(50, proposta.getSolicitacao().getDescricao().length())),
+            "PROPOSTA_ACEITA",
+            "/prestador/dashboard"
+        );
+
+        log.info("Proposta id={} aceita, notificacao enviada ao prestador", propostaId);
         return toDTO(proposta);
     }
 

@@ -1,6 +1,7 @@
 export enum TipoUsuario {
   CLIENTE = 'CLIENTE',
-  PRESTADOR = 'PRESTADOR'
+  PRESTADOR = 'PRESTADOR',
+  ADMIN = 'ADMIN'
 }
 
 export enum StatusSolicitacao {
@@ -111,6 +112,35 @@ export interface Prestador {
   estado: string;
   avaliacaoMedia?: number;
   totalAvaliacoes?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface NotificacaoDTO {
+  id: number;
+  mensagem: string;
+  tipo: string;
+  lida: boolean;
+  linkDestino: string | null;
+  dataCriacao: string;
+}
+
+export interface UserResumoDTO {
+  id: number;
+  nome: string;
+  email: string;
+  tipo: string;
+  ativo: boolean;
+  dataCadastro: string;
+  avaliacaoMedia: number;
+  totalAvaliacoes: number;
+}
+
+export interface AdminStats {
+  totalUsuarios: number;
+  totalPrestadores: number;
+  totalSolicitacoes: number;
+  totalPropostas: number;
 }
 
 export interface SolicitacaoServico {

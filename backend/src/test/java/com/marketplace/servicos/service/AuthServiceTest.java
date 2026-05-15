@@ -36,6 +36,7 @@ import com.marketplace.servicos.model.User;
 import com.marketplace.servicos.model.VerificationToken;
 import com.marketplace.servicos.repository.UserRepository;
 import com.marketplace.servicos.repository.VerificationTokenRepository;
+import com.marketplace.servicos.model.RefreshToken;
 import com.marketplace.servicos.security.JwtTokenProvider;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,6 +59,9 @@ class AuthServiceTest {
 
     @Mock
     private AuthenticationManager authenticationManager;
+
+    @Mock
+    private RefreshTokenService refreshTokenService;
 
     @InjectMocks
     private AuthService authService;
@@ -161,6 +165,9 @@ class AuthServiceTest {
         when(auth.getPrincipal()).thenReturn(user);
         when(authenticationManager.authenticate(any())).thenReturn(auth);
         when(jwtTokenProvider.generateToken(user)).thenReturn("jwt-token");
+        RefreshToken rt = new RefreshToken();
+        rt.setToken("refresh-token");
+        when(refreshTokenService.generateRefreshToken(user)).thenReturn(rt);
 
         LoginDTO dto = new LoginDTO("ok@example.com", "pwd");
 
