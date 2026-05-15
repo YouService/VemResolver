@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, throwError } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest, TipoUsuario, User, UpdatePerfilRequest, AlterarSenhaRequest } from '../models/models';
 
 import { environment } from '../../environments/environment';
@@ -35,6 +35,9 @@ export class AuthService {
       tap(response => {
         localStorage.setItem('currentUser', JSON.stringify(response));
         localStorage.setItem('token', response.token);
+        if (response.refreshToken) {
+          localStorage.setItem('refreshToken', response.refreshToken);
+        }
         this.currentUserSubject.next(response);
       })
     );
@@ -43,6 +46,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     this.currentUserSubject.next(null);
   }
 
@@ -63,7 +67,32 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!token && !refreshToken) return false;
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp * 1000 > Date.now()) return true;
+      } catch {
+        // token malformado
+      }
+    }
+    // token expirado mas há refresh token — o interceptor renova na próxima chamada
+    return !!refreshToken;
+  }
+
+  refresh(refreshToken: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, { refreshToken }).pipe(
+      tap(response => {
+        localStorage.setItem('currentUser', JSON.stringify(response));
+        localStorage.setItem('token', response.token);
+        if (response.refreshToken) {
+          localStorage.setItem('refreshToken', response.refreshToken);
+        }
+        this.currentUserSubject.next(response);
+      })
+    );
   }
 
   isCliente(): boolean {

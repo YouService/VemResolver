@@ -153,7 +153,7 @@ vemresolver/
 
 - ✅ CORS via variável de ambiente `${FRONTEND_URL}` — sem hardcode
 - ✅ URLs da API Angular centralizadas em `environment.ts` (`/api` em prod, `localhost:8080` em dev)
-- ✅ Interceptor Angular de 401 — limpa `localStorage` e redireciona para `/login`
+- ✅ Interceptor Angular de 401 — tenta refresh automático; só redireciona para `/login` se refresh falhar
 - ✅ Swagger desabilitado em produção (`application-prod.yml`)
 - ✅ `DataSeeder` restrito ao perfil `!prod` — sem usuários de teste em produção
 - ✅ Ownership em aceitar/recusar propostas e em alterar status de solicitação
@@ -162,18 +162,13 @@ vemresolver/
 - ✅ `UserController` legado removido — substituído por `PerfilController` com DTOs seguros (`UpdatePerfilDTO`)
 - ✅ Rodapé padronizado em todas as páginas públicas (logo + links + copyright)
 - ✅ `PropostaController` desacoplado do repositório — resolução de prestador movida para `PropostaService`
+- ✅ Refresh token com rotação — sessão renova automaticamente; `POST /api/auth/refresh`; token de 7 dias
+- ✅ `isAuthenticated()` decodifica o JWT para checar expiração real no client
+- ✅ Flyway substitui `ddl-auto: update` — schema versionado em `db/migration/`; `baseline-on-migrate` para DBs existentes
 
 ---
 
 ## O que fazer a seguir
-
-### Prioridade 1 — Qualidade e segurança (recomendado antes de produção)
-
-| # | Tarefa | Área | Esforço |
-|---|--------|------|---------|
-| M4 | Implementar refresh token — JWT atual expira em 24h sem renovação automática | Backend | Médio |
-| M5 | `isAuthenticated()` no Angular só verifica presença do token no `localStorage`, não a expiração | Frontend | Pequeno |
-| M10 | Substituir `ddl-auto: update` por Flyway ou Liquibase para controle seguro de migrações de schema | Backend | Médio |
 
 ### Prioridade 2 — Melhorias de UX (próximas iterações)
 
