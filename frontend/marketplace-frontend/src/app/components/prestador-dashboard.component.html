@@ -146,7 +146,7 @@
                       O cliente irá marcar o serviço como concluído quando finalizado.
                     </p>
                     <a
-                      [routerLink]="['/chat/solicitacao', proposta.solicitacaoId]"
+                      [routerLink]="['/chat/proposta', proposta.id]"
                       class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition ml-2 whitespace-nowrap">
                       💬 Chat
                     </a>
@@ -178,12 +178,17 @@
                     <p class="text-gray-800 text-sm line-clamp-1 break-words">{{ proposta.solicitacaoDescricao }}</p>
                     <p class="text-gray-500 text-xs mt-1 truncate">📍 {{ proposta.cidade }}, {{ proposta.estado }}</p>
                   </div>
-                  <div class="text-right flex-shrink-0">
+                  <div class="text-right flex-shrink-0 flex flex-col items-end gap-1">
                     <p class="font-bold text-green-700">R$ {{ proposta.valor | number:'1.2-2' }}</p>
                     <p class="text-xs text-gray-500">{{ formatarData(proposta.dataEnvio) }}</p>
-                    <span class="inline-block mt-1 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
+                    <span class="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
                       Aguardando
                     </span>
+                    <a
+                      [routerLink]="['/chat/proposta', proposta.id]"
+                      class="px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition whitespace-nowrap">
+                      💬 Chat
+                    </a>
                   </div>
                 </div>
               }

@@ -114,6 +114,17 @@
                     }
                   </div>
 
+                  <!-- Chat disponível para propostas ENVIADAS e ACEITAS -->
+                  @if (proposta.status === StatusProposta.ENVIADA || proposta.status === StatusProposta.ACEITA) {
+                    <div class="px-5 pb-3">
+                      <a
+                        [routerLink]="['/chat/proposta', proposta.id]"
+                        class="w-full block text-center py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm">
+                        💬 Abrir Chat com {{ proposta.prestadorNome }}
+                      </a>
+                    </div>
+                  }
+
                   <!-- Ações (apenas para propostas ENVIADAS com solicitação ABERTA) -->
                   @if (proposta.status === StatusProposta.ENVIADA && solicitacao?.status === 'ABERTA') {
                     <div class="px-5 pb-5">

@@ -26,30 +26,30 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @GetMapping("/{solicitacaoId}")
-    @Operation(summary = "Listar mensagens do chat de um contrato")
+    @GetMapping("/proposta/{propostaId}")
+    @Operation(summary = "Listar mensagens do chat de uma proposta")
     public ResponseEntity<List<MensagemChatDTO>> listar(
-            @PathVariable Long solicitacaoId,
+            @PathVariable Long propostaId,
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(chatService.listarMensagens(solicitacaoId, user.getId()));
+        return ResponseEntity.ok(chatService.listarMensagens(propostaId, user.getId()));
     }
 
-    @PostMapping("/{solicitacaoId}")
+    @PostMapping("/proposta/{propostaId}")
     @Operation(summary = "Enviar mensagem no chat")
     public ResponseEntity<MensagemChatDTO> enviar(
-            @PathVariable Long solicitacaoId,
+            @PathVariable Long propostaId,
             @Valid @RequestBody MensagemChatDTO dto,
             @AuthenticationPrincipal User user) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(chatService.enviarMensagem(solicitacaoId, user.getId(), dto.getTexto()));
+                .body(chatService.enviarMensagem(propostaId, user.getId(), dto.getTexto()));
     }
 
-    @PatchMapping("/{solicitacaoId}/ler")
+    @PatchMapping("/proposta/{propostaId}/ler")
     @Operation(summary = "Marcar mensagens recebidas como lidas")
     public ResponseEntity<Void> marcarComoLidas(
-            @PathVariable Long solicitacaoId,
+            @PathVariable Long propostaId,
             @AuthenticationPrincipal User user) {
-        chatService.marcarComoLidas(solicitacaoId, user.getId());
+        chatService.marcarComoLidas(propostaId, user.getId());
         return ResponseEntity.noContent().build();
     }
 }

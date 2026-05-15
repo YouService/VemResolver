@@ -10,15 +10,15 @@ export class ChatService {
 
   constructor(private http: HttpClient) {}
 
-  listar(solicitacaoId: number): Observable<MensagemChat[]> {
-    return this.http.get<MensagemChat[]>(`${this.apiUrl}/${solicitacaoId}`);
+  listar(propostaId: number): Observable<MensagemChat[]> {
+    return this.http.get<MensagemChat[]>(`${this.apiUrl}/proposta/${propostaId}`);
   }
 
-  enviar(solicitacaoId: number, texto: string): Observable<MensagemChat> {
-    return this.http.post<MensagemChat>(`${this.apiUrl}/${solicitacaoId}`, { texto });
+  enviar(propostaId: number, texto: string): Observable<MensagemChat> {
+    return this.http.post<MensagemChat>(`${this.apiUrl}/proposta/${propostaId}`, { texto });
   }
 
-  marcarComoLidas(solicitacaoId: number): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/${solicitacaoId}/ler`, null);
+  marcarComoLidas(propostaId: number): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/proposta/${propostaId}/ler`, null);
   }
 }

@@ -20,8 +20,12 @@ public class MensagemChat {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "solicitacao_id", nullable = false)
+    @JoinColumn(name = "solicitacao_id")
     private SolicitacaoServico solicitacao;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "proposta_id")
+    private Proposta proposta;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "remetente_id", nullable = false)

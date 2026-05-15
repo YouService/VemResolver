@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface MensagemChatRepository extends JpaRepository<MensagemChat, Long> {
 
-    List<MensagemChat> findBySolicitacaoIdOrderByDataEnvioAsc(Long solicitacaoId);
+    List<MensagemChat> findByPropostaIdOrderByDataEnvioAsc(Long propostaId);
 
-    List<MensagemChat> findBySolicitacaoIdAndRemetenteIdNotAndLidaFalse(Long solicitacaoId, Long remetenteId);
+    List<MensagemChat> findByPropostaIdAndRemetenteIdNotAndLidaFalse(Long propostaId, Long remetenteId);
 }
