@@ -5,6 +5,7 @@ import com.marketplace.servicos.exception.BusinessException;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.*;
 import com.marketplace.servicos.repository.AvaliacaoRepository;
+import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,12 @@ class SolicitacaoServicoServiceTest {
 
     @Mock
     private AvaliacaoRepository avaliacaoRepository;
+
+    @Mock
+    private PropostaRepository propostaRepository;
+
+    @Mock
+    private NotificacaoService notificacaoService;
 
     @InjectMocks
     private SolicitacaoServicoService solicitacaoService;
@@ -66,6 +73,12 @@ class SolicitacaoServicoServiceTest {
     void concluirServico_EmAndamento_RetornaConcluida() {
         when(solicitacaoRepository.findById(10L)).thenReturn(Optional.of(solicitacao));
         when(solicitacaoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(propostaRepository.findBySolicitacaoIdAndStatus(10L, StatusProposta.ACEITA))
+                .thenReturn(Optional.empty());
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(10L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(false);
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(10L, TipoAvaliacao.PRESTADOR_AVALIA_CLIENTE))
+                .thenReturn(false);
 
         SolicitacaoServicoDTO resultado = solicitacaoService.concluirServico(10L, 1L);
 
