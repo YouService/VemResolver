@@ -146,6 +146,8 @@ vemresolver/
 - ✅ Perfil do prestador — criar/editar com pré-preenchimento automático via `GET /api/prestadores/me`
 - ✅ Perfil do cliente com aba de avaliações recebidas e nota média
 - ✅ Soft delete de conta
+- ✅ Botão "Editar" no dashboard do cliente fecha o modal e navega corretamente para a tela de edição
+- ✅ Campo `dataCriacao` na entidade `Avaliacao` — avaliações agora têm timestamp de criação
 
 ### Segurança e infraestrutura
 
@@ -159,6 +161,7 @@ vemresolver/
 - ✅ Criação de perfil de prestador restrita a `ROLE_PRESTADOR`
 - ✅ `UserController` legado removido — substituído por `PerfilController` com DTOs seguros (`UpdatePerfilDTO`)
 - ✅ Rodapé padronizado em todas as páginas públicas (logo + links + copyright)
+- ✅ `PropostaController` desacoplado do repositório — resolução de prestador movida para `PropostaService`
 
 ---
 
@@ -168,17 +171,14 @@ vemresolver/
 
 | # | Tarefa | Área | Esforço |
 |---|--------|------|---------|
-| M1 | Mover lógica de `PropostaController` para `PropostaService` — remover `PrestadorRepository` injetado diretamente no controller | Backend | Pequeno |
 | M4 | Implementar refresh token — JWT atual expira em 24h sem renovação automática | Backend | Médio |
 | M5 | `isAuthenticated()` no Angular só verifica presença do token no `localStorage`, não a expiração | Frontend | Pequeno |
 | M10 | Substituir `ddl-auto: update` por Flyway ou Liquibase para controle seguro de migrações de schema | Backend | Médio |
-| M11 | Adicionar campo `dataCriacao` na entidade `Avaliacao` — hoje impossível ordenar avaliações cronologicamente | Backend | Pequeno |
 
 ### Prioridade 2 — Melhorias de UX (próximas iterações)
 
 | # | Tarefa | Área | Esforço |
 |---|--------|------|---------|
-| M9 | Botão "Editar" na modal do dashboard do cliente apenas fecha o modal — deveria navegar para a tela de edição | Frontend | Pequeno |
 | B3 | Busca por categoria e barra de pesquisa na home atualmente apenas fazem `console.log` sem filtrar nada | Frontend | Médio |
 | B4 | Paginação visível em todas as listagens do frontend (backend já pagina, frontend não exibe controles) | Frontend | Médio |
 | B5 | Erros de HTTP nos componentes legados usam `console.error` sem nenhum feedback visual ao usuário | Frontend | Pequeno |

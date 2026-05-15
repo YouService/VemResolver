@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-12  
+> **Última atualização:** 2026-05-15  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -243,8 +243,7 @@ frontend/marketplace-frontend/src/app/
 | tipo | TipoAvaliacao (enum) | NOT NULL, default CLIENTE_AVALIA_PRESTADOR |
 | nota | Integer | NOT NULL |
 | comentario | String | TEXT, nullable |
-
-> ⚠️ `Avaliacao` não tem campo `dataCriacao` — impossível ordenar avaliações cronologicamente.
+| dataCriacao | LocalDateTime | NOT NULL, auto (`@CreationTimestamp`) |
 
 #### `VerificationToken` → tabela `verification_tokens`
 Armazena token de verificação de e-mail enviado ao registrar. Usuário só ativa a conta via link no e-mail.
@@ -299,7 +298,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 ### `/api/propostas`
 | Método | Path | Auth | O que faz | Observações |
 |--------|------|------|-----------|-------------|
-| POST | `/api/propostas` | JWT | Envia proposta | ⚠️ `PropostaController` injeta `PrestadorRepository` diretamente |
+| POST | `/api/propostas` | JWT | Envia proposta | ✅ `PropostaController` desacoplado — `PrestadorRepository` removido; resolução movida para `PropostaService` |
 | GET | `/api/propostas/solicitacao/{id}` | JWT | Lista propostas de uma solicitação | ⚠️ Qualquer autenticado acessa propostas de qualquer solicitação |
 | GET | `/api/propostas/minhas` | JWT | Propostas do prestador logado | — |
 | PATCH | `/api/propostas/{id}/aceitar` | JWT | Aceita proposta | ⚠️ Sem verificação de que o usuário é dono da solicitação |
@@ -339,7 +338,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | `SejaProfissionalComponent` | `/seja-um-profissional` | Pública | ✅ Informativo |
 | `SegurancaComponent` | `/seguranca` | Pública | ✅ Informativo |
 | `SobreNosComponent` | `/sobre-nos` | Pública | ✅ Informativo |
-| `ClienteDashboardComponent` | `/cliente/dashboard` | clienteGuard | ✅ Funcional — lista solicitações, modal de detalhes, botão "Concluir", botão "Avaliar" |
+| `ClienteDashboardComponent` | `/cliente/dashboard` | clienteGuard | ✅ Funcional — lista solicitações, modal de detalhes, botão "Concluir", botão "Avaliar", botão "Editar" navega corretamente |
 | `ClienteNovaSolicitacaoComponent` | `/cliente/nova-solicitacao` | clienteGuard | ✅ Funcional |
 | `ClienteEditarSolicitacaoComponent` | `/cliente/editar-solicitacao/:id` | clienteGuard | ⚠️ Existente — verificar se totalmente implementado |
 | `ClientePerfilComponent` | `/cliente/perfil` | clienteGuard | ✅ Funcional — edição de dados pessoais e endereço; aba "Minhas Avaliações" com média agregada |
@@ -395,7 +394,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 
 | # | Problema | Arquivo | Status |
 |---|----------|---------|--------|
-| M1 | `PropostaController` injeta `PrestadorRepository` diretamente | `PropostaController.java` | ❌ **Pendente** |
+| M1 | `PropostaController` injeta `PrestadorRepository` diretamente | `PropostaController.java` | ✅ **Resolvido** em 2026-05-15 — `PrestadorRepository` removido do controller; `criar()` e `listarMinhas()` movidos para `PropostaService` |
 | M2 | `POST /api/avaliacoes` sem validação de que o serviço foi concluído | `AvaliacaoService.java` | ✅ **Resolvido** — valida status CONCLUIDA |
 | M3 | Sem proteção contra avaliação duplicada | `AvaliacaoService.java` | ✅ **Resolvido** — unicidade por (solicitacaoId, TipoAvaliacao) |
 | M4 | JWT expira em 24h sem refresh token | `JwtTokenProvider.java` | ❌ **Pendente** |
@@ -403,9 +402,9 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | M6 | `canActivate: [clienteGuard, prestadorGuard]` em `/meu-perfil` bloqueava prestadores | `app.routes.ts` | ✅ **Resolvido** — rota `/meu-perfil` substituída por `/cliente/perfil` e `/prestador/perfil` separadas |
 | M7 | Contadores no dashboard do prestador hardcoded em `0` | `prestador-dashboard.component.ts` | ✅ **Resolvido** — stats reais |
 | M8 | Botão "Ver Detalhes e Enviar Proposta" sem handler | `prestador-dashboard.component.ts` | ✅ **Resolvido** — navega para `/prestador/solicitacao/:id` |
-| M9 | Botão "Editar" na modal do cliente apenas fecha o modal | `cliente-dashboard.component.ts` | ❌ **Pendente** |
+| M9 | Botão "Editar" na modal do cliente apenas fecha o modal | `cliente-dashboard.component.ts` | ✅ **Resolvido** em 2026-05-15 — `fecharModal()` chamado antes de `router.navigate()` em `editarSolicitacao()` |
 | M10 | `ddl-auto: update` sem controle de migração (sem Flyway/Liquibase) | `application.yml` | ❌ **Pendente** |
-| M11 | `Avaliacao` sem campo `dataCriacao` | `Avaliacao.java` | ❌ **Pendente** |
+| M11 | `Avaliacao` sem campo `dataCriacao` | `Avaliacao.java` | ✅ **Resolvido** em 2026-05-15 — campo `dataCriacao` com `@CreationTimestamp` adicionado; `AvaliacaoDTO` e `toDTO()` atualizados |
 
 ### BAIXO
 
@@ -436,7 +435,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | Avaliação bidirecional (prestador avalia cliente) | `feature/avaliacao-bidirecional` | 2026-05-12 |
 | Painel do prestador com contratos em andamento e stats reais | `feature/prestador-contratos-andamento` | 2026-05-12 |
 
-### Bugs corrigidos
+### Bugs e débitos corrigidos
 
 | Bug | Branch | Corrigido |
 |-----|--------|-----------|
@@ -449,6 +448,9 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | Aba "Minhas Avaliações" no perfil do cliente exibia avaliações de prestadores | — | 2026-05-12 |
 | Cadastro de novos usuários retornando 400 (validação Base64 errada) | — | 2026-05-12 |
 | Campo data de expedição com `type="date"` exigia YYYY-MM-DD | — | 2026-05-12 |
+| M9: botão "Editar" no modal do cliente fechava sem navegar | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
+| M1: `PropostaController` injetava `PrestadorRepository` diretamente (violação de camadas) | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
+| M11: entidade `Avaliacao` sem `dataCriacao` — impossível ordenar avaliações | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
 
 ---
 
@@ -458,17 +460,14 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 
 | # | Tarefa | Arquivo | Esforço |
 |---|--------|---------|---------|
-| M1 | Mover lógica de `PropostaController` para `PropostaService` — remover `PrestadorRepository` injetado diretamente no controller | `PropostaController.java` | Pequeno |
 | M4 | Implementar refresh token — JWT atual expira em 24h sem renovação automática | `JwtTokenProvider.java` | Médio |
 | M5 | `isAuthenticated()` no Angular só verifica presença do token no `localStorage`, não a expiração | `auth.service.ts` | Pequeno |
 | M10 | Substituir `ddl-auto: update` por Flyway ou Liquibase — controle seguro de migrações de schema | `application.yml` | Médio |
-| M11 | Adicionar campo `dataCriacao` na entidade `Avaliacao` — impossível ordenar avaliações cronologicamente | `Avaliacao.java` | Pequeno |
 
 ### Prioridade 2 — Melhorias de UX (próximas iterações)
 
 | # | Tarefa | Arquivo | Esforço |
 |---|--------|---------|---------|
-| M9 | Botão "Editar" na modal do dashboard do cliente apenas fecha o modal — deveria navegar para tela de edição | `cliente-dashboard.component.ts` | Pequeno |
 | B3 | Busca por categoria e barra de pesquisa na home fazem apenas `console.log` sem filtrar nada | `home.component.ts` | Médio |
 | B4 | Paginação visível em todas as listagens do frontend (backend já pagina, frontend não exibe controles) | Todos os dashboards | Médio |
 | B5 | Erros de HTTP nos componentes legados usam `console.error` sem feedback visual ao usuário | Múltiplos componentes | Pequeno |
@@ -527,7 +526,10 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | Botão "Ver Propostas" exibido indevidamente em serviços concluídos/cancelados | — | 2026-05-12 |
 | Cadastro de novos usuários retornava 400 (validação Base64 em `RegisterDTO.senha`) | `fix/bug5-cadastro-400-datas` | 2026-05-12 |
 | Campo data de expedição com `type="date"` exigia formato `YYYY-MM-DD` | `fix/bug5-cadastro-400-datas` | 2026-05-12 |
+| M9: botão "Editar" no modal do cliente fechava sem navegar | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
+| M1: `PropostaController` injetava `PrestadorRepository` diretamente (violação de camadas) | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
+| M11: entidade `Avaliacao` sem `dataCriacao` — impossível ordenar avaliações | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
 
 ---
 
-*Atualizado em 2026-05-12 — sincronizado com README.md.*
+*Atualizado em 2026-05-15 — sincronizado com README.md.*
