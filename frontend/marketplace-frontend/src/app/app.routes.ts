@@ -20,6 +20,9 @@ import { SobreNosComponent } from './components/sobre-nos.component';
 import { TermosUsoComponent } from './components/termos-uso.component';
 import { VerifyAccountComponent } from './components/verify-account.component';
 import { clienteGuard, prestadorGuard } from './guards/auth.guard';
+import { AdminDashboardComponent } from './components/admin/admin-dashboard.component';
+import { BuscaPrestadoresComponent } from './components/busca-prestadores/busca-prestadores.component';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -82,5 +85,15 @@ export const routes: Routes = [
     canActivate: [clienteGuard]
   },
   { path: 'notification-demo', component: NotificationDemoComponent },
+  {
+    path: 'admin/dashboard',
+    component: AdminDashboardComponent,
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'prestadores/buscar',
+    component: BuscaPrestadoresComponent,
+    canActivate: [clienteGuard]
+  },
   { path: '**', redirectTo: '' }
 ];

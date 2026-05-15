@@ -1,0 +1,181 @@
+
+    <div class="min-h-screen bg-gray-50">
+      <!-- Header -->
+      <div class="bg-white shadow-sm border-b">
+        <div class="container max-w-6xl mx-auto px-4 py-6">
+          <div class="flex items-center gap-4">
+            <button
+              (click)="voltar()"
+              class="text-gray-500 hover:text-gray-700 transition">
+              ← Voltar
+            </button>
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900">Enviar Proposta</h1>
+              <p class="text-gray-600 text-sm mt-1">Apresente seu valor e mensagem para o cliente</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container mx-auto px-4 py-8 max-w-3xl">
+
+        <!-- Loading -->
+        @if (loading) {
+          <div class="text-center py-16">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="text-gray-600 mt-4">Carregando solicitação...</p>
+          </div>
+        }
+
+        <!-- Erro ao carregar -->
+        @else if (erroCarregamento) {
+          <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <span class="text-5xl">😕</span>
+            <p class="text-gray-700 text-lg mt-4">{{ erroCarregamento }}</p>
+            <button
+              (click)="voltar()"
+              class="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+              Voltar ao Painel
+            </button>
+          </div>
+        }
+
+        <!-- Sucesso -->
+        @else if (sucesso) {
+          <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <span class="text-3xl">✅</span>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mt-4">Proposta enviada!</h2>
+            <p class="text-gray-600 mt-2">
+              Sua proposta foi enviada para <strong>{{ solicitacao?.clienteNome }}</strong>.
+              O cliente irá analisá-la e você será notificado em caso de aceite.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+              <button
+                (click)="voltar()"
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                Voltar ao Painel
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Formulário -->
+        @else if (solicitacao) {
+          <!-- Card com detalhes da solicitação -->
+          <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex items-start justify-between mb-4">
+              <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+                {{ solicitacao.categoriaNome }}
+              </span>
+              <span class="text-sm text-gray-500">{{ formatarData(solicitacao.dataCriacao) }}</span>
+            </div>
+
+            <h2 class="text-lg font-bold text-gray-900 mb-3">Detalhes da Solicitação</h2>
+
+            <p class="text-gray-700 mb-4 leading-relaxed">{{ solicitacao.descricao }}</p>
+
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t text-sm">
+              <div class="flex items-center gap-2 text-gray-600">
+                <span>👤</span>
+                <span>{{ solicitacao.clienteNome }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-gray-600">
+                <span>📍</span>
+                <span>{{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulário da proposta -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Sua Proposta</h2>
+
+            <form [formGroup]="propostaForm" (ngSubmit)="enviar()">
+              <!-- Valor -->
+              <div class="mb-6">
+                <label class="block text-gray-700 font-semibold mb-2">
+                  Valor cobrado (R$)
+                  <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">R$</span>
+                  <input
+                    type="number"
+                    formControlName="valor"
+                    placeholder="0,00"
+                    min="1"
+                    step="0.01"
+                    class="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    [class.border-red-500]="propostaForm.get('valor')?.invalid && propostaForm.get('valor')?.touched">
+                </div>
+                @if (propostaForm.get('valor')?.invalid && propostaForm.get('valor')?.touched) {
+                  <p class="text-red-500 text-sm mt-1">Informe um valor maior que zero</p>
+                }
+              </div>
+
+              <!-- Mensagem -->
+              <div class="mb-6">
+                <label class="block text-gray-700 font-semibold mb-2">
+                  Mensagem para o cliente
+                  <span class="text-red-500">*</span>
+                </label>
+                <textarea
+                  formControlName="mensagem"
+                  rows="5"
+                  placeholder="Apresente-se, explique como você realizaria o serviço, prazo estimado, o que está incluso no valor..."
+                  class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  [class.border-red-500]="propostaForm.get('mensagem')?.invalid && propostaForm.get('mensagem')?.touched">
+                </textarea>
+                <div class="flex justify-between mt-1">
+                  @if (propostaForm.get('mensagem')?.invalid && propostaForm.get('mensagem')?.touched) {
+                    <p class="text-red-500 text-sm">Mínimo de 20 caracteres</p>
+                  } @else {
+                    <span></span>
+                  }
+                  <p class="text-gray-500 text-sm">
+                    {{ propostaForm.get('mensagem')?.value?.length || 0 }} caracteres
+                  </p>
+                </div>
+              </div>
+
+              <!-- Dica -->
+              <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                <p class="text-sm text-blue-700">
+                  <strong>Dica:</strong> Propostas com mensagens detalhadas têm mais chance de serem aceitas.
+                  Inclua prazo estimado e o que está incluso no valor.
+                </p>
+              </div>
+
+              <!-- Erro de envio -->
+              @if (erroEnvio) {
+                <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                  {{ erroEnvio }}
+                </div>
+              }
+
+              <!-- Botões -->
+              <div class="flex justify-between items-center pt-6 border-t">
+                <button
+                  type="button"
+                  (click)="voltar()"
+                  class="px-6 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition">
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  [disabled]="enviando"
+                  class="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                  @if (enviando) {
+                    <span>Enviando...</span>
+                  } @else {
+                    <span>Enviar Proposta</span>
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+      </div>
+    </div>

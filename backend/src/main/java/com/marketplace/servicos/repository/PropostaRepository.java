@@ -20,4 +20,6 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
     boolean existsBySolicitacaoIdAndPrestadorId(Long solicitacaoId, Long prestadorId);
     
     Page<Proposta> findByPrestadorIdAndStatus(Long prestadorId, StatusProposta status, Pageable pageable);
+
+    Optional<Proposta> findBySolicitacaoIdAndStatus(Long solicitacaoId, StatusProposta status);
 }

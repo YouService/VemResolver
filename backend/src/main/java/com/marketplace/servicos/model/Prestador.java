@@ -40,7 +40,11 @@ public class Prestador {
     
     @Column(nullable = false)
     private Double avaliacaoMedia = 0.0;
-    
+
     @Column(nullable = false)
     private Integer totalAvaliacoes = 0;
+
+    private Double latitude;
+
+    private Double longitude;
 }

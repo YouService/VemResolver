@@ -55,4 +55,22 @@ export class PrestadorService {
   criarOuAtualizar(prestador: Prestador): Observable<Prestador> {
     return this.http.post<Prestador>(this.apiUrl, prestador);
   }
+
+  buscarProximos(
+    lat: number,
+    lng: number,
+    raioKm: number,
+    categoriaId?: number,
+    page = 0,
+    size = 10
+  ): Observable<PageResponse<Prestador>> {
+    let params = new HttpParams()
+      .set('lat', lat.toString())
+      .set('lng', lng.toString())
+      .set('raioKm', raioKm.toString())
+      .set('page', page.toString())
+      .set('size', size.toString());
+    if (categoriaId) params = params.set('categoriaId', categoriaId.toString());
+    return this.http.get<PageResponse<Prestador>>(`${this.apiUrl}/proximo`, { params });
+  }
 }

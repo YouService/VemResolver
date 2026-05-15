@@ -1,0 +1,154 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white shadow-sm border-b">
+    <div class="container max-w-6xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Prestadores por Localização</h1>
+          <p class="text-gray-600 mt-1">Encontre profissionais próximos a você</p>
+        </div>
+        <a routerLink="/cliente/dashboard" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium text-sm">
+          Voltar
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container max-w-6xl mx-auto px-4 py-8">
+
+    <!-- Filtros -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Filtros de Busca</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+
+        <!-- Categoria -->
+        <div>
+          <label class="block text-gray-700 font-medium mb-2 text-sm">Categoria</label>
+          <select
+            [(ngModel)]="categoriaSelecionada"
+            (change)="atualizarBusca()"
+            class="w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <option [ngValue]="undefined">Todas as categorias</option>
+            @for (cat of categorias; track cat.id) {
+              <option [ngValue]="cat.id">{{ cat.nome }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Raio -->
+        <div>
+          <label class="block text-gray-700 font-medium mb-2 text-sm">Raio de Busca</label>
+          <select
+            [(ngModel)]="raioKm"
+            (change)="atualizarBusca()"
+            class="w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            @for (raio of raiosDisponiveis; track raio) {
+              <option [ngValue]="raio">{{ raio }} km</option>
+            }
+          </select>
+        </div>
+
+        <!-- Botão localização -->
+        <div class="flex items-end">
+          <button
+            (click)="obterLocalizacao()"
+            [disabled]="obtendoLocalizacao"
+            class="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ obtendoLocalizacao ? 'Obtendo localização...' : localizacaoObtida ? '📍 Atualizar Localização' : '📍 Usar Minha Localização' }}
+          </button>
+        </div>
+      </div>
+
+      @if (erroLocalizacao) {
+        <p class="text-red-500 text-sm">{{ erroLocalizacao }}</p>
+      }
+
+      @if (localizacaoObtida && latUsuario) {
+        <p class="text-green-600 text-sm">
+          Localização obtida — buscando em um raio de {{ raioKm }} km
+        </p>
+      }
+
+      @if (!localizacaoObtida) {
+        <p class="text-gray-500 text-sm">Clique em "Usar Minha Localização" para encontrar prestadores próximos a você.</p>
+      }
+    </div>
+
+    <!-- Resultados -->
+    @if (loading) {
+      <div class="text-center py-16">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="text-gray-600 mt-4">Buscando prestadores...</p>
+      </div>
+    } @else if (errorMessage) {
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+        <span>{{ errorMessage }}</span>
+        <button (click)="errorMessage = ''" class="ml-3 text-red-500 hover:text-red-700 font-bold">✕</button>
+      </div>
+    } @else if (buscaRealizada && prestadores.length === 0) {
+      <div class="text-center py-16">
+        <span class="text-6xl">🔍</span>
+        <p class="text-gray-600 mt-4 text-lg">Nenhum prestador encontrado neste raio</p>
+        <p class="text-gray-500 text-sm mt-2">Tente ampliar o raio de busca ou mudar a categoria</p>
+      </div>
+    } @else if (prestadores.length > 0) {
+      <div class="mb-4 text-sm text-gray-500">
+        Prestadores encontrados no raio de {{ raioKm }} km
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @for (prestador of prestadores; track prestador.id) {
+          <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-900">Prestador #{{ prestador.id }}</p>
+                <p class="text-sm text-gray-500 mt-0.5">📍 {{ prestador.cidade }}, {{ prestador.estado }}</p>
+              </div>
+              @if ((prestador.totalAvaliacoes || 0) > 0) {
+                <div class="text-right flex-shrink-0 ml-4">
+                  <div class="flex items-center gap-1">
+                    <span class="text-yellow-500 text-sm">★</span>
+                    <span class="font-semibold text-gray-800 text-sm">{{ prestador.avaliacaoMedia | number:'1.1-1' }}</span>
+                  </div>
+                  <p class="text-xs text-gray-400">{{ prestador.totalAvaliacoes }} avaliação{{ prestador.totalAvaliacoes !== 1 ? 'ões' : '' }}</p>
+                </div>
+              }
+            </div>
+
+            @if (prestador.descricaoPerfil) {
+              <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ prestador.descricaoPerfil }}</p>
+            }
+
+            <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+              <a
+                routerLink="/cliente/nova-solicitacao"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm">
+                Solicitar Serviço
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (totalPaginas > 1) {
+        <div class="flex items-center justify-center gap-2 mt-8 pt-4 border-t border-gray-100">
+          <button
+            (click)="irParaPagina(paginaAtual - 1)"
+            [disabled]="paginaAtual === 0"
+            class="px-3 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            ← Anterior
+          </button>
+          <span class="text-sm text-gray-500 mx-2">
+            Página {{ paginaAtual + 1 }} de {{ totalPaginas }}
+          </span>
+          <button
+            (click)="irParaPagina(paginaAtual + 1)"
+            [disabled]="paginaAtual === totalPaginas - 1"
+            class="px-3 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            Próxima →
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

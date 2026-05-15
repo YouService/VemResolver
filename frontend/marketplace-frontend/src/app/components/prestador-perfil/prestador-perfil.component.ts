@@ -23,6 +23,8 @@ export class PrestadorPerfilComponent implements OnInit {
   successMessage = '';
   categoriasInvalidas = false;
   prestadorExistente?: Prestador;
+  usandoLocalizacao = false;
+  erroLocalizacao = '';
 
   constructor(
     private fb: FormBuilder,
@@ -34,7 +36,9 @@ export class PrestadorPerfilComponent implements OnInit {
     this.perfilForm = this.fb.group({
       descricaoPerfil: ['', [Validators.required, Validators.minLength(50)]],
       cidade: ['', Validators.required],
-      estado: ['', Validators.required]
+      estado: ['', Validators.required],
+      latitude: [null],
+      longitude: [null]
     });
   }
 
@@ -62,7 +66,9 @@ export class PrestadorPerfilComponent implements OnInit {
         this.perfilForm.patchValue({
           descricaoPerfil: prestador.descricaoPerfil || '',
           cidade: prestador.cidade || '',
-          estado: prestador.estado || ''
+          estado: prestador.estado || '',
+          latitude: prestador.latitude ?? null,
+          longitude: prestador.longitude ?? null
         });
         this.categoriasSelecionadas = prestador.categoriasIds || [];
       },
@@ -127,7 +133,9 @@ export class PrestadorPerfilComponent implements OnInit {
       categoriasIds: this.categoriasSelecionadas,
       descricaoPerfil: this.perfilForm.value.descricaoPerfil,
       cidade: this.perfilForm.value.cidade,
-      estado: this.perfilForm.value.estado
+      estado: this.perfilForm.value.estado,
+      latitude: this.perfilForm.value.latitude ?? undefined,
+      longitude: this.perfilForm.value.longitude ?? undefined
     };
 
     const request = this.prestadorExistente
@@ -150,7 +158,29 @@ export class PrestadorPerfilComponent implements OnInit {
     });
   }
 
-  voltarDashboard() {
+  obterLocalizacao(): void {
+    if (!navigator.geolocation) {
+      this.erroLocalizacao = 'Geolocalização não suportada pelo navegador.';
+      return;
+    }
+    this.usandoLocalizacao = true;
+    this.erroLocalizacao = '';
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        this.perfilForm.patchValue({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude
+        });
+        this.usandoLocalizacao = false;
+      },
+      () => {
+        this.erroLocalizacao = 'Não foi possível obter localização. Verifique as permissões do navegador.';
+        this.usandoLocalizacao = false;
+      }
+    );
+  }
+
+  voltarDashboard(): void {
     this.router.navigate(['/prestador/dashboard']);
   }
 }
