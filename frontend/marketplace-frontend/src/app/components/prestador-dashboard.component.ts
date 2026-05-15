@@ -336,6 +336,35 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
                 </div>
               }
             </div>
+
+            @if (totalPaginas > 1) {
+              <div class="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-100">
+                <button
+                  (click)="irParaPagina(paginaAtual - 1)"
+                  [disabled]="paginaAtual === 0"
+                  class="px-3 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                  ← Anterior
+                </button>
+                @for (p of [].constructor(totalPaginas); track $index) {
+                  <button
+                    (click)="irParaPagina($index)"
+                    [class]="$index === paginaAtual
+                      ? 'px-3 py-2 rounded-lg bg-blue-600 text-white font-semibold'
+                      : 'px-3 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition'">
+                    {{ $index + 1 }}
+                  </button>
+                }
+                <button
+                  (click)="irParaPagina(paginaAtual + 1)"
+                  [disabled]="paginaAtual === totalPaginas - 1"
+                  class="px-3 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                  Próxima →
+                </button>
+                <span class="text-sm text-gray-500 ml-2">
+                  Página {{ paginaAtual + 1 }} de {{ totalPaginas }}
+                </span>
+              </div>
+            }
           }
         </div>
 
@@ -349,6 +378,9 @@ export class PrestadorDashboardComponent implements OnInit {
   prestador?: Prestador;
   userName = '';
   loading = false;
+  paginaAtual = 0;
+  totalPaginas = 0;
+  itensPorPagina = 9;
 
   constructor(
     private solicitacaoService: SolicitacaoService,
@@ -388,15 +420,23 @@ export class PrestadorDashboardComponent implements OnInit {
     });
   }
 
-  carregarSolicitacoes() {
+  carregarSolicitacoes(pagina: number = this.paginaAtual) {
     this.loading = true;
-    this.solicitacaoService.buscarAbertas(undefined, undefined, undefined, 0, 30).subscribe({
+    this.solicitacaoService.buscarAbertas(undefined, undefined, undefined, pagina, this.itensPorPagina).subscribe({
       next: (response) => {
         this.solicitacoes = response.content;
+        this.totalPaginas = response.totalPages;
+        this.paginaAtual = pagina;
         this.loading = false;
       },
       error: () => { this.loading = false; }
     });
+  }
+
+  irParaPagina(pagina: number) {
+    if (pagina >= 0 && pagina < this.totalPaginas) {
+      this.carregarSolicitacoes(pagina);
+    }
   }
 
   carregarPropostas() {

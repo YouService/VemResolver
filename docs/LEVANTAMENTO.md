@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-15 (P1 concluída)  
+> **Última atualização:** 2026-05-15 (P2 concluída)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -410,11 +410,11 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 
 | # | Problema | Arquivo | Status |
 |---|----------|---------|--------|
-| B1 | Sem rate limiting em `POST /api/auth/login` | `SecurityConfig.java` | ❌ **Pendente** |
+| B1 | Sem rate limiting em `POST /api/auth/login` | `SecurityConfig.java` | ✅ **Resolvido** em 2026-05-15 — `LoginRateLimitFilter` bloqueia IPs com > 10 tentativas/min com HTTP 429 |
 | B2 | `PropostaService` e `AvaliacaoService` declarados mas não usados | — | ✅ **Resolvido** — ambos são usados pelos novos componentes |
-| B3 | `buscarServico()` e `selecionarCategoria()` na home apenas fazem `console.log` | `home.component.ts` | ❌ **Pendente** |
-| B4 | Sem paginação visível no frontend | Todos os dashboards | ❌ **Pendente** |
-| B5 | Erros de HTTP tratados apenas com `console.error()` sem feedback visual | Múltiplos componentes | ⚠️ **Parcial** — novos componentes usam `NotificationService`; legados ainda usam `console.error` |
+| B3 | `buscarServico()` e `selecionarCategoria()` na home apenas fazem `console.log` | `home.component.ts` | ✅ **Resolvido** em 2026-05-15 — navega para `/register`, `/cliente/nova-solicitacao` ou `/prestador/dashboard` conforme papel; `?categoriaId` pré-seleciona categoria |
+| B4 | Sem paginação visível no frontend | Todos os dashboards | ✅ **Resolvido** em 2026-05-15 — controles anterior/próxima + indicador de página nos dashboards cliente e prestador |
+| B5 | Erros de HTTP tratados apenas com `console.error()` sem feedback visual | Múltiplos componentes | ✅ **Resolvido** em 2026-05-15 — banners de erro exibidos ao usuário em todos os componentes afetados |
 | B6 | Templates HTML inline em arquivos TypeScript | Todos os componentes originais | ❌ **Pendente** — novos componentes usam arquivos separados |
 | B7 | Paineis do cliente e prestador mais largos que o navbar em telas grandes | `cliente-dashboard`, `prestador-dashboard` e outros | ✅ **Resolvido** em 2026-05-12 — `max-w-6xl` adicionado em 5 componentes |
 | B8 | Rodapés inconsistentes entre as páginas (estilos, logo ausente, links divergentes) | `home`, `register`, `seguranca`, `seja-profissional` | ✅ **Resolvido** em 2026-05-12 — padrão unificado: logo + links (Sobre nós, Termos de uso, Política de Privacidade) + copyright |
@@ -451,19 +451,14 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | M9: botão "Editar" no modal do cliente fechava sem navegar | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
 | M1: `PropostaController` injetava `PrestadorRepository` diretamente (violação de camadas) | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
 | M11: entidade `Avaliacao` sem `dataCriacao` — impossível ordenar avaliações | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
+| B3: `buscarServico()` e `selecionarCategoria()` na home faziam apenas `console.log` | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
+| B4: dashboards sem controles de paginação apesar do backend paginar | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
+| B5: `console.error` sem feedback visual em múltiplos componentes | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
+| B1: `POST /api/auth/login` sem rate limiting (vulnerável a força bruta) | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
 
 ---
 
 ## 8. O QUE FALTA IMPLEMENTAR
-
-### Prioridade 2 — Melhorias de UX (próximas iterações)
-
-| # | Tarefa | Arquivo | Esforço |
-|---|--------|---------|---------|
-| B3 | Busca por categoria e barra de pesquisa na home fazem apenas `console.log` sem filtrar nada | `home.component.ts` | Médio |
-| B4 | Paginação visível em todas as listagens do frontend (backend já pagina, frontend não exibe controles) | Todos os dashboards | Médio |
-| B5 | Erros de HTTP nos componentes legados usam `console.error` sem feedback visual ao usuário | Múltiplos componentes | Pequeno |
-| B1 | Sem rate limiting em `POST /api/auth/login` — vulnerável a força bruta | `SecurityConfig.java` | Pequeno |
 
 ### Prioridade 3 — Evolução do produto (maior esforço)
 

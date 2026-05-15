@@ -6,9 +6,9 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 // Importações de UI
 import { MatIconModule } from '@angular/material/icon';
 
-// Interfaces e Serviços (Verifique se os caminhos batem com sua estrutura)
 import { Categoria } from '../../models/models';
 import { CategoriaService } from '../../services/categoria.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -30,13 +30,15 @@ import { CategoriaService } from '../../services/categoria.service';
 })
 export class HomeComponent implements OnInit {
   @ViewChild('categoriesContainer') categoriesContainer!: ElementRef;
-  
+
   categorias: Categoria[] = [];
   searchTerm: string = '';
+  errorMessage = '';
   quickRegisterForm: FormGroup;
 
   constructor(
     private categoriaService: CategoriaService,
+    private authService: AuthService,
     private fb: FormBuilder,
     private router: Router
   ) {
@@ -59,7 +61,9 @@ export class HomeComponent implements OnInit {
            this.categorias = response.content;
         }
       },
-      error: (error) => console.error('Erro ao carregar categorias:', error)
+      error: () => {
+        this.errorMessage = 'Não foi possível carregar as categorias. Tente recarregar a página.';
+      }
     });
   }
 
@@ -85,13 +89,27 @@ export class HomeComponent implements OnInit {
   }
 
   buscarServico() {
-    if (this.searchTerm) {
-      this.router.navigate(['/servicos'], { queryParams: { busca: this.searchTerm } });
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/register'], { queryParams: { tipo: 'CLIENTE' } });
+      return;
     }
+    if (this.authService.isPrestador()) {
+      this.router.navigate(['/prestador/dashboard']);
+      return;
+    }
+    this.router.navigate(['/cliente/nova-solicitacao']);
   }
 
   selecionarCategoria(categoria: Categoria) {
-    this.router.navigate(['/servicos'], { queryParams: { categoria: categoria.id } });
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/register'], { queryParams: { tipo: 'CLIENTE', categoriaId: categoria.id } });
+      return;
+    }
+    if (this.authService.isPrestador()) {
+      this.router.navigate(['/prestador/dashboard']);
+      return;
+    }
+    this.router.navigate(['/cliente/nova-solicitacao'], { queryParams: { categoriaId: categoria.id } });
   }
 
   iniciarCadastro() {

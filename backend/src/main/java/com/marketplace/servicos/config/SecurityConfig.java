@@ -1,6 +1,7 @@
 package com.marketplace.servicos.config;
 
 import com.marketplace.servicos.security.JwtAuthenticationFilter;
+import com.marketplace.servicos.security.LoginRateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -63,7 +64,8 @@ public class SecurityConfig {
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new LoginRateLimitFilter(), JwtAuthenticationFilter.class);
         
         return http.build();
     }
