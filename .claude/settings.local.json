@@ -27,7 +27,13 @@
       "PowerShell(Invoke-WebRequest -Uri \"http://localhost:8080/api/categorias?page=0&size=10\" -Method GET -UseBasicParsing 2>&1 | Select-Object StatusCode, StatusDescription, Content)",
       "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8080/api/categorias?page=0&size=10\" -UseBasicParsing; Write-Host \"Status: $\\($r.StatusCode\\)\"; Write-Host $r.Content } catch { Write-Host \"Erro: $\\($_.Exception.Response.StatusCode\\)\"; Write-Host $_.Exception.Message })",
       "PowerShell($body = '{\"email\":\"joao@cliente.com\",\"senha\":\"123456\"}'; try { $r = Invoke-WebRequest -Uri \"http://localhost:8080/api/auth/login\" -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing; Write-Host \"Status: $\\($r.StatusCode\\)\"; Write-Host $r.Content } catch { Write-Host \"Status: $\\($_.Exception.Response.StatusCode.value__\\)\"; $stream = $_.Exception.Response.GetResponseStream\\(\\); $reader = New-Object System.IO.StreamReader\\($stream\\); Write-Host $reader.ReadToEnd\\(\\) })",
-      "PowerShell([Convert]::ToBase64String\\([System.Text.Encoding]::UTF8.GetBytes\\(\"marketplace-dev-secret-key-minimum-256bits-length-ok\"\\)\\))"
+      "PowerShell([Convert]::ToBase64String\\([System.Text.Encoding]::UTF8.GetBytes\\(\"marketplace-dev-secret-key-minimum-256bits-length-ok\"\\)\\))",
+      "Bash(pandoc --version)",
+      "PowerShell(pandoc *)",
+      "PowerShell(pip install *)",
+      "PowerShell(python -m pip install python-docx 2>&1 | Select-Object -Last 3)",
+      "PowerShell(python -c \"import docx; print\\('ok'\\)\" 2>&1)",
+      "PowerShell(python C:/dev/workspace/vemresolver/docs/gerar_docx.py)"
     ]
   }
 }
