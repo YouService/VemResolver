@@ -114,6 +114,7 @@ Criados automaticamente pelo `DataSeeder` apenas nos perfis `dev` / padrão (nun
 | [`docs/03-implementacao-e-apis.txt`](docs/03-implementacao-e-apis.txt) | Guia de implementação — contratos de API, DTOs, serviços Angular, boas práticas |
 | [`docs/04-testes-e-qualidade.txt`](docs/04-testes-e-qualidade.txt) | Plano de testes — inventário atual, gaps críticos, esqueletos de testes prioritários |
 | [`docs/CASOS-DE-USO-P4.md`](docs/CASOS-DE-USO-P4.md) | Casos de uso detalhados da Prioridade 4 — UC-01 a UC-07 com fluxos, regras e critérios de aceite |
+| [`docs/CASOS-DE-TESTE-P4.md`](docs/CASOS-DE-TESTE-P4.md) | Casos de teste da Prioridade 4 — 82 CTs cobrindo fluxo principal, negativo, borda, segurança e auditoria para UC-01 a UC-07 |
 
 ---
 
