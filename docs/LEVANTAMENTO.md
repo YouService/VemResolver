@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-15 (P4.1 — Chat por proposta implementado)  
+> **Última atualização:** 2026-05-16 (fix: erro 500 na tela de avaliação — V7 migration + @Transactional)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -404,7 +404,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | M8 | Botão "Ver Detalhes e Enviar Proposta" sem handler | `prestador-dashboard.component.ts` | ✅ **Resolvido** — navega para `/prestador/solicitacao/:id` |
 | M9 | Botão "Editar" na modal do cliente apenas fecha o modal | `cliente-dashboard.component.ts` | ✅ **Resolvido** em 2026-05-15 — `fecharModal()` chamado antes de `router.navigate()` em `editarSolicitacao()` |
 | M10 | `ddl-auto: update` sem controle de migração (sem Flyway/Liquibase) | `application.yml` | ✅ **Resolvido** em 2026-05-15 — Flyway adicionado; `ddl-auto: none`; `V1__initial_schema.sql` + `V2__add_refresh_tokens.sql`; `baseline-on-migrate: true` para DBs existentes |
-| M11 | `Avaliacao` sem campo `dataCriacao` | `Avaliacao.java` | ✅ **Resolvido** em 2026-05-15 — campo `dataCriacao` com `@CreationTimestamp` adicionado; `AvaliacaoDTO` e `toDTO()` atualizados |
+| M11 | `Avaliacao` sem campo `dataCriacao` | `Avaliacao.java` | ✅ **Resolvido** em 2026-05-15/16 — campo `dataCriacao` com `@CreationTimestamp` adicionado; `V7__add_data_criacao_avaliacoes.sql` adiciona a coluna ao banco existente (criado pelo Hibernate DDL antes do Flyway) |
 
 ### BAIXO
 
@@ -451,6 +451,9 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | M9: botão "Editar" no modal do cliente fechava sem navegar | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
 | M1: `PropostaController` injetava `PrestadorRepository` diretamente (violação de camadas) | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
 | M11: entidade `Avaliacao` sem `dataCriacao` — impossível ordenar avaliações | `fix/m9-m1-m11-correcoes-medio` | 2026-05-15 |
+| Erro 500 na tela de avaliação — `column "data_criacao" of relation "avaliacoes" does not exist`; tabela criada pelo Hibernate DDL antes do Flyway sem a coluna; `V7__add_data_criacao_avaliacoes.sql` corrige o schema | `develop` | 2026-05-16 |
+| `@Transactional(readOnly = true)` ausente em métodos de leitura — múltiplas chamadas a repositórios sem transação compartilhada causavam falha de sessão Hibernate em `SolicitacaoServicoService`, `PropostaService` e `AvaliacaoService` | `develop` | 2026-05-16 |
+| `FluxoPrincipalTest` falhava ao carregar contexto por `MAIL_HOST` não resolvido — corrigido com `@TestPropertySource` | `develop` | 2026-05-16 |
 | B3: `buscarServico()` e `selecionarCategoria()` na home faziam apenas `console.log` | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
 | B4: dashboards sem controles de paginação apesar do backend paginar | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
 | B5: `console.error` sem feedback visual em múltiplos componentes | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
@@ -584,4 +587,4 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
-*Atualizado em 2026-05-15 (P4.1 Chat por proposta entregue) — sincronizado com README.md.*
+*Atualizado em 2026-05-16 (fix: erro 500 avaliação — V7 migration + @Transactional) — sincronizado com README.md.*

@@ -127,11 +127,13 @@ public class AvaliacaoService {
         return toDTO(avaliacao);
     }
 
+    @Transactional(readOnly = true)
     public Page<AvaliacaoDTO> listarPorPrestador(Long prestadorId, Pageable pageable) {
         return avaliacaoRepository.findByPrestadorIdAndTipo(prestadorId, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR, pageable)
                 .map(this::toDTO);
     }
 
+    @Transactional(readOnly = true)
     public Page<AvaliacaoDTO> listarPorCliente(Long clienteId, Pageable pageable) {
         return avaliacaoRepository.findByClienteIdAndTipo(clienteId, TipoAvaliacao.PRESTADOR_AVALIA_CLIENTE, pageable)
                 .map(this::toDTO);

@@ -85,16 +85,19 @@ public class PropostaService {
         return toDTO(proposta);
     }
 
+    @Transactional(readOnly = true)
     public Page<PropostaDTO> listarPorSolicitacao(Long solicitacaoId, Pageable pageable) {
         return propostaRepository.findBySolicitacaoId(solicitacaoId, pageable)
                 .map(this::toDTO);
     }
-    
+
+    @Transactional(readOnly = true)
     public Page<PropostaDTO> listarPorPrestador(Long prestadorId, Pageable pageable) {
         return propostaRepository.findByPrestadorId(prestadorId, pageable)
                 .map(this::toDTO);
     }
 
+    @Transactional(readOnly = true)
     public Page<PropostaDTO> listarMinhas(Long usuarioId, Pageable pageable) {
         Long prestadorId = prestadorRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Prestador não encontrado"))
