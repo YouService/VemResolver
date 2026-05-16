@@ -119,11 +119,12 @@ public class DataSeeder {
             return salvo;
         });
 
-        long totalSolicitacoesJoao = solicitacaoRepository
-                .findByClienteId(joao.getId(), PageRequest.of(0, 1))
+        // Cria dados de teste apenas se Maria não tiver nenhuma proposta ENVIADA
+        long propostasEnviadas = propostaRepository
+                .findByPrestadorIdAndStatus(prestadorMaria.getId(), StatusProposta.ENVIADA, PageRequest.of(0, 1))
                 .getTotalElements();
 
-        if (totalSolicitacoesJoao == 0) {
+        if (propostasEnviadas == 0) {
             SolicitacaoServico solicitacao = new SolicitacaoServico();
             solicitacao.setCliente(joao);
             solicitacao.setCategoria(eletricista);
@@ -139,7 +140,7 @@ public class DataSeeder {
             proposta.setValor(new BigDecimal("150.00"));
             proposta.setMensagem("Posso realizar o serviço ainda esta semana. Tenho disponibilidade para segunda e terça-feira pela manhã.");
             propostaRepository.save(proposta);
-            System.out.println("✓ Proposta de teste criada (ENVIADA) — use /chat/proposta/{id} para testar o chat");
+            System.out.println("✓ Proposta de teste criada (ENVIADA) — acesse o chat em /prestador/dashboard ou Propostas Recebidas");
         }
     }
 }
