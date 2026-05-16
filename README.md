@@ -153,7 +153,8 @@ vemresolver/
 - ✅ Perfil do cliente com aba de avaliações recebidas e nota média
 - ✅ Soft delete de conta
 - ✅ Botão "Editar" no dashboard do cliente fecha o modal e navega corretamente para a tela de edição
-- ✅ Campo `dataCriacao` na entidade `Avaliacao` — avaliações agora têm timestamp de criação
+- ✅ Campo `dataCriacao` na entidade `Avaliacao` e migration `V7` — coluna adicionada à tabela `avaliacoes` (tabela havia sido criada pelo Hibernate DDL antes do Flyway, sem a coluna; `V7__add_data_criacao_avaliacoes.sql` corrige o schema no banco existente)
+- ✅ `@Transactional(readOnly = true)` em todos os métodos de leitura com múltiplas chamadas a repositórios — corrige 500 em `SolicitacaoServicoService`, `PropostaService` e `AvaliacaoService`
 
 ### Segurança e infraestrutura
 

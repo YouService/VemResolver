@@ -123,4 +123,35 @@ class SolicitacaoServicoServiceTest {
         assertThrows(BusinessException.class,
                 () -> solicitacaoService.concluirServico(10L, 1L));
     }
+
+    @Test
+    void buscarPorId_SolicitacaoConcluida_RetornaComPropostaAceitaId() {
+        solicitacao.setStatus(StatusSolicitacao.CONCLUIDA);
+
+        Proposta propostaAceita = new Proposta();
+        propostaAceita.setId(42L);
+
+        when(solicitacaoRepository.findById(10L)).thenReturn(Optional.of(solicitacao));
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(10L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(true);
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(10L, TipoAvaliacao.PRESTADOR_AVALIA_CLIENTE))
+                .thenReturn(false);
+        when(propostaRepository.findBySolicitacaoIdAndStatus(10L, StatusProposta.ACEITA))
+                .thenReturn(Optional.of(propostaAceita));
+
+        SolicitacaoServicoDTO resultado = solicitacaoService.buscarPorId(10L);
+
+        assertEquals(StatusSolicitacao.CONCLUIDA, resultado.getStatus());
+        assertEquals(42L, resultado.getPropostaAceitaId());
+        assertTrue(resultado.getFoiAvaliadoPeloCliente());
+        assertFalse(resultado.getFoiAvaliadoPeloPrestador());
+    }
+
+    @Test
+    void buscarPorId_NaoEncontrada_LancaException() {
+        when(solicitacaoRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> solicitacaoService.buscarPorId(99L));
+    }
 }

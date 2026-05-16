@@ -86,17 +86,20 @@ public class SolicitacaoServicoService {
         return toDTO(solicitacao);
     }
     
+    @Transactional(readOnly = true)
     public SolicitacaoServicoDTO buscarPorId(Long id) {
         SolicitacaoServico solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
         return toDTO(solicitacao);
     }
-    
+
+    @Transactional(readOnly = true)
     public Page<SolicitacaoServicoDTO> listarPorCliente(Long clienteId, Pageable pageable) {
         return solicitacaoRepository.findByClienteId(clienteId, pageable)
                 .map(this::toDTO);
     }
-    
+
+    @Transactional(readOnly = true)
     public Page<SolicitacaoServicoDTO> buscarAbertas(Long categoriaId, String cidade, String estado, Pageable pageable) {
         Page<SolicitacaoServico> solicitacoes;
         

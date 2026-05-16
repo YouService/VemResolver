@@ -28,6 +28,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@org.springframework.test.context.TestPropertySource(properties = {
+    "MAIL_HOST=localhost",
+    "MAIL_PORT=25",
+    "MAIL_USERNAME=test@test.com",
+    "MAIL_PASSWORD=test"
+})
 public class FluxoPrincipalTest {
 
     @Autowired
