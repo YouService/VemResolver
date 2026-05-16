@@ -1,27 +1,29 @@
 package com.marketplace.servicos.config;
 
-import com.marketplace.servicos.model.Categoria;
-import com.marketplace.servicos.model.TipoUsuario;
-import com.marketplace.servicos.model.User;
-import com.marketplace.servicos.repository.CategoriaRepository;
-import com.marketplace.servicos.repository.UserRepository;
+import com.marketplace.servicos.model.*;
+import com.marketplace.servicos.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Configuration
 @Profile("!prod")
 public class DataSeeder {
-    
+
     @Bean
     CommandLineRunner initDatabase(
             CategoriaRepository categoriaRepository,
             UserRepository userRepository,
+            PrestadorRepository prestadorRepository,
+            SolicitacaoServicoRepository solicitacaoRepository,
+            PropostaRepository propostaRepository,
             PasswordEncoder passwordEncoder) {
         return args -> {
             if (categoriaRepository.count() == 0) {
@@ -40,7 +42,7 @@ public class DataSeeder {
                 categoriaRepository.saveAll(categorias);
                 System.out.println("✓ Categorias iniciais criadas");
             }
-            
+
             if (!userRepository.existsByEmail("joao@cliente.com")) {
                 User cliente = new User();
                 cliente.setNome("João Silva");
@@ -82,6 +84,62 @@ public class DataSeeder {
                 userRepository.save(admin);
                 System.out.println("✓ Usuário de teste criado: admin@vemresolver.com / Admin@2025");
             }
+
+            seedDadosChat(categoriaRepository, userRepository, prestadorRepository, solicitacaoRepository, propostaRepository);
         };
+    }
+
+    private void seedDadosChat(
+            CategoriaRepository categoriaRepository,
+            UserRepository userRepository,
+            PrestadorRepository prestadorRepository,
+            SolicitacaoServicoRepository solicitacaoRepository,
+            PropostaRepository propostaRepository) {
+
+        User joao = userRepository.findByEmail("joao@cliente.com").orElse(null);
+        User maria = userRepository.findByEmail("maria@prestador.com").orElse(null);
+        if (joao == null || maria == null) return;
+
+        Categoria eletricista = categoriaRepository.findAll().stream()
+                .filter(c -> c.getNome().equals("Eletricista"))
+                .findFirst().orElse(null);
+        if (eletricista == null) return;
+
+        Prestador prestadorMaria = prestadorRepository.findByUsuarioId(maria.getId()).orElseGet(() -> {
+            Prestador p = new Prestador();
+            p.setUsuario(maria);
+            p.setDescricaoPerfil("Eletricista com 10 anos de experiência em instalações residenciais e comerciais.");
+            p.setCidade("São Paulo");
+            p.setEstado("SP");
+            p.setAvaliacaoMedia(0.0);
+            p.setTotalAvaliacoes(0);
+            p.getCategorias().add(eletricista);
+            Prestador salvo = prestadorRepository.save(p);
+            System.out.println("✓ Perfil de prestador criado: maria@prestador.com");
+            return salvo;
+        });
+
+        long totalSolicitacoesJoao = solicitacaoRepository
+                .findByClienteId(joao.getId(), PageRequest.of(0, 1))
+                .getTotalElements();
+
+        if (totalSolicitacoesJoao == 0) {
+            SolicitacaoServico solicitacao = new SolicitacaoServico();
+            solicitacao.setCliente(joao);
+            solicitacao.setCategoria(eletricista);
+            solicitacao.setDescricao("Instalação de tomada elétrica na sala de estar e troca de disjuntor na caixa de fusíveis.");
+            solicitacao.setCidade("São Paulo");
+            solicitacao.setEstado("SP");
+            solicitacao = solicitacaoRepository.save(solicitacao);
+            System.out.println("✓ Solicitação de teste criada (ABERTA)");
+
+            Proposta proposta = new Proposta();
+            proposta.setSolicitacao(solicitacao);
+            proposta.setPrestador(prestadorMaria);
+            proposta.setValor(new BigDecimal("150.00"));
+            proposta.setMensagem("Posso realizar o serviço ainda esta semana. Tenho disponibilidade para segunda e terça-feira pela manhã.");
+            propostaRepository.save(proposta);
+            System.out.println("✓ Proposta de teste criada (ENVIADA) — use /chat/proposta/{id} para testar o chat");
+        }
     }
 }
