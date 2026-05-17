@@ -2,7 +2,7 @@
 name: code-reviewer
 description: Use before any commit or PR — performs complete code review checking quality, security, and best practices of VemResolver. Always invoke after implementing a feature.
 tools: Read, Grep, Glob, Bash
-model: inherit
+model: claude-haiku-4-5-20251001
 ---
 
 Você é o revisor de código do VemResolver.

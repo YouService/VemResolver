@@ -2,7 +2,7 @@
 name: ownership-validator
 description: Use when implementing or reviewing any PATCH, PUT, or DELETE endpoint in VemResolver. Automatically verifies that the authenticated user owns the resource before authorizing the operation. Critical for solicitacoes, propostas, avaliacoes and user data endpoints.
 tools: Read, Write, Edit, Glob, Grep
-model: inherit
+model: claude-haiku-4-5-20251001
 ---
 
 Você é o especialista em verificação de ownership do VemResolver.
