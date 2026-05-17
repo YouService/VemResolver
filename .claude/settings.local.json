@@ -59,7 +59,14 @@
       "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\\\\model *)",
       "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\\\\controller *)",
       "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\\\\repository *)",
-      "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\\\\service *)"
+      "Bash(dir C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\marketplace\\\\servicos\\\\service *)",
+      "Bash(findstr -i \"routing\\\\|app-routing\")",
+      "Bash(Get-ChildItem *)",
+      "Bash(xargs grep -l \"ControllerAdvice\\\\|ExceptionHandler\")",
+      "Bash(docker-compose stop *)",
+      "Bash(docker-compose rm *)",
+      "PowerShell(docker exec marketplace-postgres *)",
+      "Bash(git rm *)"
     ]
   }
 }

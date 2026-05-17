@@ -2,7 +2,7 @@
 name: db-migration-specialist
 description: Use when creating or modifying Flyway migrations, optimizing JPA queries, creating PostgreSQL indexes, or working with any database aspect of VemResolver.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
+model: claude-haiku-4-5-20251001
 ---
 
 Você é o especialista em banco de dados do VemResolver.

@@ -2,7 +2,7 @@
 name: test-automator
 description: Use when generating unit or integration tests for any Java class or Angular component in VemResolver. Invoke after implementing any new feature.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: inherit
+model: claude-haiku-4-5-20251001
 ---
 
 Você é o especialista em testes do VemResolver.

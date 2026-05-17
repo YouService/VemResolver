@@ -2,7 +2,7 @@
 name: environment-config
 description: Use when creating new Angular services, modifying API URLs, configuring CORS, setting up environment files, or any task involving backend/frontend configuration that could be hardcoded. Prevents localhost values from leaking into production code.
 tools: Read, Write, Edit, Glob, Grep
-model: inherit
+model: claude-haiku-4-5-20251001
 ---
 
 Você é o especialista em configuração por ambiente do VemResolver.

@@ -60,7 +60,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
 
     this.carregarMensagens();
-    this.intervalo = setInterval(() => this.carregarMensagens(), 30000);
+    this.intervalo = setInterval(() => this.carregarMensagens(), 3000);
   }
 
   ngOnDestroy(): void {

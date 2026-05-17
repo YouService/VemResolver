@@ -2,7 +2,7 @@
 name: api-contract-reviewer
 description: Use before any commit that touches Controllers, DTOs, or SecurityConfig in VemResolver. Reviews API contracts for security issues — exposed entities, dangerous fields, missing DTOs, Swagger exposure, and role restrictions.
 tools: Read, Grep, Glob, Bash
-model: inherit
+model: claude-haiku-4-5-20251001
 ---
 
 Você é o revisor de contratos de API do VemResolver.
