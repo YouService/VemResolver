@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-16 (fix/chat-p4-1: DataSeeder cria dados de teste para o chat P4.1)  
+> **Última atualização:** 2026-05-17 (fix/chat-polling-3s: intervalo de polling do chat reduzido de 30s para 3s)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -568,7 +568,8 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 | Item | Branch | Data |
 |------|--------|------|
-| P4.1: Chat por proposta — `MensagemChat` entity + `ChatService` + `ChatController` + `V5__add_mensagens_chat.sql` + `V6__chat_por_proposta.sql`; chat privado por proposta (pré e pós aceite); `ChatComponent` Angular com polling 30s, envio otimista; somente leitura se proposta RECUSADA ou solicitação CONCLUIDA/CANCELADA; botão "💬 Chat" integrado nos dashboards e na tela de propostas recebidas; 11 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-11) | `develop` | 2026-05-15 |
+| P4.1: Chat por proposta — `MensagemChat` entity + `ChatService` + `ChatController` + `V5__add_mensagens_chat.sql` + `V6__chat_por_proposta.sql`; chat privado por proposta (pré e pós aceite); `ChatComponent` Angular com polling 3s, envio otimista; somente leitura se proposta RECUSADA ou solicitação CONCLUIDA/CANCELADA; botão "💬 Chat" integrado nos dashboards e na tela de propostas recebidas; 11 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-11) | `develop` | 2026-05-15 |
+| fix/chat-polling-3s: intervalo de polling do `ChatComponent` reduzido de 30s para 3s — elimina delay perceptível para o receptor sem necessidade de SSE, adequado ao volume atual do projeto | `fix/chat-polling-3s` | 2026-05-17 |
 | fix/chat-p4-1: DataSeeder corrigido — cria perfil `Prestador` para `maria@prestador.com`, solicitação ABERTA e proposta ENVIADA de teste; check por propostas ENVIADA garante que o dado é recriado após cada ciclo de testes, sem precisar de `docker-compose down -v`; chat disponível imediatamente após `docker-compose up` | `fix/chat-p4-1` | 2026-05-16 |
 
 ---

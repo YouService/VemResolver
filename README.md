@@ -183,7 +183,7 @@ vemresolver/
 
 ### Prioridade 4 — Competitividade (em andamento)
 
-- ✅ **P4.1 Chat interno** entre cliente e prestador — um chat privado por proposta (pré e pós aceite); polling 30s; somente leitura após encerramento ou proposta recusada; botão "💬 Chat" integrado nos dashboards e na tela de propostas recebidas; 11 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-11)
+- ✅ **P4.1 Chat interno** entre cliente e prestador — um chat privado por proposta (pré e pós aceite); polling 3s; somente leitura após encerramento ou proposta recusada; botão "💬 Chat" integrado nos dashboards e na tela de propostas recebidas; 11 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-11)
 - ✅ **fix/chat-p4-1** — DataSeeder corrigido para criar perfil de prestador, solicitação ABERTA e proposta ENVIADA de teste; chat disponível imediatamente após `docker-compose up` sem precisar de reset de banco
 
 ### Prioridade 3 — Evolução do produto (concluída)
