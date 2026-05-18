@@ -53,6 +53,12 @@ Para parar e apagar os dados do banco:
 docker-compose down -v
 ```
 
+> **Importante — rebuild do backend:** o frontend é servido com volume montado e hot-reload (`ng serve --poll 1000`). O backend é um JAR compilado — qualquer alteração no código Java exige rebuild explícito do container:
+> ```bash
+> docker-compose up --build -d backend
+> ```
+> Sem o rebuild, o container continuará executando o JAR antigo e endpoints novos retornarão 404.
+
 ---
 
 ## Subindo manualmente (sem Docker)
@@ -209,8 +215,8 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 |---|---|---|---|---|
 | P4.1 | **Chat interno** — um chat por proposta, disponível antes e após o aceite | Permite negociação antes do aceite; mantém histórico dentro da plataforma; abre caminho para monetização por contato | Alto | Médio | ✅ Entregue |
 | P4.2 | **Portfólio de fotos** no perfil do prestador (até 10 imagens de trabalhos realizados) | Fotos são o principal elemento de conversão em serviços visuais (pintura, reforma, cozinha) | Alto | Baixo | ✅ Entregue |
-| P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Prestadores sem guia visual ficam com perfis fracos; reduz taxa de prestadores cadastrados mas inativos | Médio-Alto | Baixo |
-| P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar serviço | Prestador não tem URL pública para divulgar fora da plataforma; gera tráfego orgânico de volta | Médio-Alto | Baixo |
+| P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Prestadores sem guia visual ficam com perfis fracos; reduz taxa de prestadores cadastrados mas inativos | Médio-Alto | Baixo | ✅ Entregue |
+| P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar serviço | Prestador não tem URL pública para divulgar fora da plataforma; gera tráfego orgânico de volta | Médio-Alto | Baixo | ✅ Entregue |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta recebida, proposta aceita, nova solicitação compatível) | Polling de 30 s só funciona com a aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio |
 | P4.6 | **Badge "Verificado"** automático para prestadores com 5+ contratos concluídos e média ≥ 4,0 | Nenhum diferencial visual entre prestadores hoje; badge cria gamificação de reputação | Médio | Baixo |
 | P4.7 | **Avaliação multidimensional** — pontualidade, qualidade do serviço e comunicação (além da nota geral) | Nota única 1–5 é pouco granular; dimensões separadas ajudam o cliente a escolher e o prestador a melhorar | Médio | Médio |

@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-17 (feat/prestador-dashboard-redesign: painel do prestador redesenhado)  
+> **Última atualização:** 2026-05-18 (feat/p4.3 + feat/p4.4: onboarding guiado e perfil público compartilhável)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -42,31 +42,37 @@
 ```
 backend/src/main/java/com/marketplace/servicos/
 ├── config/
-│   ├── DataSeeder.java          (seed de categorias e usuários de teste)
+│   ├── DataSeeder.java          (seed de categorias, usuários, proposta e chat de teste)
 │   ├── DotenvConfig.java        (carrega .env)
 │   ├── EncodingFilter.java      (filtro UTF-8)
 │   ├── OpenApiConfig.java       (configuração Swagger)
 │   ├── SecurityConfig.java      (Spring Security + CORS)
-│   └── WebConfig.java
+│   └── WebConfig.java           (serve /uploads/** como static resource)
 ├── controller/
+│   ├── AdminController.java     (GET /api/admin/stats, GET /api/admin/usuarios — ROLE_ADMIN)
 │   ├── AuthController.java
 │   ├── AvaliacaoController.java
 │   ├── CategoriaController.java
-│   ├── PerfilController.java    (adicionado — gerencia perfil via DTOs)
-│   ├── PrestadorController.java
+│   ├── ChatController.java      (GET/POST /api/chat/proposta/{id})
+│   ├── FotoPrestadorController.java (POST/DELETE /api/prestadores/me/foto-perfil; POST/DELETE /api/prestadores/me/fotos)
+│   ├── NotificacaoController.java   (5 endpoints de notificações)
+│   ├── PerfilController.java    (gerencia perfil via DTOs)
+│   ├── PrestadorController.java (inclui /me/completude e /{id}/publico)
 │   ├── PropostaController.java
-│   ├── SolicitacaoServicoController.java
-│   └── UserController.java     (removido em 2026-05-12 — endpoints cobertos por PerfilController e AuthController)
+│   └── SolicitacaoServicoController.java
 ├── dto/
 │   ├── AlterarSenhaDTO.java
 │   ├── AuthResponseDTO.java
 │   ├── AvaliacaoDTO.java
 │   ├── CategoriaDTO.java
+│   ├── CompletudePrestadorDTO.java  (percentual + List<ItemChecklist>)
 │   ├── LoginDTO.java
-│   ├── PrestadorDTO.java
-│   ├── PropostaDTO.java         (enriquecido: dados da solicitação, foiAvaliadoPeloPrestador)
+│   ├── MensagemChatDTO.java
+│   ├── PerfilPublicoDTO.java        (sem dados sensíveis; inclui AvaliacaoResumo interno)
+│   ├── PrestadorDTO.java            (inclui fotoPerfilUrl, percentualCompletude)
+│   ├── PropostaDTO.java
 │   ├── RegisterDTO.java
-│   ├── SolicitacaoServicoDTO.java (enriquecido: foiAvaliadoPeloCliente, foiAvaliadoPeloPrestador)
+│   ├── SolicitacaoServicoDTO.java
 │   └── UpdatePerfilDTO.java
 ├── exception/
 │   ├── BusinessException.java
@@ -74,22 +80,30 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── GlobalExceptionHandler.java
 │   └── ResourceNotFoundException.java
 ├── model/
-│   ├── Avaliacao.java           (campo tipo: TipoAvaliacao adicionado)
+│   ├── Avaliacao.java           (tipo: TipoAvaliacao, dataCriacao: @CreationTimestamp)
 │   ├── Categoria.java
-│   ├── Prestador.java           (avaliacaoMedia e totalAvaliacoes)
+│   ├── FotoPrestador.java       (id, prestador, url, dataUpload)
+│   ├── MensagemChat.java        (id, proposta, remetente, texto, dataEnvio, lida)
+│   ├── Notificacao.java
+│   ├── Prestador.java           (fotoPerfilUrl, percentualCompletude, latitude, longitude)
 │   ├── Proposta.java
+│   ├── RefreshToken.java
 │   ├── SolicitacaoServico.java
-│   ├── StatusProposta.java      (enum: ENVIADA, ACEITA, RECUSADA)
-│   ├── StatusSolicitacao.java   (enum: ABERTA, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
-│   ├── TipoAvaliacao.java       (novo — CLIENTE_AVALIA_PRESTADOR, PRESTADOR_AVALIA_CLIENTE)
-│   ├── TipoUsuario.java         (enum: CLIENTE, PRESTADOR, ADMIN)
-│   ├── User.java                (enriquecido: endereço, avaliacaoMedia, totalAvaliacoes)
-│   └── VerificationToken.java   (novo — token de verificação de e-mail)
+│   ├── StatusProposta.java      (ENVIADA, ACEITA, RECUSADA)
+│   ├── StatusSolicitacao.java   (ABERTA, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
+│   ├── TipoAvaliacao.java       (CLIENTE_AVALIA_PRESTADOR, PRESTADOR_AVALIA_CLIENTE)
+│   ├── TipoUsuario.java         (CLIENTE, PRESTADOR, ADMIN)
+│   ├── User.java
+│   └── VerificationToken.java
 ├── repository/
-│   ├── AvaliacaoRepository.java
+│   ├── AvaliacaoRepository.java     (inclui findTop5 para perfil público)
 │   ├── CategoriaRepository.java
+│   ├── FotoPrestadorRepository.java
+│   ├── MensagemChatRepository.java
+│   ├── NotificacaoRepository.java
 │   ├── PrestadorRepository.java
-│   ├── PropostaRepository.java
+│   ├── PropostaRepository.java      (inclui countByPrestadorIdAndStatusAndSolicitacaoStatus)
+│   ├── RefreshTokenRepository.java
 │   ├── SolicitacaoServicoRepository.java
 │   ├── UserRepository.java
 │   └── VerificationTokenRepository.java
@@ -101,10 +115,14 @@ backend/src/main/java/com/marketplace/servicos/
     ├── AuthService.java
     ├── AvaliacaoService.java
     ├── CategoriaService.java
-    ├── EmailService.java        (envio de e-mail de verificação)
-    ├── PerfilService.java       (novo)
-    ├── PrestadorService.java
+    ├── ChatService.java
+    ├── EmailService.java
+    ├── FotoPrestadorService.java    (@Lazy em PrestadorService para evitar dependência circular)
+    ├── NotificacaoService.java
+    ├── PerfilService.java
+    ├── PrestadorService.java        (getCompletude, recalcularCompletude, buscarPerfilPublico)
     ├── PropostaService.java
+    ├── RefreshTokenService.java
     ├── SolicitacaoServicoService.java
     └── UserService.java
 ```
@@ -114,6 +132,9 @@ backend/src/main/java/com/marketplace/servicos/
 ```
 frontend/marketplace-frontend/src/app/
 ├── components/
+│   ├── admin-dashboard/admin-dashboard.component.ts (/admin/dashboard — adminGuard)
+│   ├── busca-prestadores/busca-prestadores.component.ts (/buscar-prestadores)
+│   ├── chat/chat.component.ts                 (/chat/proposta/:id — polling 3s)
 │   ├── cliente-avaliacao.component.ts         (/cliente/solicitacao/:id/avaliacao)
 │   ├── cliente-dashboard.component.ts
 │   ├── cliente-editar-solicitacao.component.ts
@@ -122,42 +143,44 @@ frontend/marketplace-frontend/src/app/
 │   ├── cliente-propostas-recebidas.component.ts (/cliente/solicitacao/:id/propostas)
 │   ├── cookie-banner.component.ts
 │   ├── footer/footer.component.ts
+│   ├── fotos-prestador/fotos-prestador.component.ts (grid de portfólio no perfil)
 │   ├── global-snack-bar/global-snack-bar.component.ts
-│   ├── home/home.component.ts                 (novo — substitui home.component.ts)
-│   ├── home.component.ts                      (legado — mantido por compatibilidade)
+│   ├── home/home.component.ts
 │   ├── login.component.ts
-│   ├── navbar.component.ts
+│   ├── navbar.component.ts                    (sino com polling 30s e badge de notificações)
 │   ├── notification/notification.component.ts
 │   ├── notification-container/notification-container.component.ts
-│   ├── notification-demo/notification-demo.component.ts
+│   ├── onboarding-checklist/onboarding-checklist.component.ts (checklist 7 critérios + barra de progresso)
+│   ├── perfil-publico/perfil-publico.component.ts (/prestador/:id — sem autenticação)
 │   ├── politica-privacidade.component.ts
 │   ├── prestador-avaliacao.component.ts       (/prestador/solicitacao/:id/avaliacao)
-│   ├── prestador-dashboard.component.ts
+│   ├── prestador-dashboard.component.ts       (oportunidades no topo + copiar link de perfil)
 │   ├── prestador-enviar-proposta.component.ts (/prestador/solicitacao/:id)
-│   ├── prestador-perfil/prestador-perfil.component.ts (/prestador/perfil)
+│   ├── prestador-perfil/prestador-perfil.component.ts (avatar upload, telefone, forkJoin para salvar)
 │   ├── register/register.component.ts
 │   ├── seguranca.component.ts
 │   ├── seja-profissional.component.ts
 │   ├── seletor-uf.component.ts
 │   ├── sobre-nos.component.ts
 │   ├── termos-uso.component.ts
-│   ├── user-profile.component.ts              (legado)
 │   └── verify-account.component.ts
 ├── directives/
 │   ├── mask.directive.ts
 │   └── uppercase.directive.ts
 ├── guards/
-│   └── auth.guard.ts                          (authGuard, clienteGuard, prestadorGuard)
+│   └── auth.guard.ts                          (authGuard, clienteGuard, prestadorGuard, adminGuard)
 ├── interceptors/
-│   └── auth.interceptor.ts                    (adiciona JWT no header + trata 401 → redireciona para /login)
+│   └── auth.interceptor.ts                    (JWT no header + trata 401 → refresh → /login)
 ├── models/
-│   └── models.ts
+│   └── models.ts                              (inclui MensagemChat, FotoPrestador, PerfilPublico, CompletudePrestador)
 ├── services/
 │   ├── auth.service.ts
 │   ├── avaliacao.service.ts
 │   ├── categoria.service.ts
+│   ├── chat.service.ts
+│   ├── foto.service.ts                        (uploadAvatar, deletarAvatar, upload portfólio, listar fotos)
 │   ├── notification.service.ts
-│   ├── prestador.service.ts
+│   ├── prestador.service.ts                   (inclui getCompletude, getPerfilPublico, buscarProximos)
 │   ├── proposta.service.ts
 │   ├── snack.service.ts
 │   ├── solicitacao.service.ts
@@ -209,6 +232,10 @@ frontend/marketplace-frontend/src/app/
 | estado | String | nullable |
 | avaliacaoMedia | Double | NOT NULL, default 0.0 |
 | totalAvaliacoes | Integer | NOT NULL, default 0 |
+| latitude | Double | nullable (V3) |
+| longitude | Double | nullable (V3) |
+| fotoPerfilUrl | String | TEXT, nullable (V9) |
+| percentualCompletude | Integer | NOT NULL, default 0 (V9) — recalculado a cada save |
 
 #### `SolicitacaoServico` → tabela `solicitacoes_servico`
 | Campo | Tipo | Restrições |
@@ -279,9 +306,17 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 |--------|------|------|-----------|-------------|
 | GET | `/api/prestadores` | Pública | Lista prestadores com filtros (paginado) | — |
 | GET | `/api/prestadores/{id}` | Pública | Busca prestador por ID | — |
+| GET | `/api/prestadores/{id}/publico` | Pública | Perfil público — sem dados sensíveis | `PerfilPublicoDTO`; 404 se inativo |
 | GET | `/api/prestadores/me` | JWT | Perfil do prestador logado | — |
-| POST | `/api/prestadores` | JWT (`ROLE_PRESTADOR`) | Cria ou atualiza perfil de prestador | ✅ Exige `ROLE_PRESTADOR` via `SecurityFilterChain` + `@PreAuthorize` |
+| GET | `/api/prestadores/me/completude` | JWT (`ROLE_PRESTADOR`) | Retorna checklist de completude | `CompletudePrestadorDTO` com 7 itens ponderados |
+| GET | `/api/prestadores/proximo` | Pública | Busca por raio com Haversine | Params: `lat`, `lng`, `raioKm`, `categoriaId` |
+| POST | `/api/prestadores` | JWT (`ROLE_PRESTADOR`) | Cria ou atualiza perfil de prestador | ✅ Exige `ROLE_PRESTADOR` |
 | PUT | `/api/prestadores/{id}` | JWT | Atualiza perfil | — |
+| POST | `/api/prestadores/me/foto-perfil` | JWT (`ROLE_PRESTADOR`) | Upload de avatar (salvo em `/uploads/prestadores/{id}/avatar.*`) | Recalcula completude |
+| DELETE | `/api/prestadores/me/foto-perfil` | JWT (`ROLE_PRESTADOR`) | Remove avatar | Recalcula completude |
+| POST | `/api/prestadores/me/fotos` | JWT (`ROLE_PRESTADOR`) | Upload de foto de portfólio (máx 10) | Armazenamento em volume Docker |
+| DELETE | `/api/prestadores/me/fotos/{fotoId}` | JWT (`ROLE_PRESTADOR`) | Remove foto de portfólio | — |
+| GET | `/api/prestadores/{id}/fotos` | Pública | Lista fotos de portfólio | — |
 
 ### `/api/solicitacoes`
 | Método | Path | Auth | O que faz | Observações |
@@ -303,6 +338,26 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | GET | `/api/propostas/minhas` | JWT | Propostas do prestador logado | — |
 | PATCH | `/api/propostas/{id}/aceitar` | JWT | Aceita proposta | ⚠️ Sem verificação de que o usuário é dono da solicitação |
 | PATCH | `/api/propostas/{id}/recusar` | JWT | Recusa proposta | ⚠️ Mesmo problema |
+
+### `/api/chat`
+| Método | Path | Auth | O que faz | Observações |
+|--------|------|------|-----------|-------------|
+| GET | `/api/chat/proposta/{propostaId}` | JWT | Lista mensagens do chat de uma proposta | Somente leitura se proposta RECUSADA ou solicitação CONCLUIDA/CANCELADA |
+| POST | `/api/chat/proposta/{propostaId}` | JWT | Envia mensagem no chat | — |
+
+### `/api/notificacoes`
+| Método | Path | Auth | O que faz |
+|--------|------|------|-----------|
+| GET | `/api/notificacoes` | JWT | Lista notificações do usuário logado |
+| GET | `/api/notificacoes/nao-lidas` | JWT | Contagem de notificações não lidas |
+| PATCH | `/api/notificacoes/{id}/lida` | JWT | Marca notificação como lida |
+| PATCH | `/api/notificacoes/marcar-todas-lidas` | JWT | Marca todas como lidas |
+
+### `/api/admin`
+| Método | Path | Auth | O que faz |
+|--------|------|------|-----------|
+| GET | `/api/admin/stats` | JWT (`ROLE_ADMIN`) | Totais de usuários, prestadores, solicitações, propostas |
+| GET | `/api/admin/usuarios` | JWT (`ROLE_ADMIN`) | Lista todos os usuários paginada |
 
 ### `/api/avaliacoes`
 | Método | Path | Auth | O que faz | Observações |
@@ -344,10 +399,16 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | `ClientePerfilComponent` | `/cliente/perfil` | clienteGuard | ✅ Funcional — edição de dados pessoais e endereço; aba "Minhas Avaliações" com média agregada |
 | `ClientePropostasRecebidasComponent` | `/cliente/solicitacao/:id/propostas` | clienteGuard | ✅ Funcional — aceitar/recusar com confirmação |
 | `ClienteAvaliacaoComponent` | `/cliente/solicitacao/:id/avaliacao` | clienteGuard | ✅ Funcional — estrelas 1–5, comentário, estados completos |
-| `PrestadorDashboardComponent` | `/prestador/dashboard` | prestadorGuard | ✅ Funcional — seções Contratos/Propostas/Concluídos/Oportunidades; stats reais; badge "Avaliado ✓" |
-| `PrestadorPerfilComponent` | `/prestador/perfil` | prestadorGuard | ✅ Funcional — pré-preenche via `buscarMeuPerfil()` |
+| `PrestadorDashboardComponent` | `/prestador/dashboard` | prestadorGuard | ✅ Funcional — oportunidades no topo, filtro cidade/estado, botão "Ver perfil público" + "Copiar link" |
+| `PrestadorPerfilComponent` | `/prestador/perfil` | prestadorGuard | ✅ Funcional — avatar upload, telefone, forkJoin salva perfil+usuário em paralelo |
 | `PrestadorEnviarPropostaComponent` | `/prestador/solicitacao/:id` | prestadorGuard | ✅ Funcional — detalhes da solicitação + formulário de proposta |
 | `PrestadorAvaliacaoComponent` | `/prestador/solicitacao/:id/avaliacao` | prestadorGuard | ✅ Funcional — estrelas 1–5, comentário, estados completos |
+| `OnboardingChecklistComponent` | (embed no dashboard) | prestadorGuard | ✅ Funcional — 7 critérios ponderados, barra colorida, collapse ao 100% |
+| `PerfilPublicoComponent` | `/prestador/:id` | Pública | ✅ Funcional — avatar, badge Verificado, portfólio com modal, avaliações, CTA solicitar serviço |
+| `ChatComponent` | `/chat/proposta/:id` | authGuard | ✅ Funcional — polling 3s, somente leitura após encerramento |
+| `FotosPrestadorComponent` | (embed no perfil) | prestadorGuard | ✅ Funcional — grid com upload inline e remoção por hover |
+| `BuscaPrestadoresComponent` | `/buscar-prestadores` | Pública | ✅ Funcional — geolocalização do navegador + Haversine no backend |
+| `AdminDashboardComponent` | `/admin/dashboard` | adminGuard | ✅ Funcional — stats globais + tabela de usuários paginada |
 
 ### Serviços Angular
 
@@ -356,9 +417,11 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | `AuthService` | `environment.apiUrl/auth` | ✅ Centralizado em `environment.ts` |
 | `CategoriaService` | `environment.apiUrl/categorias` | ✅ Centralizado em `environment.ts` |
 | `SolicitacaoService` | `environment.apiUrl/solicitacoes` | ✅ Centralizado em `environment.ts` |
-| `PrestadorService` | `environment.apiUrl/prestadores` | ✅ Centralizado em `environment.ts` |
+| `PrestadorService` | `environment.apiUrl/prestadores` | ✅ Inclui getCompletude, getPerfilPublico, buscarProximos |
 | `PropostaService` | `environment.apiUrl/propostas` | ✅ Centralizado em `environment.ts` |
 | `AvaliacaoService` | `environment.apiUrl/avaliacoes` | ✅ Centralizado em `environment.ts` |
+| `FotoService` | `environment.apiUrl/prestadores` | ✅ uploadAvatar, deletarAvatar, upload portfólio, listar fotos |
+| `ChatService` | `environment.apiUrl/chat` | ✅ listar e enviar mensagens por propostaId |
 | `UserService` | `environment.apiUrl/users` | ✅ Centralizado em `environment.ts` |
 | `ViaCEPService` | `https://viacep.com.br` | ✅ Busca endereço por CEP |
 | `NotificationService` | — | ✅ Toasts e notificações em-tela |
@@ -458,6 +521,9 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | B4: dashboards sem controles de paginação apesar do backend paginar | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
 | B5: `console.error` sem feedback visual em múltiplos componentes | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
 | B1: `POST /api/auth/login` sem rate limiting (vulnerável a força bruta) | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
+| "Perfil não encontrado" ao acessar `/prestador/:id` — container backend executava JAR anterior a P4.4; o endpoint `GET /api/prestadores/{id}/publico` não existia no binário; `PerfilPublicoComponent` interpreta qualquer erro como 404; corrigido com `docker-compose up --build -d backend` (rebuild do JAR) | `main` | 2026-05-18 |
+
+> **Nota operacional:** o frontend é servido via volume Docker com hot-reload (`ng serve --poll 1000`). O backend é um JAR compilado — qualquer mudança em código Java exige `docker-compose up --build -d backend` para recompilar o JAR e reiniciar o container. Sem o rebuild, novos endpoints retornam 404.
 
 ---
 
@@ -575,6 +641,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | fix/chat-p4-1: DataSeeder corrigido — cria perfil `Prestador` para `maria@prestador.com`, solicitação ABERTA e proposta ENVIADA de teste; check por propostas ENVIADA garante que o dado é recriado após cada ciclo de testes, sem precisar de `docker-compose down -v`; chat disponível imediatamente após `docker-compose up` | `fix/chat-p4-1` | 2026-05-16 |
 | feat/p4.4-perfil-publico: página pública `/prestador/:id` sem autenticação — `PerfilPublicoComponent` com avatar, nome, badge Verificado, categorias, cidade+estado, estrelas, portfólio em grid clicável (modal de ampliação), últimas 5 avaliações com nota e comentário; botão "Solicitar Serviço" redireciona para `/register?tipo=CLIENTE` (visitante) ou `/cliente/nova-solicitacao` (cliente logado); botão "Copiar link do perfil" usa Clipboard API; botão "Ver perfil público" + "Copiar link" integrados no `PrestadorDashboardComponent`; `GET /api/prestadores/{id}/publico` → `PerfilPublicoDTO` (sem e-mail, telefone ou CPF); badge Verificado calculado dinamicamente (5+ contratos ACEITA+CONCLUIDA e média ≥ 4,0); 404 amigável para ID inválido ou prestador inativo | `feature/p4.4-perfil-publico` | 2026-05-18 |
 | feat/p4.3-onboarding-checklist: checklist de completude do perfil do prestador com 7 critérios ponderados (foto de perfil 15%, descrição 20%, categorias 15%, telefone 10%, cidade+estado 10%, portfólio de fotos 20%, lat/lng 10%); barra de progresso com cor dinâmica (vermelho <50%, amarelo 50–79%, verde ≥80%); collapse automático ao 100%; avatar upload (`POST/DELETE /api/prestadores/me/foto-perfil`); campo de telefone editável na tela de perfil; `percentual_completude` persistido em `prestadores` e recalculado a cada save de perfil ou foto; `V9__add_foto_perfil_e_completude.sql`; `OnboardingChecklistComponent` integrado no `PrestadorDashboardComponent`; endpoint `GET /api/prestadores/me/completude` retorna `CompletudePrestadorDTO` com itens | `feature/p4.3-onboarding-checklist` | 2026-05-18 |
+| fix: "Perfil não encontrado" ao acessar perfil público — container backend rodava JAR pré-P4.4; `GET /api/prestadores/{id}/publico` inexistente causava 404; corrigido via `docker-compose up --build -d backend` | `main` | 2026-05-18 |
 
 ---
 
@@ -593,4 +660,4 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
-*Atualizado em 2026-05-16 (fix: erro 500 avaliação — V7 migration + @Transactional) — sincronizado com README.md.*
+*Atualizado em 2026-05-18 (feat/p4.3-onboarding-checklist + feat/p4.4-perfil-publico + fix: rebuild backend Docker) — sincronizado com README.md.*
