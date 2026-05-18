@@ -72,7 +72,12 @@
       "Bash(Select-Object Name)",
       "Bash(docker-compose down *)",
       "Bash(git pull *)",
-      "Bash(./mvnw compile *)"
+      "Bash(./mvnw compile *)",
+      "Bash(docker-compose ps *)",
+      "Bash(docker-compose logs *)",
+      "Bash(xargs grep -l \"\")",
+      "Bash(xargs grep -n \"permitAll\\\\|requestMatchers\")",
+      "Bash(xargs grep -h \"CONCLUIDA\\\\|ACEITA\")"
     ]
   }
 }

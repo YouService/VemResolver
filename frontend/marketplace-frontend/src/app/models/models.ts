@@ -220,6 +220,27 @@ export interface FotoPrestador {
   dataUpload: string;
 }
 
+export interface AvaliacaoResumo {
+  nomeAvaliador: string;
+  nota: number;
+  comentario?: string;
+  dataCriacao?: string;
+}
+
+export interface PerfilPublico {
+  id: number;
+  nome: string;
+  fotoPerfilUrl?: string;
+  categorias: string[];
+  cidade: string;
+  estado: string;
+  avaliacaoMedia: number;
+  totalAvaliacoes: number;
+  verificado: boolean;
+  portafolioUrls: string[];
+  avaliacoes: AvaliacaoResumo[];
+}
+
 export interface MensagemChat {
   id?: number;
   propostaId: number;
