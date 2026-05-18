@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-17 (feat/p4.2-portfolio-fotos: portfólio de fotos para prestadores)  
+> **Última atualização:** 2026-05-17 (feat/prestador-dashboard-redesign: painel do prestador redesenhado)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -570,6 +570,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 |------|--------|------|
 | P4.1: Chat por proposta — `MensagemChat` entity + `ChatService` + `ChatController` + `V5__add_mensagens_chat.sql` + `V6__chat_por_proposta.sql`; chat privado por proposta (pré e pós aceite); `ChatComponent` Angular com polling 3s, envio otimista; somente leitura se proposta RECUSADA ou solicitação CONCLUIDA/CANCELADA; botão "💬 Chat" integrado nos dashboards e na tela de propostas recebidas; 11 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-11) | `develop` | 2026-05-15 |
 | fix/chat-polling-3s: intervalo de polling do `ChatComponent` reduzido de 30s para 3s — elimina delay perceptível para o receptor sem necessidade de SSE, adequado ao volume atual do projeto | `fix/chat-polling-3s` | 2026-05-17 |
+| feat/prestador-dashboard-redesign: `PrestadorDashboardComponent` redesenhado — oportunidades (solicitações abertas) movidas para o topo com filtro reativo por cidade/estado; cards convertidos para lista vertical consistente com o dashboard do cliente; contratos, propostas e concluídos abaixo; seção "Meu Perfil" removida (redundante com botão no header); `FormsModule` adicionado; tratamento de erro no carregamento | `feature/prestador-dashboard-redesign` | 2026-05-17 |
 | feat/p4.2-portfolio-fotos: `FotoPrestador` entity + `FotoPrestadorService` (upload, delete, list) + `FotoPrestadorController` (POST/DELETE `/api/prestadores/me/fotos`, GET `/{id}/fotos`); `V8__add_fotos_prestador.sql`; armazenamento em disco via volume Docker `uploads_data`; `WebConfig` serve `/uploads/**` como static; `SecurityConfig` libera GET `/uploads/**` e restringe DELETE; `FotosPrestadorComponent` Angular com grid, upload inline e remoção por hover; integrado em `PrestadorPerfilComponent`; completude do perfil passa a 5 critérios incluindo fotos | `feature/p4.2-portfolio-fotos` | 2026-05-17 |
 | fix/chat-p4-1: DataSeeder corrigido — cria perfil `Prestador` para `maria@prestador.com`, solicitação ABERTA e proposta ENVIADA de teste; check por propostas ENVIADA garante que o dado é recriado após cada ciclo de testes, sem precisar de `docker-compose down -v`; chat disponível imediatamente após `docker-compose up` | `fix/chat-p4-1` | 2026-05-16 |
 

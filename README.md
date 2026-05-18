@@ -186,6 +186,7 @@ vemresolver/
 - ✅ **P4.1 Chat interno** entre cliente e prestador — um chat privado por proposta (pré e pós aceite); polling 3s; somente leitura após encerramento ou proposta recusada; botão "💬 Chat" integrado nos dashboards e na tela de propostas recebidas; 11 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-11)
 - ✅ **fix/chat-p4-1** — DataSeeder corrigido para criar perfil de prestador, solicitação ABERTA e proposta ENVIADA de teste; chat disponível imediatamente após `docker-compose up` sem precisar de reset de banco
 - ✅ **P4.2 Portfólio de fotos** — prestador adiciona até 10 fotos (JPEG/PNG/WEBP, máx 5 MB cada) em "Meu Perfil"; grid com remoção por hover; armazenamento em volume Docker persistente; `GET /api/prestadores/{id}/fotos` público; completude do perfil passa a incluir fotos como 5º critério
+- ✅ **Painel do Prestador redesenhado** — oportunidades aparecem primeiro (com filtro por cidade/estado); contratos em andamento, propostas aguardando e serviços concluídos abaixo; visual e estrutura consistentes com o painel do cliente; tratamento de erro e filtragem reativa
 
 ### Prioridade 3 — Evolução do produto (concluída)
 
