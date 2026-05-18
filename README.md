@@ -105,6 +105,19 @@ Criados automaticamente pelo `DataSeeder` apenas nos perfis `dev` / padrão (nun
 | Prestador | `maria@prestador.com` | `123456` |
 | Admin | `admin@vemresolver.com` | `Admin@2025` |
 
+### Seed de dados volumosos
+
+Para popular o banco com dados realistas (10 clientes, 10 prestadores, 15 fluxos completos com chat e avaliações variadas), execute o script Python após subir o ambiente:
+
+```bash
+pip install requests   # apenas na primeira vez
+python seed_dados.py
+```
+
+O script realiza o fluxo completo — solicitação → proposta → chat → aceitar → concluir → avaliação mútua — e exibe tudo no painel admin. Leva aproximadamente 3 minutos (inclui pausas obrigatórias pelo rate limit de login).
+
+> **Nota:** execute apenas com o ambiente rodando (`docker-compose up`). Ao re-executar, limpe os dados seed primeiro: `docker exec marketplace-postgres psql -U postgres -d marketplace_db -c "DELETE FROM usuarios WHERE email LIKE '%@seed.com';"` (com as dependências na ordem correta).
+
 ---
 
 ## Documentação técnica
@@ -186,6 +199,12 @@ vemresolver/
 - ✅ B4: Controles de paginação visíveis nos dashboards de cliente e prestador — botões anterior/próxima + indicador "Página X de Y"; backend já paginava, agora o frontend exibe e navega entre páginas
 - ✅ B5: Todos os `console.error` sem feedback visual foram substituídos por mensagens de erro exibidas ao usuário — banners de erro nos dashboards, erros de CEP no perfil, erro de carregamento de categorias na home
 - ✅ B1: Rate limiting em `POST /api/auth/login` — `LoginRateLimitFilter` bloqueia IPs com mais de 10 tentativas por minuto com HTTP 429
+
+### Testes e qualidade
+
+- ✅ **117 testes unitários backend** passando — `PrestadorService`, `FotoPrestadorService`, `PropostaService`, `AvaliacaoService`, `NotificacaoService` (`fix/cobertura-de-testes`)
+- ✅ **30 testes de segurança backend** passando — `PrestadorSegurancaTest`, `ChatSegurancaTest`, `AdminSegurancaTest`; gap de segurança corrigido: `GET /api/prestadores/me/**` agora exige `ROLE_PRESTADOR`
+- ✅ **69/70 testes frontend** passando — `ChatComponent`, `OnboardingChecklist`, `PerfilPublico`, `PrestadorDashboard`
 
 ### Prioridade 4 — Competitividade (em andamento)
 
