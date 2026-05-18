@@ -203,8 +203,8 @@ vemresolver/
 ### Testes e qualidade
 
 - ✅ **117 testes unitários backend** passando — `PrestadorService`, `FotoPrestadorService`, `PropostaService`, `AvaliacaoService`, `NotificacaoService` (`fix/cobertura-de-testes`)
-- ✅ **30 testes de segurança backend** passando — `PrestadorSegurancaTest`, `ChatSegurancaTest`, `AdminSegurancaTest`; gap de segurança corrigido: `GET /api/prestadores/me/**` agora exige `ROLE_PRESTADOR`
-- ✅ **69/70 testes frontend** passando — `ChatComponent`, `OnboardingChecklist`, `PerfilPublico`, `PrestadorDashboard`
+- ✅ **39 testes de segurança backend** passando — `PrestadorSegurancaTest`, `ChatSegurancaTest`, `AdminSegurancaTest`; 9 novos testes para os endpoints admin de online e solicitações; gap de segurança corrigido: `GET /api/prestadores/me/**` agora exige `ROLE_PRESTADOR`
+- ✅ **83/84 testes frontend** passando — `ChatComponent`, `OnboardingChecklist`, `PerfilPublico`, `PrestadorDashboard`, `AdminDashboardComponent` (13 novos)
 
 ### Prioridade 4 — Competitividade (em andamento)
 
@@ -219,7 +219,7 @@ vemresolver/
 
 - ✅ Migração de todos os templates HTML inline para arquivos `.html` separados — 19 componentes migrados
 - ✅ Sistema de notificações em tempo real — polling a cada 30 s; sino com badge no navbar; painel dropdown com "Marcar todas como lidas"; triggers automáticos em proposta enviada, aceita, serviço concluído e avaliação recebida
-- ✅ Painel administrativo — estatísticas globais (usuários, solicitações, prestadores, avaliações), tabela de usuários paginada com ativação/desativação inline; endpoint `GET /api/admin/stats`, restrito a `ROLE_ADMIN`
+- ✅ Painel administrativo — estatísticas globais (usuários, solicitações, prestadores, avaliações, **online agora**), tabela de usuários paginada com ativação/desativação inline; aba **"Online agora"** com grid de usuários ativos nos últimos 5 minutos (dot animado); aba **"Solicitações"** com filtro por status e alteração inline de status; `OnlineTrackingFilter` registra `ultimo_acesso` throttled a cada 2 min; `GET /api/admin/usuarios/online`, `GET /api/admin/solicitacoes`, `PATCH /api/admin/solicitacoes/{id}/status` — todos restritos a `ROLE_ADMIN`
 - ✅ Busca geolocalizada de prestadores por raio — `navigator.geolocation` no frontend; Haversine no backend (`GET /api/prestadores/proximo?lat&lng&raioKm`); prestador salva coordenadas via botão "Usar minha localização atual" no perfil; `V3__add_notificacoes_e_geolocalizacao.sql` adiciona `latitude`/`longitude` e tabela `notificacoes`
 
 ---

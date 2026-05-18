@@ -149,6 +149,8 @@ export interface UserResumoDTO {
   dataCadastro: string;
   avaliacaoMedia: number;
   totalAvaliacoes: number;
+  ultimoAcesso?: string;
+  online?: boolean;
 }
 
 export interface AdminStats {
@@ -156,6 +158,7 @@ export interface AdminStats {
   totalPrestadores: number;
   totalSolicitacoes: number;
   totalPropostas: number;
+  usuariosOnline: number;
 }
 
 export interface SolicitacaoServico {
@@ -249,4 +252,17 @@ export interface MensagemChat {
   texto: string;
   dataEnvio?: string;
   lida?: boolean;
+}
+
+export interface SolicitacaoAdminDTO {
+  id: number;
+  clienteNome: string;
+  clienteEmail: string;
+  categoriaNome: string;
+  descricao: string;
+  cidade: string;
+  estado: string;
+  status: string;
+  dataCriacao: string;
+  totalPropostas: number;
 }

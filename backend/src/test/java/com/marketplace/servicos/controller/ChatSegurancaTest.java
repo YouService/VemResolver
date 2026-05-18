@@ -3,6 +3,7 @@ package com.marketplace.servicos.controller;
 import com.marketplace.servicos.config.SecurityConfig;
 import com.marketplace.servicos.model.TipoUsuario;
 import com.marketplace.servicos.model.User;
+import com.marketplace.servicos.repository.UserRepository;
 import com.marketplace.servicos.security.CustomUserDetailsService;
 import com.marketplace.servicos.security.JwtAuthenticationFilter;
 import com.marketplace.servicos.service.ChatService;
@@ -43,6 +44,7 @@ class ChatSegurancaTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockBean private UserRepository userRepository;
     @MockBean private ChatService chatService;
     @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockBean private CustomUserDetailsService customUserDetailsService;

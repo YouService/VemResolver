@@ -78,7 +78,10 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private Integer totalAvaliacoes = 0;
-    
+
+    @Column(name = "ultimo_acesso", columnDefinition = "TIMESTAMP(0)")
+    private LocalDateTime ultimoAcesso;
+
     @PrePersist
     protected void onCreate() {
         dataCadastro = LocalDateTime.now().withNano(0);
