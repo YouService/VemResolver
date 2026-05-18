@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-18 (feat/p4.3 + feat/p4.4: onboarding guiado e perfil público compartilhável)  
+> **Última atualização:** 2026-05-18 (fix/cobertura-de-testes + seed_dados.py: cobertura de testes expandida e script de dados volumosos)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -522,8 +522,10 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | B5: `console.error` sem feedback visual em múltiplos componentes | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
 | B1: `POST /api/auth/login` sem rate limiting (vulnerável a força bruta) | `feature/prioridade2-ux-melhorias` | 2026-05-15 |
 | "Perfil não encontrado" ao acessar `/prestador/:id` — container backend executava JAR anterior a P4.4; o endpoint `GET /api/prestadores/{id}/publico` não existia no binário; `PerfilPublicoComponent` interpreta qualquer erro como 404; corrigido com `docker-compose up --build -d backend` (rebuild do JAR) | `main` | 2026-05-18 |
+| fix/cobertura-de-testes: 117 testes unitários backend passando (PrestadorService, FotoPrestadorService, PropostaService, AvaliacaoService, NotificacaoService); 30 testes de segurança backend (PrestadorSegurancaTest, ChatSegurancaTest, AdminSegurancaTest); 69/70 testes frontend (ChatComponent, OnboardingChecklist, PerfilPublico, PrestadorDashboard); gap corrigido — `GET /api/prestadores/me/**` agora exige `ROLE_PRESTADOR` em `SecurityConfig`; `@WithMockUser` substituido por `.with(user(buildUser(...)))` com entidade User customizada; serializacao de `PageImpl` corrigida com `PageRequest.of(0,10)` | `fix/cobertura-de-testes` | 2026-05-18 |
+| seed_dados.py: script Python para popular o banco com dados realistas — 10 clientes, 10 prestadores (com perfil, categorias e coordenadas), 15 fluxos completos (solicitacao, proposta, chat, aceitar, concluir, avaliacoes mutuas), 60 mensagens de chat, 30 avaliacoes com notas variadas (2 a 5 estrelas); gerencia rate limit de login (10/min) via pausas de 65s entre janelas | raiz do projeto | 2026-05-18 |
 
-> **Nota operacional:** o frontend é servido via volume Docker com hot-reload (`ng serve --poll 1000`). O backend é um JAR compilado — qualquer mudança em código Java exige `docker-compose up --build -d backend` para recompilar o JAR e reiniciar o container. Sem o rebuild, novos endpoints retornam 404.
+> **Nota operacional:** o frontend e servido via volume Docker com hot-reload (`ng serve --poll 1000`). O backend e um JAR compilado — qualquer mudanca em codigo Java exige `docker-compose up --build -d backend` para recompilar o JAR e reiniciar o container. Sem o rebuild, novos endpoints retornam 404.
 
 ---
 
@@ -642,6 +644,8 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | feat/p4.4-perfil-publico: página pública `/prestador/:id` sem autenticação — `PerfilPublicoComponent` com avatar, nome, badge Verificado, categorias, cidade+estado, estrelas, portfólio em grid clicável (modal de ampliação), últimas 5 avaliações com nota e comentário; botão "Solicitar Serviço" redireciona para `/register?tipo=CLIENTE` (visitante) ou `/cliente/nova-solicitacao` (cliente logado); botão "Copiar link do perfil" usa Clipboard API; botão "Ver perfil público" + "Copiar link" integrados no `PrestadorDashboardComponent`; `GET /api/prestadores/{id}/publico` → `PerfilPublicoDTO` (sem e-mail, telefone ou CPF); badge Verificado calculado dinamicamente (5+ contratos ACEITA+CONCLUIDA e média ≥ 4,0); 404 amigável para ID inválido ou prestador inativo | `feature/p4.4-perfil-publico` | 2026-05-18 |
 | feat/p4.3-onboarding-checklist: checklist de completude do perfil do prestador com 7 critérios ponderados (foto de perfil 15%, descrição 20%, categorias 15%, telefone 10%, cidade+estado 10%, portfólio de fotos 20%, lat/lng 10%); barra de progresso com cor dinâmica (vermelho <50%, amarelo 50–79%, verde ≥80%); collapse automático ao 100%; avatar upload (`POST/DELETE /api/prestadores/me/foto-perfil`); campo de telefone editável na tela de perfil; `percentual_completude` persistido em `prestadores` e recalculado a cada save de perfil ou foto; `V9__add_foto_perfil_e_completude.sql`; `OnboardingChecklistComponent` integrado no `PrestadorDashboardComponent`; endpoint `GET /api/prestadores/me/completude` retorna `CompletudePrestadorDTO` com itens | `feature/p4.3-onboarding-checklist` | 2026-05-18 |
 | fix: "Perfil não encontrado" ao acessar perfil público — container backend rodava JAR pré-P4.4; `GET /api/prestadores/{id}/publico` inexistente causava 404; corrigido via `docker-compose up --build -d backend` | `main` | 2026-05-18 |
+| fix/cobertura-de-testes: testes backend (117 unitarios + 30 segurança) e frontend (69/70) corrigidos e expandidos; gap de segurança em `SecurityConfig` corrigido (`GET /api/prestadores/me/**` exige `ROLE_PRESTADOR`); tecnicas: `.with(user(buildUser(...)))` para autenticacao com User customizado, `PageRequest.of(0,10)` para serializar PageImpl corretamente | `fix/cobertura-de-testes` | 2026-05-18 |
+| seed_dados.py: script Python na raiz do projeto para popular o banco com dados de demonstracao — 10 clientes + 10 prestadores com perfil completo + 15 fluxos completos (solicitacao, proposta, 4 mensagens de chat por fluxo, aceitar, concluir, avaliacao mutua); notas variadas de 2 a 5 estrelas; pausas automaticas de 65s para respeitar o rate limit de 10 logins/min | raiz | 2026-05-18 |
 
 ---
 
@@ -660,4 +664,4 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
-*Atualizado em 2026-05-18 (feat/p4.3-onboarding-checklist + feat/p4.4-perfil-publico + fix: rebuild backend Docker) — sincronizado com README.md.*
+*Atualizado em 2026-05-18 (fix/cobertura-de-testes + seed_dados.py) — sincronizado com README.md.*
