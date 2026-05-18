@@ -66,7 +66,10 @@
       "Bash(docker-compose stop *)",
       "Bash(docker-compose rm *)",
       "PowerShell(docker exec marketplace-postgres *)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(dir *)",
+      "Bash(git stash *)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

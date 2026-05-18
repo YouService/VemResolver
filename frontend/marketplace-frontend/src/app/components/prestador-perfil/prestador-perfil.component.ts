@@ -6,11 +6,12 @@ import { PrestadorService } from '../../services/prestador.service';
 import { CategoriaService } from '../../services/categoria.service';
 import { AuthService } from '../../services/auth.service';
 import { Prestador, Categoria } from '../../models/models';
+import { FotosPrestadorComponent } from '../fotos-prestador/fotos-prestador.component';
 
 @Component({
   selector: 'app-prestador-perfil',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FotosPrestadorComponent],
   templateUrl: './prestador-perfil.component.html',
   styleUrls: ['./prestador-perfil.component.css']
 })
@@ -23,6 +24,7 @@ export class PrestadorPerfilComponent implements OnInit {
   successMessage = '';
   categoriasInvalidas = false;
   prestadorExistente?: Prestador;
+  fotoCount = 0;
   usandoLocalizacao = false;
   erroLocalizacao = '';
 
@@ -96,12 +98,13 @@ export class PrestadorPerfilComponent implements OnInit {
 
   calcularCompletude(): number {
     let pontos = 0;
-    const total = 4;
+    const total = 5;
 
     if (this.perfilForm.get('descricaoPerfil')?.valid) pontos++;
     if (this.perfilForm.get('cidade')?.valid) pontos++;
     if (this.perfilForm.get('estado')?.valid) pontos++;
     if (this.categoriasSelecionadas.length > 0) pontos++;
+    if (this.fotoCount > 0) pontos++;
 
     return Math.round((pontos / total) * 100);
   }

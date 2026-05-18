@@ -33,6 +33,9 @@ services:
       MAIL_USERNAME: dev@localhost
       MAIL_PASSWORD: dev
       FRONTEND_URL: http://localhost:4200
+      UPLOAD_DIR: /uploads
+    volumes:
+      - uploads_data:/uploads
     ports:
       - "8080:8080"
     networks:
@@ -54,6 +57,7 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
 
 networks:
   marketplace-network:
