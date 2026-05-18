@@ -174,6 +174,7 @@ public class SolicitacaoServicoService {
             throw new BusinessException("Apenas solicitações abertas podem ser excluídas");
         }
 
+        propostaRepository.deleteAllBySolicitacaoId(id);
         solicitacaoRepository.delete(solicitacao);
     }
 
