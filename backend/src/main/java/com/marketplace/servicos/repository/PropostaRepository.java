@@ -22,4 +22,6 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
     Page<Proposta> findByPrestadorIdAndStatus(Long prestadorId, StatusProposta status, Pageable pageable);
 
     Optional<Proposta> findBySolicitacaoIdAndStatus(Long solicitacaoId, StatusProposta status);
+
+    void deleteAllBySolicitacaoId(Long solicitacaoId);
 }

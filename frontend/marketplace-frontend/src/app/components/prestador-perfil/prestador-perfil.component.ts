@@ -141,9 +141,7 @@ export class PrestadorPerfilComponent implements OnInit {
       longitude: this.perfilForm.value.longitude ?? undefined
     };
 
-    const request = this.prestadorExistente
-      ? this.prestadorService.atualizar(this.prestadorExistente.id, prestadorData)
-      : this.prestadorService.criar(prestadorData);
+    const request = this.prestadorService.criarOuAtualizar(prestadorData);
 
     request.subscribe({
       next: () => {
