@@ -24,6 +24,7 @@ import { AdminDashboardComponent } from './components/admin/admin-dashboard.comp
 import { BuscaPrestadoresComponent } from './components/busca-prestadores/busca-prestadores.component';
 import { adminGuard } from './guards/admin.guard';
 import { ChatComponent } from './components/chat/chat.component';
+import { PerfilPublicoComponent } from './components/perfil-publico/perfil-publico.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -101,5 +102,6 @@ export const routes: Routes = [
     component: ChatComponent,
     canActivate: [authGuard]
   },
+  { path: 'prestador/:id', component: PerfilPublicoComponent },
   { path: '**', redirectTo: '' }
 ];

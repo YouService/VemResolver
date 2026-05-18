@@ -1,0 +1,181 @@
+<div class="min-h-screen bg-gray-50">
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p class="text-gray-600">Carregando perfil...</p>
+      </div>
+    </div>
+  }
+
+  <!-- 404 -->
+  @if (!loading && naoEncontrado) {
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="text-center">
+        <p class="text-7xl mb-4">🔍</p>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Perfil não encontrado</h1>
+        <p class="text-gray-600 mb-6">Este prestador não existe ou não está disponível.</p>
+        <a routerLink="/" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
+          Voltar para o início
+        </a>
+      </div>
+    </div>
+  }
+
+  <!-- Perfil -->
+  @if (!loading && perfil) {
+    <!-- Hero Section -->
+    <div class="bg-white shadow-sm">
+      <div class="container max-w-4xl mx-auto px-4 py-10">
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+
+          <!-- Avatar -->
+          <div class="flex-shrink-0">
+            @if (perfil.fotoPerfilUrl) {
+              <img [src]="urlCompleta(perfil.fotoPerfilUrl)" [alt]="perfil.nome"
+                   class="w-28 h-28 rounded-full object-cover border-4 border-blue-100 shadow-lg">
+            } @else {
+              <div class="w-28 h-28 rounded-full bg-blue-100 flex items-center justify-center border-4 border-blue-200 shadow-lg">
+                <span class="text-blue-600 text-3xl font-bold">{{ iniciaisNome }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Info -->
+          <div class="flex-1 text-center md:text-left">
+            <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+              <h1 class="text-3xl font-bold text-gray-900">{{ perfil.nome }}</h1>
+              @if (perfil.verificado) {
+                <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-sm font-semibold px-3 py-1 rounded-full">
+                  ✔ Verificado
+                </span>
+              }
+            </div>
+
+            <p class="text-gray-500 mb-3">📍 {{ perfil.cidade }}, {{ perfil.estado }}</p>
+
+            <!-- Categorias -->
+            <div class="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
+              @for (cat of perfil.categorias; track cat) {
+                <span class="bg-gray-100 text-gray-700 text-sm font-medium px-3 py-1 rounded-full">{{ cat }}</span>
+              }
+            </div>
+
+            <!-- Avaliação -->
+            @if (perfil.totalAvaliacoes > 0) {
+              <div class="flex items-center gap-2 justify-center md:justify-start">
+                <div class="flex text-yellow-400 text-xl">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <span>{{ star <= (perfil.avaliacaoMedia || 0) ? '★' : '☆' }}</span>
+                  }
+                </div>
+                <span class="font-bold text-gray-800 text-lg">{{ perfil.avaliacaoMedia | number:'1.1-1' }}</span>
+                <span class="text-gray-500 text-sm">({{ perfil.totalAvaliacoes }} avaliação{{ perfil.totalAvaliacoes !== 1 ? 'ões' : '' }})</span>
+              </div>
+            } @else {
+              <p class="text-gray-400 text-sm">Sem avaliações ainda</p>
+            }
+          </div>
+
+          <!-- Ações -->
+          <div class="flex flex-col gap-3 flex-shrink-0">
+            @if (mostrarBotaoSolicitar) {
+              <button (click)="solicitarServico()"
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-center whitespace-nowrap">
+                Solicitar Serviço
+              </button>
+            }
+            <button (click)="copiarLink()"
+              class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition text-center whitespace-nowrap">
+              @if (linkCopiado) {
+                ✅ Link copiado!
+              } @else {
+                🔗 Copiar link do perfil
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container max-w-4xl mx-auto px-4 py-8 space-y-8">
+
+      <!-- Portfólio -->
+      @if (perfil.portafolioUrls.length > 0) {
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Portfólio de Trabalhos</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            @for (url of perfil.portafolioUrls; track url) {
+              <div class="aspect-square overflow-hidden rounded-lg cursor-pointer group relative"
+                   (click)="ampliarFoto(url)">
+                <img [src]="urlCompleta(url)" alt="Trabalho"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition"></div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Avaliações -->
+      @if (perfil.avaliacoes.length > 0) {
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">
+            Avaliações de Clientes
+            @if (perfil.totalAvaliacoes > 5) {
+              <span class="text-sm font-normal text-gray-500 ml-2">(últimas 5 de {{ perfil.totalAvaliacoes }})</span>
+            }
+          </h2>
+          <div class="space-y-4">
+            @for (av of perfil.avaliacoes; track av.nomeAvaliador) {
+              <div class="border-b pb-4 last:border-0 last:pb-0">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="font-semibold text-gray-800">{{ av.nomeAvaliador }}</span>
+                      <div class="flex text-yellow-400 text-sm">
+                        @for (star of [1,2,3,4,5]; track star) {
+                          <span>{{ star <= av.nota ? '★' : '☆' }}</span>
+                        }
+                      </div>
+                    </div>
+                    @if (av.comentario) {
+                      <p class="text-gray-600 text-sm">{{ av.comentario }}</p>
+                    }
+                  </div>
+                  @if (av.dataCriacao) {
+                    <span class="text-xs text-gray-400 flex-shrink-0">{{ av.dataCriacao }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- CTA Final -->
+      @if (mostrarBotaoSolicitar) {
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Gostou do perfil?</h3>
+          <p class="text-gray-600 mb-4">Solicite o serviço agora e receba uma proposta rapidamente.</p>
+          <button (click)="solicitarServico()"
+            class="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
+            Solicitar Serviço
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Modal foto ampliada -->
+  @if (fotoAmpliada) {
+    <div class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+         (click)="fecharFoto()">
+      <img [src]="fotoAmpliada" alt="Foto ampliada"
+           class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+    </div>
+  }
+
+</div>
