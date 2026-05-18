@@ -114,6 +114,21 @@ export interface Prestador {
   totalAvaliacoes?: number;
   latitude?: number;
   longitude?: number;
+  fotoPerfilUrl?: string;
+  percentualCompletude?: number;
+}
+
+export interface ItemChecklist {
+  id: string;
+  descricao: string;
+  concluido: boolean;
+  peso: number;
+  linkDestino: string;
+}
+
+export interface CompletudePrestador {
+  percentual: number;
+  itens: ItemChecklist[];
 }
 
 export interface NotificacaoDTO {

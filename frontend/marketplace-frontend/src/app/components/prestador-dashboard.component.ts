@@ -7,11 +7,12 @@ import { PrestadorService } from '../services/prestador.service';
 import { PropostaService } from '../services/proposta.service';
 import { AuthService } from '../services/auth.service';
 import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicitacao } from '../models/models';
+import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-checklist.component';
 
 @Component({
   selector: 'app-prestador-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, OnboardingChecklistComponent],
   templateUrl: './prestador-dashboard.component.html'
 })
 export class PrestadorDashboardComponent implements OnInit {

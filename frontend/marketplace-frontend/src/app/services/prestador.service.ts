@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Prestador, PageResponse } from '../models/models';
+import { CompletudePrestador, Prestador, PageResponse } from '../models/models';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -54,6 +54,10 @@ export class PrestadorService {
 
   criarOuAtualizar(prestador: Prestador): Observable<Prestador> {
     return this.http.post<Prestador>(this.apiUrl, prestador);
+  }
+
+  getCompletude(): Observable<CompletudePrestador> {
+    return this.http.get<CompletudePrestador>(`${this.apiUrl}/me/completude`);
   }
 
   buscarProximos(

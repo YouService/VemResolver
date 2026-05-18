@@ -8,6 +8,7 @@ import com.marketplace.servicos.model.Prestador;
 import com.marketplace.servicos.repository.FotoPrestadorRepository;
 import com.marketplace.servicos.repository.PrestadorRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,27 +25,27 @@ import java.util.UUID;
 public class FotoPrestadorService {
 
     private static final int MAX_FOTOS = 10;
-    private static final long MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+    private static final long MAX_BYTES = 5 * 1024 * 1024;
     private static final Set<String> TIPOS_ACEITOS = Set.of("image/jpeg", "image/png", "image/webp");
 
     private final FotoPrestadorRepository fotoRepository;
     private final PrestadorRepository prestadorRepository;
+    private final PrestadorService prestadorService;
 
     @Value("${upload.dir:/uploads}")
     private String uploadDir;
 
-    public FotoPrestadorService(FotoPrestadorRepository fotoRepository, PrestadorRepository prestadorRepository) {
+    public FotoPrestadorService(FotoPrestadorRepository fotoRepository,
+                                PrestadorRepository prestadorRepository,
+                                @Lazy PrestadorService prestadorService) {
         this.fotoRepository = fotoRepository;
         this.prestadorRepository = prestadorRepository;
+        this.prestadorService = prestadorService;
     }
 
     @Transactional
     public FotoPrestadorDTO upload(MultipartFile file, Long usuarioId) {
-        if (file.isEmpty()) throw new BusinessException("Arquivo vazio");
-        if (!TIPOS_ACEITOS.contains(file.getContentType()))
-            throw new BusinessException("Tipo de arquivo não suportado. Use JPEG, PNG ou WEBP");
-        if (file.getSize() > MAX_BYTES)
-            throw new BusinessException("Arquivo muito grande. Tamanho máximo: 5 MB");
+        validarArquivo(file);
 
         Prestador prestador = prestadorRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil de prestador não encontrado"));
@@ -70,7 +71,55 @@ public class FotoPrestadorService {
         foto.setUrl(urlRelativa);
         foto = fotoRepository.save(foto);
 
+        prestadorService.recalcularCompletude(prestador);
+
         return toDTO(foto);
+    }
+
+    @Transactional
+    public String uploadAvatar(MultipartFile file, Long usuarioId) {
+        validarArquivo(file);
+
+        Prestador prestador = prestadorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil de prestador não encontrado"));
+
+        String ext = extensao(file.getContentType());
+        String nomeArquivo = "avatar" + ext;
+        Path diretorio = Paths.get(uploadDir, "prestadores", prestador.getId().toString());
+
+        try {
+            Files.createDirectories(diretorio);
+            Path destino = diretorio.resolve(nomeArquivo);
+            Files.deleteIfExists(destino);
+            Files.copy(file.getInputStream(), destino);
+        } catch (IOException e) {
+            throw new BusinessException("Erro ao salvar avatar: " + e.getMessage());
+        }
+
+        String urlRelativa = "/uploads/prestadores/" + prestador.getId() + "/" + nomeArquivo;
+        prestador.setFotoPerfilUrl(urlRelativa);
+        prestadorRepository.save(prestador);
+        prestadorService.recalcularCompletude(prestador);
+
+        return urlRelativa;
+    }
+
+    @Transactional
+    public void deletarAvatar(Long usuarioId) {
+        Prestador prestador = prestadorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil de prestador não encontrado"));
+
+        if (prestador.getFotoPerfilUrl() != null) {
+            Path arquivo = Paths.get(uploadDir + prestador.getFotoPerfilUrl().replace("/uploads", ""));
+            try {
+                Files.deleteIfExists(arquivo);
+            } catch (IOException e) {
+                // arquivo já ausente — remove o registro mesmo assim
+            }
+            prestador.setFotoPerfilUrl(null);
+            prestadorRepository.save(prestador);
+            prestadorService.recalcularCompletude(prestador);
+        }
     }
 
     @Transactional
@@ -88,10 +137,11 @@ public class FotoPrestadorService {
         try {
             Files.deleteIfExists(arquivo);
         } catch (IOException e) {
-            // arquivo já ausente do disco — remove o registro mesmo assim
+            // arquivo já ausente — remove o registro mesmo assim
         }
 
         fotoRepository.delete(foto);
+        prestadorService.recalcularCompletude(prestador);
     }
 
     @Transactional(readOnly = true)
@@ -100,6 +150,14 @@ public class FotoPrestadorService {
             throw new ResourceNotFoundException("Prestador não encontrado");
         return fotoRepository.findByPrestadorIdOrderByDataUploadAsc(prestadorId)
                 .stream().map(this::toDTO).toList();
+    }
+
+    private void validarArquivo(MultipartFile file) {
+        if (file.isEmpty()) throw new BusinessException("Arquivo vazio");
+        if (!TIPOS_ACEITOS.contains(file.getContentType()))
+            throw new BusinessException("Tipo de arquivo não suportado. Use JPEG, PNG ou WEBP");
+        if (file.getSize() > MAX_BYTES)
+            throw new BusinessException("Arquivo muito grande. Tamanho máximo: 5 MB");
     }
 
     private FotoPrestadorDTO toDTO(FotoPrestador foto) {

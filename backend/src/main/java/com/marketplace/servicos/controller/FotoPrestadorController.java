@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/prestadores")
@@ -43,6 +44,26 @@ public class FotoPrestadorController {
             @PathVariable Long fotoId,
             @AuthenticationPrincipal User user) {
         fotoService.deletar(fotoId, user.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/me/foto-perfil")
+    @PreAuthorize("hasRole('PRESTADOR')")
+    @SecurityRequirement(name = "bearer-jwt")
+    @Operation(summary = "Enviar ou substituir foto de perfil (avatar) do prestador")
+    public ResponseEntity<Map<String, String>> uploadAvatar(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal User user) {
+        String url = fotoService.uploadAvatar(file, user.getId());
+        return ResponseEntity.ok(Map.of("url", url));
+    }
+
+    @DeleteMapping("/me/foto-perfil")
+    @PreAuthorize("hasRole('PRESTADOR')")
+    @SecurityRequirement(name = "bearer-jwt")
+    @Operation(summary = "Remover foto de perfil (avatar) do prestador")
+    public ResponseEntity<Void> deletarAvatar(@AuthenticationPrincipal User user) {
+        fotoService.deletarAvatar(user.getId());
         return ResponseEntity.noContent().build();
     }
 
