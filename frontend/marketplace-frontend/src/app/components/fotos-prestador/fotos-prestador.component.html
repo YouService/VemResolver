@@ -1,0 +1,50 @@
+<div>
+  @if (carregando) {
+    <p class="text-sm text-gray-500">Carregando fotos...</p>
+  }
+
+  @if (erro) {
+    <div class="mb-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+      {{ erro }}
+    </div>
+  }
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+    @for (foto of fotos; track foto.id) {
+      <div class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+        <img [src]="urlCompleta(foto.url)" alt="Foto do portfólio"
+             class="w-full h-full object-cover">
+        @if (editavel) {
+          <button (click)="excluir(foto.id)"
+            class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+            title="Remover foto">
+            ✕
+          </button>
+        }
+      </div>
+    }
+
+    @if (editavel && podeAdicionar) {
+      <label class="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition bg-gray-50"
+             [class.opacity-50]="enviando"
+             [class.pointer-events-none]="enviando">
+        <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" (change)="onFileSelected($event)" [disabled]="enviando">
+        @if (enviando) {
+          <span class="text-2xl">⏳</span>
+          <span class="text-xs text-gray-500 mt-1">Enviando...</span>
+        } @else {
+          <span class="text-2xl text-gray-400">+</span>
+          <span class="text-xs text-gray-500 mt-1">Adicionar foto</span>
+        }
+      </label>
+    }
+  </div>
+
+  @if (editavel) {
+    <p class="text-xs text-gray-400 mt-2">{{ fotos.length }}/{{ MAX_FOTOS }} fotos · JPEG, PNG ou WEBP · máx. 5 MB cada</p>
+  }
+
+  @if (!editavel && fotos.length === 0) {
+    <p class="text-sm text-gray-400 italic">Nenhuma foto de portfólio cadastrada.</p>
+  }
+</div>
