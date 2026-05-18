@@ -1,7 +1,10 @@
 package com.marketplace.servicos.controller;
 
+import com.marketplace.servicos.dto.SolicitacaoAdminDTO;
 import com.marketplace.servicos.dto.UserResumoDTO;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
+import com.marketplace.servicos.model.SolicitacaoServico;
+import com.marketplace.servicos.model.StatusSolicitacao;
 import com.marketplace.servicos.model.User;
 import com.marketplace.servicos.repository.PrestadorRepository;
 import com.marketplace.servicos.repository.PropostaRepository;
@@ -19,6 +22,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -29,6 +34,7 @@ import java.util.Map;
 public class AdminController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminController.class);
+    private static final int MINUTOS_ONLINE = 5;
 
     private final UserRepository userRepository;
     private final PrestadorRepository prestadorRepository;
@@ -46,20 +52,23 @@ public class AdminController {
     }
 
     @GetMapping("/stats")
-    @Operation(summary = "Retorna totais de usuarios, prestadores, solicitacoes e propostas")
+    @Operation(summary = "Retorna totais de usuarios, prestadores, solicitacoes, propostas e usuarios online")
     public ResponseEntity<Map<String, Long>> stats() {
+        LocalDateTime limiar = LocalDateTime.now().minusMinutes(MINUTOS_ONLINE);
         return ResponseEntity.ok(Map.of(
             "totalUsuarios", userRepository.count(),
             "totalPrestadores", prestadorRepository.count(),
             "totalSolicitacoes", solicitacaoServicoRepository.count(),
-            "totalPropostas", propostaRepository.count()
+            "totalPropostas", propostaRepository.count(),
+            "usuariosOnline", userRepository.countByUltimoAcessoAfterAndAtivoTrue(limiar)
         ));
     }
 
     @GetMapping("/usuarios")
     @Operation(summary = "Listar todos os usuarios com paginacao")
     public ResponseEntity<Page<UserResumoDTO>> listarUsuarios(Pageable pageable) {
-        return ResponseEntity.ok(userRepository.findAll(pageable).map(this::toResumoDTO));
+        LocalDateTime limiar = LocalDateTime.now().minusMinutes(MINUTOS_ONLINE);
+        return ResponseEntity.ok(userRepository.findAll(pageable).map(u -> toResumoDTO(u, limiar)));
     }
 
     @GetMapping("/usuarios/{id}")
@@ -67,7 +76,8 @@ public class AdminController {
     public ResponseEntity<UserResumoDTO> buscarUsuario(@PathVariable Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
-        return ResponseEntity.ok(toResumoDTO(user));
+        LocalDateTime limiar = LocalDateTime.now().minusMinutes(MINUTOS_ONLINE);
+        return ResponseEntity.ok(toResumoDTO(user, limiar));
     }
 
     @PatchMapping("/usuarios/{id}/ativar")
@@ -82,7 +92,41 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
-    private UserResumoDTO toResumoDTO(User user) {
+    @GetMapping("/usuarios/online")
+    @Operation(summary = "Listar usuarios ativos nos ultimos 5 minutos")
+    public ResponseEntity<List<UserResumoDTO>> listarOnline() {
+        LocalDateTime limiar = LocalDateTime.now().minusMinutes(MINUTOS_ONLINE);
+        List<UserResumoDTO> online = userRepository.findOnline(limiar)
+                .stream().map(u -> toResumoDTO(u, limiar)).toList();
+        return ResponseEntity.ok(online);
+    }
+
+    @GetMapping("/solicitacoes")
+    @Operation(summary = "Listar todas as solicitacoes (com filtro opcional por status)")
+    public ResponseEntity<Page<SolicitacaoAdminDTO>> listarSolicitacoes(
+            @RequestParam(required = false) StatusSolicitacao status,
+            Pageable pageable) {
+        Page<SolicitacaoServico> page = (status != null)
+                ? solicitacaoServicoRepository.findByStatus(status, pageable)
+                : solicitacaoServicoRepository.findAll(pageable);
+        return ResponseEntity.ok(page.map(this::toAdminDTO));
+    }
+
+    @PatchMapping("/solicitacoes/{id}/status")
+    @Transactional
+    @Operation(summary = "Alterar status de uma solicitacao (bypass de ownership)")
+    public ResponseEntity<Void> alterarStatusSolicitacao(
+            @PathVariable Long id, @RequestParam StatusSolicitacao status) {
+        SolicitacaoServico sol = solicitacaoServicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
+        StatusSolicitacao statusAnterior = sol.getStatus();
+        sol.setStatus(status);
+        solicitacaoServicoRepository.save(sol);
+        log.info("Admin alterou status da solicitacao id={} de {} para {}", id, statusAnterior, status);
+        return ResponseEntity.noContent().build();
+    }
+
+    private UserResumoDTO toResumoDTO(User user, LocalDateTime limiar) {
         UserResumoDTO dto = new UserResumoDTO();
         dto.setId(user.getId());
         dto.setNome(user.getNome());
@@ -92,6 +136,23 @@ public class AdminController {
         dto.setDataCadastro(user.getDataCadastro());
         dto.setAvaliacaoMedia(user.getAvaliacaoMedia());
         dto.setTotalAvaliacoes(user.getTotalAvaliacoes());
+        dto.setUltimoAcesso(user.getUltimoAcesso());
+        dto.setOnline(user.getUltimoAcesso() != null && user.getUltimoAcesso().isAfter(limiar));
+        return dto;
+    }
+
+    private SolicitacaoAdminDTO toAdminDTO(SolicitacaoServico sol) {
+        SolicitacaoAdminDTO dto = new SolicitacaoAdminDTO();
+        dto.setId(sol.getId());
+        dto.setClienteNome(sol.getCliente().getNome());
+        dto.setClienteEmail(sol.getCliente().getEmail());
+        dto.setCategoriaNome(sol.getCategoria().getNome());
+        dto.setDescricao(sol.getDescricao());
+        dto.setCidade(sol.getCidade());
+        dto.setEstado(sol.getEstado());
+        dto.setStatus(sol.getStatus());
+        dto.setDataCriacao(sol.getDataCriacao());
+        dto.setTotalPropostas(propostaRepository.countBySolicitacaoId(sol.getId()));
         return dto;
     }
 }
