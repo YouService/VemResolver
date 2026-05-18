@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CompletudePrestador, Prestador, PageResponse } from '../models/models';
+import { CompletudePrestador, PerfilPublico, Prestador, PageResponse } from '../models/models';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -54,6 +54,10 @@ export class PrestadorService {
 
   criarOuAtualizar(prestador: Prestador): Observable<Prestador> {
     return this.http.post<Prestador>(this.apiUrl, prestador);
+  }
+
+  getPerfilPublico(id: number): Observable<PerfilPublico> {
+    return this.http.get<PerfilPublico>(`${this.apiUrl}/${id}/publico`);
   }
 
   getCompletude(): Observable<CompletudePrestador> {

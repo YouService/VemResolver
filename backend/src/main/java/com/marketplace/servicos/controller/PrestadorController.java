@@ -1,6 +1,7 @@
 package com.marketplace.servicos.controller;
 
 import com.marketplace.servicos.dto.CompletudePrestadorDTO;
+import com.marketplace.servicos.dto.PerfilPublicoDTO;
 import com.marketplace.servicos.dto.PrestadorDTO;
 import com.marketplace.servicos.model.User;
 import com.marketplace.servicos.service.PrestadorService;
@@ -59,6 +60,12 @@ public class PrestadorController {
             @AuthenticationPrincipal User user) {
         dto.setUsuarioId(user.getId());
         return ResponseEntity.ok(prestadorService.criarOuAtualizar(dto));
+    }
+
+    @GetMapping("/{id}/publico")
+    @Operation(summary = "Buscar perfil público do prestador (sem autenticação)")
+    public ResponseEntity<PerfilPublicoDTO> buscarPerfilPublico(@PathVariable Long id) {
+        return ResponseEntity.ok(prestadorService.buscarPerfilPublico(id));
     }
 
     @GetMapping("/me/completude")

@@ -2,16 +2,23 @@ package com.marketplace.servicos.service;
 
 import com.marketplace.servicos.dto.CompletudePrestadorDTO;
 import com.marketplace.servicos.dto.CompletudePrestadorDTO.ItemChecklist;
+import com.marketplace.servicos.dto.PerfilPublicoDTO;
 import com.marketplace.servicos.dto.PrestadorDTO;
 import com.marketplace.servicos.exception.BusinessException;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
+import com.marketplace.servicos.model.Avaliacao;
 import com.marketplace.servicos.model.Categoria;
 import com.marketplace.servicos.model.Prestador;
+import com.marketplace.servicos.model.StatusProposta;
+import com.marketplace.servicos.model.StatusSolicitacao;
+import com.marketplace.servicos.model.TipoAvaliacao;
 import com.marketplace.servicos.model.TipoUsuario;
 import com.marketplace.servicos.model.User;
+import com.marketplace.servicos.repository.AvaliacaoRepository;
 import com.marketplace.servicos.repository.CategoriaRepository;
 import com.marketplace.servicos.repository.FotoPrestadorRepository;
 import com.marketplace.servicos.repository.PrestadorRepository;
+import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -29,15 +36,21 @@ public class PrestadorService {
     private final UserRepository userRepository;
     private final CategoriaRepository categoriaRepository;
     private final FotoPrestadorRepository fotoPrestadorRepository;
+    private final AvaliacaoRepository avaliacaoRepository;
+    private final PropostaRepository propostaRepository;
 
     public PrestadorService(PrestadorRepository prestadorRepository,
                             UserRepository userRepository,
                             CategoriaRepository categoriaRepository,
-                            FotoPrestadorRepository fotoPrestadorRepository) {
+                            FotoPrestadorRepository fotoPrestadorRepository,
+                            AvaliacaoRepository avaliacaoRepository,
+                            PropostaRepository propostaRepository) {
         this.prestadorRepository = prestadorRepository;
         this.userRepository = userRepository;
         this.categoriaRepository = categoriaRepository;
         this.fotoPrestadorRepository = fotoPrestadorRepository;
+        this.avaliacaoRepository = avaliacaoRepository;
+        this.propostaRepository = propostaRepository;
     }
 
     @Transactional
@@ -111,6 +124,52 @@ public class PrestadorService {
         int end = Math.min(start + pageable.getPageSize(), resultado.size());
         List<PrestadorDTO> pagina = start > resultado.size() ? List.of() : resultado.subList(start, end);
         return new PageImpl<>(pagina, pageable, resultado.size());
+    }
+
+    @Transactional(readOnly = true)
+    public PerfilPublicoDTO buscarPerfilPublico(Long prestadorId) {
+        Prestador prestador = prestadorRepository.findById(prestadorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil não encontrado"));
+
+        if (!prestador.getUsuario().isEnabled()) {
+            throw new ResourceNotFoundException("Perfil não encontrado");
+        }
+
+        List<String> portafolioUrls = fotoPrestadorRepository
+                .findByPrestadorIdOrderByDataUploadAsc(prestadorId)
+                .stream().map(f -> f.getUrl()).toList();
+
+        List<Avaliacao> avaliacoes = avaliacaoRepository
+                .findTop5ByPrestadorIdAndTipoOrderByDataCriacaoDesc(prestadorId, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR);
+
+        List<PerfilPublicoDTO.AvaliacaoResumo> avaliacoesResumo = avaliacoes.stream()
+                .map(a -> new PerfilPublicoDTO.AvaliacaoResumo(
+                        a.getCliente().getNome(),
+                        a.getNota(),
+                        a.getComentario(),
+                        a.getDataCriacao() != null ? a.getDataCriacao().toLocalDate().toString() : null))
+                .toList();
+
+        long contratosConcluidosCount = propostaRepository.countByPrestadorIdAndStatusAndSolicitacaoStatus(
+                prestadorId, StatusProposta.ACEITA, StatusSolicitacao.CONCLUIDA);
+        boolean verificado = contratosConcluidosCount >= 5 && prestador.getAvaliacaoMedia() >= 4.0;
+
+        List<String> categoriaNomes = prestador.getCategorias().stream()
+                .map(Categoria::getNome).toList();
+
+        return new PerfilPublicoDTO(
+                prestador.getId(),
+                prestador.getUsuario().getNome(),
+                prestador.getFotoPerfilUrl(),
+                categoriaNomes,
+                prestador.getCidade(),
+                prestador.getEstado(),
+                prestador.getAvaliacaoMedia(),
+                prestador.getTotalAvaliacoes(),
+                verificado,
+                portafolioUrls,
+                avaliacoesResumo
+        );
     }
 
     public CompletudePrestadorDTO getCompletude(Long usuarioId) {

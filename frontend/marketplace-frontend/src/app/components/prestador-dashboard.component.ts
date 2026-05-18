@@ -28,6 +28,8 @@ export class PrestadorDashboardComponent implements OnInit {
   totalPaginas = 0;
   itensPorPagina = 10;
 
+  linkCopiado = false;
+
   constructor(
     private solicitacaoService: SolicitacaoService,
     private prestadorService: PrestadorService,
@@ -104,6 +106,15 @@ export class PrestadorDashboardComponent implements OnInit {
     this.propostaService.listarMinhas(0, 50).subscribe({
       next: (response) => { this.minhasPropostas = response.content; },
       error: () => {}
+    });
+  }
+
+  copiarLinkPerfil(): void {
+    if (!this.prestador) return;
+    const url = `${window.location.origin}/prestador/${this.prestador.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      this.linkCopiado = true;
+      setTimeout(() => { this.linkCopiado = false; }, 3000);
     });
   }
 
