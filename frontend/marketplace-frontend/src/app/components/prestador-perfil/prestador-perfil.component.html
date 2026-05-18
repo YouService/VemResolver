@@ -196,6 +196,19 @@
       </form>
     </div>
 
+    <!-- Portfólio de Fotos -->
+    @if (prestadorExistente) {
+      <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+        <h3 class="font-semibold text-gray-900 mb-1">Portfólio de Fotos</h3>
+        <p class="text-sm text-gray-500 mb-4">Adicione fotos dos seus trabalhos para atrair mais clientes</p>
+        <app-fotos-prestador
+          [prestadorId]="prestadorExistente.id"
+          [editavel]="true"
+          (fotosChange)="fotoCount = $event">
+        </app-fotos-prestador>
+      </div>
+    }
+
     <!-- Progress Indicator -->
     <div class="mt-8 bg-white rounded-lg shadow-md p-6">
       <h3 class="font-semibold text-gray-900 mb-4">Completude do Perfil</h3>

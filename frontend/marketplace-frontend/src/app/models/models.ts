@@ -199,6 +199,12 @@ export interface PageResponse<T> {
   number: number;
 }
 
+export interface FotoPrestador {
+  id: number;
+  url: string;
+  dataUpload: string;
+}
+
 export interface MensagemChat {
   id?: number;
   propostaId: number;
