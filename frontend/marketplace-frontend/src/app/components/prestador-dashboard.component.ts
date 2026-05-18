@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { SolicitacaoService } from '../services/solicitacao.service';
 import { PrestadorService } from '../services/prestador.service';
 import { PropostaService } from '../services/proposta.service';
@@ -10,18 +11,21 @@ import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicita
 @Component({
   selector: 'app-prestador-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './prestador-dashboard.component.html'
 })
 export class PrestadorDashboardComponent implements OnInit {
   solicitacoes: SolicitacaoServico[] = [];
+  solicitacoesFiltradas: SolicitacaoServico[] = [];
   minhasPropostas: Proposta[] = [];
   prestador?: Prestador;
   userName = '';
   loading = false;
+  errorMessage = '';
+  filtroCidade = '';
   paginaAtual = 0;
   totalPaginas = 0;
-  itensPorPagina = 9;
+  itensPorPagina = 10;
 
   constructor(
     private solicitacaoService: SolicitacaoService,
@@ -63,15 +67,30 @@ export class PrestadorDashboardComponent implements OnInit {
 
   carregarSolicitacoes(pagina: number = this.paginaAtual) {
     this.loading = true;
+    this.errorMessage = '';
     this.solicitacaoService.buscarAbertas(undefined, undefined, undefined, pagina, this.itensPorPagina).subscribe({
       next: (response) => {
         this.solicitacoes = response.content;
         this.totalPaginas = response.totalPages;
         this.paginaAtual = pagina;
+        this.aplicarFiltro();
         this.loading = false;
       },
-      error: () => { this.loading = false; }
+      error: () => {
+        this.errorMessage = 'Erro ao carregar oportunidades. Tente atualizar a página.';
+        this.loading = false;
+      }
     });
+  }
+
+  aplicarFiltro() {
+    const termo = this.filtroCidade.trim().toLowerCase();
+    this.solicitacoesFiltradas = termo
+      ? this.solicitacoes.filter(s =>
+          s.cidade?.toLowerCase().includes(termo) ||
+          s.estado?.toLowerCase().includes(termo)
+        )
+      : [...this.solicitacoes];
   }
 
   irParaPagina(pagina: number) {

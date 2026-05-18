@@ -93,243 +93,81 @@
           </div>
         </div>
 
-        <!-- Contratos em Andamento -->
-        @if (contratosAndamento.length > 0) {
-          <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
-                Contratos em Andamento
-                <span class="bg-yellow-100 text-yellow-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">
-                  {{ contratosAndamento.length }}
-                </span>
-              </h2>
-              <button (click)="carregarPropostas()" class="text-blue-600 hover:text-blue-700 font-medium">
+        <!-- Novas Oportunidades -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-900">Novas Oportunidades</h2>
+            <div class="flex gap-3">
+              <input
+                type="text"
+                [(ngModel)]="filtroCidade"
+                (input)="aplicarFiltro()"
+                placeholder="Filtrar por cidade ou estado..."
+                class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-52">
+              <button
+                (click)="carregarSolicitacoes()"
+                class="text-blue-600 hover:text-blue-700 font-medium">
                 🔄 Atualizar
               </button>
             </div>
-            <div class="space-y-4">
-              @for (proposta of contratosAndamento; track proposta.id) {
-                <div class="border-2 border-yellow-300 bg-yellow-50 rounded-lg p-5 overflow-hidden">
-                  <div class="flex items-start justify-between gap-3 mb-3">
-                    <div class="flex items-center gap-2 flex-wrap min-w-0">
-                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                        {{ proposta.categoriaNome }}
-                      </span>
-                      <span class="bg-yellow-200 text-yellow-900 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                        Em Andamento
-                      </span>
-                    </div>
-                    <span class="text-sm font-bold text-green-700 flex-shrink-0">
-                      R$ {{ proposta.valor | number:'1.2-2' }}
-                    </span>
-                  </div>
+          </div>
 
-                  <p class="text-gray-800 font-medium mb-3 break-words">{{ proposta.solicitacaoDescricao }}</p>
-
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-600">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span>👤</span>
-                      <span class="truncate">{{ proposta.clienteNome }}</span>
-                    </div>
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span>📍</span>
-                      <span class="truncate">{{ proposta.cidade }}, {{ proposta.estado }}</span>
-                    </div>
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span>📅</span>
-                      <span class="truncate">Aceito {{ formatarData(proposta.dataEnvio) }}</span>
-                    </div>
-                  </div>
-
-                  <div class="mt-3 pt-3 border-t border-yellow-200 flex items-center justify-between">
-                    <p class="text-xs text-gray-500">
-                      O cliente irá marcar o serviço como concluído quando finalizado.
-                    </p>
-                    <a
-                      [routerLink]="['/chat/proposta', proposta.id]"
-                      class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition ml-2 whitespace-nowrap">
-                      💬 Chat
-                    </a>
-                  </div>
-                </div>
-              }
+          @if (errorMessage && !loading) {
+            <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+              <span>{{ errorMessage }}</span>
+              <button (click)="errorMessage = ''" class="ml-3 text-red-500 hover:text-red-700 font-bold">✕</button>
             </div>
-          </div>
-        }
-
-        <!-- Propostas Aguardando Resposta -->
-        @if (propostasAguardando.length > 0) {
-          <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-              Propostas Aguardando Resposta
-              <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">
-                {{ propostasAguardando.length }}
-              </span>
-            </h2>
-            <div class="space-y-3">
-              @for (proposta of propostasAguardando; track proposta.id) {
-                <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between gap-3">
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                        {{ proposta.categoriaNome }}
-                      </span>
-                    </div>
-                    <p class="text-gray-800 text-sm line-clamp-1 break-words">{{ proposta.solicitacaoDescricao }}</p>
-                    <p class="text-gray-500 text-xs mt-1 truncate">📍 {{ proposta.cidade }}, {{ proposta.estado }}</p>
-                  </div>
-                  <div class="text-right flex-shrink-0 flex flex-col items-end gap-1">
-                    <p class="font-bold text-green-700">R$ {{ proposta.valor | number:'1.2-2' }}</p>
-                    <p class="text-xs text-gray-500">{{ formatarData(proposta.dataEnvio) }}</p>
-                    <span class="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
-                      Aguardando
-                    </span>
-                    <a
-                      [routerLink]="['/chat/proposta', proposta.id]"
-                      class="px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition whitespace-nowrap">
-                      💬 Chat
-                    </a>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Serviços Concluídos -->
-        @if (servicosConcluidos.length > 0) {
-          <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-              Serviços Concluídos
-              <span class="bg-purple-100 text-purple-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">
-                {{ servicosConcluidos.length }}
-              </span>
-            </h2>
-            <div class="space-y-3">
-              @for (proposta of servicosConcluidos; track proposta.id) {
-                <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between gap-3">
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1 flex-wrap">
-                      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                        {{ proposta.categoriaNome }}
-                      </span>
-                      <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                        Concluído
-                      </span>
-                    </div>
-                    <p class="text-gray-800 text-sm line-clamp-1 break-words">{{ proposta.solicitacaoDescricao }}</p>
-                    <p class="text-gray-500 text-xs mt-1 truncate">👤 {{ proposta.clienteNome }}</p>
-                  </div>
-                  <div class="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                    <p class="font-bold text-green-700">R$ {{ proposta.valor | number:'1.2-2' }}</p>
-                    @if (proposta.foiAvaliadoPeloPrestador) {
-                      <span class="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-lg">
-                        Avaliado ✓
-                      </span>
-                    } @else {
-                      <a
-                        [routerLink]="['/prestador/solicitacao', proposta.solicitacaoId, 'avaliacao']"
-                        class="px-3 py-1.5 bg-yellow-500 text-white text-xs font-semibold rounded-lg hover:bg-yellow-600 transition">
-                        Avaliar Cliente ★
-                      </a>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Perfil Info -->
-        @if (prestador) {
-          <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Meu Perfil</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p class="text-gray-600 text-sm">Localização</p>
-                <p class="font-semibold">{{ prestador.cidade }}, {{ prestador.estado }}</p>
-              </div>
-              <div>
-                <p class="text-gray-600 text-sm">Categorias de Serviço</p>
-                <p class="font-semibold">{{ prestador.categoriasIds?.length || 0 }} categoria(s)</p>
-              </div>
-              @if ((prestador.totalAvaliacoes || 0) > 0) {
-                <div>
-                  <p class="text-gray-600 text-sm">Sua Avaliação</p>
-                  <div class="flex items-center gap-2">
-                    <span class="text-yellow-500 text-lg">
-                      @for (star of [1,2,3,4,5]; track star) {
-                        {{ star <= (prestador.avaliacaoMedia || 0) ? '★' : '☆' }}
-                      }
-                    </span>
-                    <span class="font-semibold">{{ prestador.avaliacaoMedia | number:'1.1-1' }}</span>
-                    <span class="text-gray-500 text-sm">({{ prestador.totalAvaliacoes }} avaliação{{ (prestador.totalAvaliacoes || 0) !== 1 ? 'ões' : '' }})</span>
-                  </div>
-                </div>
-              }
-            </div>
-            @if (prestador.descricaoPerfil) {
-              <div class="mt-4">
-                <p class="text-gray-600 text-sm">Sobre</p>
-                <p class="text-gray-800">{{ prestador.descricaoPerfil }}</p>
-              </div>
-            }
-          </div>
-        }
-
-        <!-- Solicitações Abertas -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-900">Novas Oportunidades</h2>
-            <button
-              (click)="carregarSolicitacoes()"
-              class="text-blue-600 hover:text-blue-700 font-medium">
-              🔄 Atualizar
-            </button>
-          </div>
+          }
 
           @if (loading) {
             <div class="text-center py-12">
               <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <p class="text-gray-600 mt-4">Carregando solicitações...</p>
+              <p class="text-gray-600 mt-4">Carregando oportunidades...</p>
             </div>
-          } @else if (solicitacoes.length === 0) {
+          } @else if (solicitacoesFiltradas.length === 0) {
             <div class="text-center py-12">
               <span class="text-6xl">📭</span>
-              <p class="text-gray-600 mt-4 text-lg">Nenhuma solicitação disponível no momento</p>
-              <p class="text-gray-500 text-sm mt-2">Novas oportunidades aparecerão aqui</p>
+              <p class="text-gray-600 mt-4 text-lg">Nenhuma oportunidade disponível no momento</p>
+              <p class="text-gray-500 text-sm mt-2">Novas solicitações de clientes aparecerão aqui</p>
             </div>
           } @else {
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              @for (solicitacao of solicitacoes; track solicitacao.id) {
-                <div class="border rounded-lg p-5 hover:shadow-lg transition overflow-hidden">
-                  <div class="flex items-start justify-between gap-2 mb-3">
-                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full truncate min-w-0">
-                      {{ solicitacao.categoriaNome }}
-                    </span>
-                    <span class="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
+            <div class="space-y-4">
+              @for (solicitacao of solicitacoesFiltradas; track solicitacao.id) {
+                <div class="border rounded-lg p-5 hover:shadow-lg transition">
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                          {{ solicitacao.categoriaNome }}
+                        </span>
+                        <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                          Aberta
+                        </span>
+                      </div>
+                      <p class="text-gray-800 mb-2 break-words line-clamp-3">{{ solicitacao.descricao }}</p>
+                    </div>
+                    <span class="text-xs text-gray-500 ml-4 whitespace-nowrap flex-shrink-0">
                       {{ formatarData(solicitacao.dataCriacao) }}
                     </span>
                   </div>
 
-                  <p class="text-gray-800 mb-4 line-clamp-3 break-words">{{ solicitacao.descricao }}</p>
-
-                  <div class="space-y-2 mb-4 text-sm text-gray-600">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span>👤</span>
-                      <span class="truncate">{{ solicitacao.clienteNome }}</span>
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex flex-col gap-1 text-sm text-gray-600">
+                      <span class="flex items-center gap-1">
+                        <span>👤</span>
+                        <span class="truncate">{{ solicitacao.clienteNome }}</span>
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <span>📍</span>
+                        <span class="truncate">{{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
+                      </span>
                     </div>
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span>📍</span>
-                      <span class="truncate">{{ solicitacao.cidade }}, {{ solicitacao.estado }}</span>
-                    </div>
+                    <a
+                      [routerLink]="['/prestador/solicitacao', solicitacao.id]"
+                      class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm whitespace-nowrap">
+                      Ver Detalhes e Enviar Proposta
+                    </a>
                   </div>
-
-                  <a
-                    [routerLink]="['/prestador/solicitacao', solicitacao.id]"
-                    class="w-full block text-center bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-medium">
-                    Ver Detalhes e Enviar Proposta
-                  </a>
                 </div>
               }
             </div>
@@ -364,6 +202,164 @@
             }
           }
         </div>
+
+        <!-- Contratos em Andamento -->
+        @if (contratosAndamento.length > 0) {
+          <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                Contratos em Andamento
+                <span class="bg-yellow-100 text-yellow-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">
+                  {{ contratosAndamento.length }}
+                </span>
+              </h2>
+              <button (click)="carregarPropostas()" class="text-blue-600 hover:text-blue-700 font-medium">
+                🔄 Atualizar
+              </button>
+            </div>
+            <div class="space-y-4">
+              @for (proposta of contratosAndamento; track proposta.id) {
+                <div class="border rounded-lg p-5 hover:shadow-lg transition">
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                          {{ proposta.categoriaNome }}
+                        </span>
+                        <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                          Em Andamento
+                        </span>
+                      </div>
+                      <p class="text-gray-800 mb-2 break-words">{{ proposta.solicitacaoDescricao }}</p>
+                    </div>
+                    <span class="font-bold text-green-700 ml-4 flex-shrink-0">
+                      R$ {{ proposta.valor | number:'1.2-2' }}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex flex-col gap-1 text-sm text-gray-600">
+                      <span class="flex items-center gap-1">
+                        <span>👤</span>
+                        <span class="truncate">{{ proposta.clienteNome }}</span>
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <span>📍</span>
+                        <span class="truncate">{{ proposta.cidade }}, {{ proposta.estado }}</span>
+                      </span>
+                    </div>
+                    <a
+                      [routerLink]="['/chat/proposta', proposta.id]"
+                      class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm whitespace-nowrap">
+                      💬 Chat
+                    </a>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Propostas Aguardando Resposta -->
+        @if (propostasAguardando.length > 0) {
+          <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              Propostas Aguardando Resposta
+              <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">
+                {{ propostasAguardando.length }}
+              </span>
+            </h2>
+            <div class="space-y-4">
+              @for (proposta of propostasAguardando; track proposta.id) {
+                <div class="border rounded-lg p-5 hover:shadow-lg transition">
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                          {{ proposta.categoriaNome }}
+                        </span>
+                        <span class="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                          Aguardando
+                        </span>
+                      </div>
+                      <p class="text-gray-800 mb-2 break-words line-clamp-2">{{ proposta.solicitacaoDescricao }}</p>
+                    </div>
+                    <span class="font-bold text-green-700 ml-4 flex-shrink-0">
+                      R$ {{ proposta.valor | number:'1.2-2' }}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex flex-col gap-1 text-sm text-gray-600">
+                      <span class="flex items-center gap-1">
+                        <span>📍</span>
+                        <span class="truncate">{{ proposta.cidade }}, {{ proposta.estado }}</span>
+                      </span>
+                      <span class="text-xs text-gray-400">Enviada {{ formatarData(proposta.dataEnvio) }}</span>
+                    </div>
+                    <a
+                      [routerLink]="['/chat/proposta', proposta.id]"
+                      class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm whitespace-nowrap">
+                      💬 Chat
+                    </a>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Serviços Concluídos -->
+        @if (servicosConcluidos.length > 0) {
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              Serviços Concluídos
+              <span class="bg-purple-100 text-purple-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">
+                {{ servicosConcluidos.length }}
+              </span>
+            </h2>
+            <div class="space-y-4">
+              @for (proposta of servicosConcluidos; track proposta.id) {
+                <div class="border rounded-lg p-5 hover:shadow-lg transition">
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                          {{ proposta.categoriaNome }}
+                        </span>
+                        <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                          Concluído
+                        </span>
+                      </div>
+                      <p class="text-gray-800 mb-2 break-words line-clamp-2">{{ proposta.solicitacaoDescricao }}</p>
+                    </div>
+                    <span class="font-bold text-green-700 ml-4 flex-shrink-0">
+                      R$ {{ proposta.valor | number:'1.2-2' }}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <span class="flex items-center gap-1 text-sm text-gray-600">
+                      <span>👤</span>
+                      <span class="truncate">{{ proposta.clienteNome }}</span>
+                    </span>
+                    @if (proposta.foiAvaliadoPeloPrestador) {
+                      <span class="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium text-sm">
+                        Avaliado ✓
+                      </span>
+                    } @else {
+                      <a
+                        [routerLink]="['/prestador/solicitacao', proposta.solicitacaoId, 'avaliacao']"
+                        class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition font-medium text-sm whitespace-nowrap">
+                        Avaliar Cliente ★
+                      </a>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
 
       </div>
     </div>
