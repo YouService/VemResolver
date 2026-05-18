@@ -1,7 +1,9 @@
 package com.marketplace.servicos.config;
 
+import com.marketplace.servicos.repository.UserRepository;
 import com.marketplace.servicos.security.JwtAuthenticationFilter;
 import com.marketplace.servicos.security.LoginRateLimitFilter;
+import com.marketplace.servicos.security.OnlineTrackingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,13 +35,17 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     @org.springframework.beans.factory.annotation.Value("${app.frontend.url}")
     private String frontendUrl;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserDetailsService userDetailsService) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                          UserDetailsService userDetailsService,
+                          UserRepository userRepository) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
     }
     
     @Bean
@@ -71,7 +77,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(new LoginRateLimitFilter(), JwtAuthenticationFilter.class);
+            .addFilterBefore(new LoginRateLimitFilter(), JwtAuthenticationFilter.class)
+            .addFilterAfter(new OnlineTrackingFilter(userRepository), JwtAuthenticationFilter.class);
         
         return http.build();
     }

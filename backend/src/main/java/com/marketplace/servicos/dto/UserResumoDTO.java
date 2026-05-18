@@ -19,4 +19,6 @@ public class UserResumoDTO {
     private LocalDateTime dataCadastro;
     private Double avaliacaoMedia;
     private Integer totalAvaliacoes;
+    private LocalDateTime ultimoAcesso;
+    private boolean online;
 }

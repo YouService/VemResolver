@@ -144,4 +144,97 @@ class AdminSegurancaTest {
                         .with(csrf()))
                 .andExpect(status().isForbidden());
     }
+
+    // ── GET /api/admin/usuarios/online ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("GET /api/admin/usuarios/online — sem autenticacao -> 403")
+    void listarOnline_SemAutenticacao_Retorna403() throws Exception {
+        mockMvc.perform(get("/api/admin/usuarios/online"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/usuarios/online — como CLIENTE -> 403")
+    @WithMockUser(roles = "CLIENTE")
+    void listarOnline_ComoCliente_Retorna403() throws Exception {
+        mockMvc.perform(get("/api/admin/usuarios/online"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/usuarios/online — como ADMIN -> 200")
+    @WithMockUser(roles = "ADMIN")
+    void listarOnline_ComoAdmin_Retorna200() throws Exception {
+        when(userRepository.findOnline(any(java.time.LocalDateTime.class)))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/admin/usuarios/online"))
+                .andExpect(status().isOk());
+    }
+
+    // ── GET /api/admin/solicitacoes ────────────────────────────────────────────
+
+    @Test
+    @DisplayName("GET /api/admin/solicitacoes — sem autenticacao -> 403")
+    void listarSolicitacoes_SemAutenticacao_Retorna403() throws Exception {
+        mockMvc.perform(get("/api/admin/solicitacoes"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/solicitacoes — como PRESTADOR -> 403")
+    @WithMockUser(roles = "PRESTADOR")
+    void listarSolicitacoes_ComoPrestador_Retorna403() throws Exception {
+        mockMvc.perform(get("/api/admin/solicitacoes"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/solicitacoes — como ADMIN -> 200")
+    @WithMockUser(roles = "ADMIN")
+    void listarSolicitacoes_ComoAdmin_Retorna200() throws Exception {
+        when(solicitacaoServicoRepository.findAll(any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+
+        mockMvc.perform(get("/api/admin/solicitacoes"))
+                .andExpect(status().isOk());
+    }
+
+    // ── PATCH /api/admin/solicitacoes/{id}/status ─────────────────────────────
+
+    @Test
+    @DisplayName("PATCH /api/admin/solicitacoes/1/status — sem autenticacao -> 403")
+    void alterarStatusSolicitacao_SemAutenticacao_Retorna403() throws Exception {
+        mockMvc.perform(patch("/api/admin/solicitacoes/1/status")
+                        .param("status", "CONCLUIDA")
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("PATCH /api/admin/solicitacoes/1/status — como CLIENTE -> 403")
+    @WithMockUser(roles = "CLIENTE")
+    void alterarStatusSolicitacao_ComoCliente_Retorna403() throws Exception {
+        mockMvc.perform(patch("/api/admin/solicitacoes/1/status")
+                        .param("status", "CONCLUIDA")
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("PATCH /api/admin/solicitacoes/1/status — como ADMIN -> 204")
+    @WithMockUser(roles = "ADMIN")
+    void alterarStatusSolicitacao_ComoAdmin_Retorna204() throws Exception {
+        com.marketplace.servicos.model.SolicitacaoServico sol = new com.marketplace.servicos.model.SolicitacaoServico();
+        sol.setId(1L);
+        sol.setStatus(com.marketplace.servicos.model.StatusSolicitacao.ABERTA);
+        when(solicitacaoServicoRepository.findById(1L)).thenReturn(java.util.Optional.of(sol));
+        when(solicitacaoServicoRepository.save(any())).thenReturn(sol);
+
+        mockMvc.perform(patch("/api/admin/solicitacoes/1/status")
+                        .param("status", "CONCLUIDA")
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+    }
 }

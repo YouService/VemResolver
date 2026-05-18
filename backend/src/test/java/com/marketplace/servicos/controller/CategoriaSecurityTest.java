@@ -3,6 +3,7 @@ package com.marketplace.servicos.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marketplace.servicos.config.SecurityConfig;
 import com.marketplace.servicos.dto.CategoriaDTO;
+import com.marketplace.servicos.repository.UserRepository;
 import com.marketplace.servicos.security.CustomUserDetailsService;
 import com.marketplace.servicos.security.JwtAuthenticationFilter;
 import com.marketplace.servicos.service.CategoriaService;
@@ -36,6 +37,9 @@ class CategoriaSecurityTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @MockBean
     private CategoriaService categoriaService;

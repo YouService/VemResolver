@@ -1,6 +1,6 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-18 (fix/cobertura-de-testes + seed_dados.py: cobertura de testes expandida e script de dados volumosos)  
+> **Última atualização:** 2026-05-18 (feature/admin-online-solicitacoes: painel admin com usuários online, listagem e alteração de status de solicitações)  
 > **Analista:** Claude Sonnet 4.6  
 > **Branch analisada:** main / develop (sincronizadas)
 
@@ -49,7 +49,7 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── SecurityConfig.java      (Spring Security + CORS)
 │   └── WebConfig.java           (serve /uploads/** como static resource)
 ├── controller/
-│   ├── AdminController.java     (GET /api/admin/stats, GET /api/admin/usuarios — ROLE_ADMIN)
+│   ├── AdminController.java     (GET /api/admin/stats, GET /api/admin/usuarios, GET /api/admin/usuarios/online, GET /api/admin/solicitacoes, PATCH /api/admin/solicitacoes/{id}/status — ROLE_ADMIN)
 │   ├── AuthController.java
 │   ├── AvaliacaoController.java
 │   ├── CategoriaController.java
@@ -72,6 +72,7 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── PrestadorDTO.java            (inclui fotoPerfilUrl, percentualCompletude)
 │   ├── PropostaDTO.java
 │   ├── RegisterDTO.java
+│   ├── SolicitacaoAdminDTO.java     (id, clienteNome, clienteEmail, categoriaNome, descricao, cidade, estado, status, dataCriacao, totalPropostas)
 │   ├── SolicitacaoServicoDTO.java
 │   └── UpdatePerfilDTO.java
 ├── exception/
@@ -105,12 +106,13 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── PropostaRepository.java      (inclui countByPrestadorIdAndStatusAndSolicitacaoStatus)
 │   ├── RefreshTokenRepository.java
 │   ├── SolicitacaoServicoRepository.java
-│   ├── UserRepository.java
+│   ├── UserRepository.java          (inclui atualizarUltimoAcesso, findOnline, countByUltimoAcessoAfterAndAtivoTrue)
 │   └── VerificationTokenRepository.java
 ├── security/
 │   ├── CustomUserDetailsService.java
 │   ├── JwtAuthenticationFilter.java
-│   └── JwtTokenProvider.java
+│   ├── JwtTokenProvider.java
+│   └── OnlineTrackingFilter.java    (não @Component — registrado via SecurityConfig.addFilterAfter; throttle 2 min)
 └── service/
     ├── AuthService.java
     ├── AvaliacaoService.java
@@ -356,8 +358,13 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 ### `/api/admin`
 | Método | Path | Auth | O que faz |
 |--------|------|------|-----------|
-| GET | `/api/admin/stats` | JWT (`ROLE_ADMIN`) | Totais de usuários, prestadores, solicitações, propostas |
-| GET | `/api/admin/usuarios` | JWT (`ROLE_ADMIN`) | Lista todos os usuários paginada |
+| GET | `/api/admin/stats` | JWT (`ROLE_ADMIN`) | Totais de usuários, prestadores, solicitações, propostas e usuários online |
+| GET | `/api/admin/usuarios` | JWT (`ROLE_ADMIN`) | Lista todos os usuários paginada (inclui `online`, `ultimoAcesso`) |
+| GET | `/api/admin/usuarios/{id}` | JWT (`ROLE_ADMIN`) | Busca usuário por ID |
+| PATCH | `/api/admin/usuarios/{id}/ativar` | JWT (`ROLE_ADMIN`) | Ativa ou desativa usuário |
+| GET | `/api/admin/usuarios/online` | JWT (`ROLE_ADMIN`) | Usuários ativos nos últimos 5 min (lista `UserResumoDTO`) |
+| GET | `/api/admin/solicitacoes` | JWT (`ROLE_ADMIN`) | Lista todas as solicitações com filtro opcional `?status=` (paginado, `SolicitacaoAdminDTO`) |
+| PATCH | `/api/admin/solicitacoes/{id}/status` | JWT (`ROLE_ADMIN`) | Altera status de solicitação (bypass de ownership) |
 
 ### `/api/avaliacoes`
 | Método | Path | Auth | O que faz | Observações |
@@ -408,7 +415,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | `ChatComponent` | `/chat/proposta/:id` | authGuard | ✅ Funcional — polling 3s, somente leitura após encerramento |
 | `FotosPrestadorComponent` | (embed no perfil) | prestadorGuard | ✅ Funcional — grid com upload inline e remoção por hover |
 | `BuscaPrestadoresComponent` | `/buscar-prestadores` | Pública | ✅ Funcional — geolocalização do navegador + Haversine no backend |
-| `AdminDashboardComponent` | `/admin/dashboard` | adminGuard | ✅ Funcional — stats globais + tabela de usuários paginada |
+| `AdminDashboardComponent` | `/admin/dashboard` | adminGuard | ✅ Funcional — 5 cards de stats (inclui "Online agora"), 3 abas: Usuários (coluna online + ativação), Online (grid com dot animado), Solicitações (filtro + alteração inline de status) |
 
 ### Serviços Angular
 
@@ -422,6 +429,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | `AvaliacaoService` | `environment.apiUrl/avaliacoes` | ✅ Centralizado em `environment.ts` |
 | `FotoService` | `environment.apiUrl/prestadores` | ✅ uploadAvatar, deletarAvatar, upload portfólio, listar fotos |
 | `ChatService` | `environment.apiUrl/chat` | ✅ listar e enviar mensagens por propostaId |
+| `AdminService` | `environment.apiUrl/admin` | ✅ stats, listarUsuarios, ativarUsuario, listarOnline, listarSolicitacoes, alterarStatusSolicitacao |
 | `UserService` | `environment.apiUrl/users` | ✅ Centralizado em `environment.ts` |
 | `ViaCEPService` | `https://viacep.com.br` | ✅ Busca endereço por CEP |
 | `NotificationService` | — | ✅ Toasts e notificações em-tela |
@@ -646,6 +654,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | fix: "Perfil não encontrado" ao acessar perfil público — container backend rodava JAR pré-P4.4; `GET /api/prestadores/{id}/publico` inexistente causava 404; corrigido via `docker-compose up --build -d backend` | `main` | 2026-05-18 |
 | fix/cobertura-de-testes: testes backend (117 unitarios + 30 segurança) e frontend (69/70) corrigidos e expandidos; gap de segurança em `SecurityConfig` corrigido (`GET /api/prestadores/me/**` exige `ROLE_PRESTADOR`); tecnicas: `.with(user(buildUser(...)))` para autenticacao com User customizado, `PageRequest.of(0,10)` para serializar PageImpl corretamente | `fix/cobertura-de-testes` | 2026-05-18 |
 | seed_dados.py: script Python na raiz do projeto para popular o banco com dados de demonstracao — 10 clientes + 10 prestadores com perfil completo + 15 fluxos completos (solicitacao, proposta, 4 mensagens de chat por fluxo, aceitar, concluir, avaliacao mutua); notas variadas de 2 a 5 estrelas; pausas automaticas de 65s para respeitar o rate limit de 10 logins/min | raiz | 2026-05-18 |
+| feature/admin-online-solicitacoes: painel admin expandido com 3 funcionalidades novas — (1) rastreamento de presença via `OnlineTrackingFilter` (throttle 2 min, não @Component, registrado via `addFilterAfter`); campo `ultimo_acesso` em `usuarios` via `V10__add_ultimo_acesso_usuario.sql`; (2) aba "Online agora" com grid de usuários ativos nos últimos 5 min; (3) aba "Solicitações" com listagem paginada + filtro por status + alteração inline de status pelo admin; `SolicitacaoAdminDTO` com `totalPropostas`; `UserResumoDTO` ampliado com `ultimoAcesso` e `online`; `AdminStats` com `usuariosOnline`; 9 novos testes de segurança backend (AdminSegurancaTest); 13 novos testes frontend (AdminDashboardComponent); `@MockBean UserRepository` adicionado a `CategoriaSecurityTest`, `ChatSegurancaTest` e `PrestadorSegurancaTest` para corrigir context load após SecurityConfig depender de UserRepository | `feature/admin-online-solicitacoes` | 2026-05-18 |
 
 ---
 
@@ -656,6 +665,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | B6: migração de 19 templates HTML inline para arquivos `.html` separados | `feature/prioridade3-evolucao-produto` | 2026-05-15 |
 | Sistema de notificações — `Notificacao` entity, `NotificacaoService`, `NotificacaoController`, triggers em PropostaService/AvaliacaoService/SolicitacaoService, `V3` migration | `feature/prioridade3-evolucao-produto` | 2026-05-15 |
 | Painel admin — `AdminController` (`GET /api/admin/stats`, `GET /api/admin/usuarios`), `AdminDashboardComponent`, `adminGuard` | `feature/prioridade3-evolucao-produto` | 2026-05-15 |
+| feature/admin-online-solicitacoes — online tracking, aba usuários online, aba solicitações com filtro e alteração de status | `feature/admin-online-solicitacoes` | 2026-05-18 |
 | Busca geolocalizada — `GET /api/prestadores/proximo` com Haversine, `BuscaPrestadoresComponent`, coordenadas no perfil do prestador | `feature/prioridade3-evolucao-produto` | 2026-05-15 |
 | Sino de notificações no navbar — polling 30 s, badge de contagem, dropdown "Marcar todas como lidas" | `feature/prioridade3-evolucao-produto` | 2026-05-15 |
 | `AuthServiceTest` corrigido — `@Mock RefreshTokenService` e stub de `generateRefreshToken` adicionados | `feature/prioridade3-evolucao-produto` | 2026-05-15 |
@@ -664,4 +674,4 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
-*Atualizado em 2026-05-18 (fix/cobertura-de-testes + seed_dados.py) — sincronizado com README.md.*
+*Atualizado em 2026-05-18 (feature/admin-online-solicitacoes) — sincronizado com README.md.*

@@ -1,6 +1,7 @@
 package com.marketplace.servicos.controller;
 
 import com.marketplace.servicos.config.SecurityConfig;
+import com.marketplace.servicos.repository.UserRepository;
 import com.marketplace.servicos.security.CustomUserDetailsService;
 import com.marketplace.servicos.security.JwtAuthenticationFilter;
 import com.marketplace.servicos.service.FotoPrestadorService;
@@ -34,6 +35,7 @@ class PrestadorSegurancaTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockBean private UserRepository userRepository;
     @MockBean private PrestadorService prestadorService;
     @MockBean private FotoPrestadorService fotoPrestadorService;
     @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
