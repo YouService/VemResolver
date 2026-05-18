@@ -32,4 +32,6 @@ public class PrestadorDTO {
     private Integer totalAvaliacoes;
     private Double latitude;
     private Double longitude;
+    private String fotoPerfilUrl;
+    private Integer percentualCompletude;
 }

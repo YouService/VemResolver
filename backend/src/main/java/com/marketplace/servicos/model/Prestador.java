@@ -47,4 +47,10 @@ public class Prestador {
     private Double latitude;
 
     private Double longitude;
+
+    @Column(name = "foto_perfil_url", columnDefinition = "TEXT")
+    private String fotoPerfilUrl;
+
+    @Column(name = "percentual_completude", nullable = false)
+    private Integer percentualCompletude = 0;
 }

@@ -32,6 +32,11 @@
 
       <div class="container max-w-6xl mx-auto px-4 py-8">
 
+        <!-- Onboarding Checklist -->
+        @if (prestador) {
+          <app-onboarding-checklist></app-onboarding-checklist>
+        }
+
         <!-- Alert perfil incompleto -->
         @if (!prestador) {
           <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">

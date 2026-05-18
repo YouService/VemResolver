@@ -26,6 +26,16 @@ export class FotoService {
     return this.http.delete<void>(`${this.apiUrl}/me/fotos/${fotoId}`);
   }
 
+  uploadAvatar(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.apiUrl}/me/foto-perfil`, formData);
+  }
+
+  deletarAvatar(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/me/foto-perfil`);
+  }
+
   urlCompleta(urlRelativa: string): string {
     return `${environment.baseUrl}${urlRelativa}`;
   }
