@@ -1,5 +1,7 @@
 package com.marketplace.servicos.service;
 
+import com.marketplace.servicos.dto.CompletudePrestadorDTO;
+import com.marketplace.servicos.dto.CompletudePrestadorDTO.ItemChecklist;
 import com.marketplace.servicos.dto.PrestadorDTO;
 import com.marketplace.servicos.exception.BusinessException;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
@@ -8,6 +10,7 @@ import com.marketplace.servicos.model.Prestador;
 import com.marketplace.servicos.model.TipoUsuario;
 import com.marketplace.servicos.model.User;
 import com.marketplace.servicos.repository.CategoriaRepository;
+import com.marketplace.servicos.repository.FotoPrestadorRepository;
 import com.marketplace.servicos.repository.PrestadorRepository;
 import com.marketplace.servicos.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -21,32 +24,35 @@ import java.util.stream.Collectors;
 
 @Service
 public class PrestadorService {
-    
+
     private final PrestadorRepository prestadorRepository;
     private final UserRepository userRepository;
     private final CategoriaRepository categoriaRepository;
-    
-    public PrestadorService(PrestadorRepository prestadorRepository, 
-                           UserRepository userRepository,
-                           CategoriaRepository categoriaRepository) {
+    private final FotoPrestadorRepository fotoPrestadorRepository;
+
+    public PrestadorService(PrestadorRepository prestadorRepository,
+                            UserRepository userRepository,
+                            CategoriaRepository categoriaRepository,
+                            FotoPrestadorRepository fotoPrestadorRepository) {
         this.prestadorRepository = prestadorRepository;
         this.userRepository = userRepository;
         this.categoriaRepository = categoriaRepository;
+        this.fotoPrestadorRepository = fotoPrestadorRepository;
     }
-    
+
     @Transactional
     public PrestadorDTO criarOuAtualizar(PrestadorDTO dto) {
         User usuario = userRepository.findByIdAndTipo(dto.getUsuarioId(), TipoUsuario.PRESTADOR)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário prestador não encontrado"));
-        
+
         Prestador prestador = prestadorRepository.findByUsuarioId(dto.getUsuarioId())
                 .orElse(new Prestador());
-        
+
         List<Categoria> categorias = categoriaRepository.findAllById(dto.getCategoriasIds());
         if (categorias.size() != dto.getCategoriasIds().size()) {
             throw new BusinessException("Uma ou mais categorias não foram encontradas");
         }
-        
+
         prestador.setUsuario(usuario);
         prestador.setCategorias(categorias);
         prestador.setDescricaoPerfil(dto.getDescricaoPerfil());
@@ -56,24 +62,29 @@ public class PrestadorService {
         prestador.setLongitude(dto.getLongitude());
 
         prestador = prestadorRepository.save(prestador);
+
+        long fotoCount = fotoPrestadorRepository.countByPrestadorId(prestador.getId());
+        prestador.setPercentualCompletude(calcularPercentual(prestador, fotoCount));
+        prestador = prestadorRepository.save(prestador);
+
         return toDTO(prestador);
     }
-    
+
     public PrestadorDTO buscarPorId(Long id) {
         Prestador prestador = prestadorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Prestador não encontrado"));
         return toDTO(prestador);
     }
-    
+
     public PrestadorDTO buscarPorUsuarioId(Long usuarioId) {
         Prestador prestador = prestadorRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil de prestador não encontrado"));
         return toDTO(prestador);
     }
-    
+
     public Page<PrestadorDTO> buscar(Long categoriaId, String cidade, String estado, Double minAvaliacao, Pageable pageable) {
         Page<Prestador> prestadores;
-        
+
         if (categoriaId != null && cidade != null && estado != null) {
             prestadores = prestadorRepository.findByCategoriaAndLocalizacao(categoriaId, cidade, estado, pageable);
         } else if (categoriaId != null) {
@@ -84,10 +95,10 @@ public class PrestadorService {
         } else {
             prestadores = prestadorRepository.findAll(pageable);
         }
-        
+
         return prestadores.map(this::toDTO);
     }
-    
+
     public Page<PrestadorDTO> buscarProximos(double lat, double lng, double raioKm, Long categoriaId, Pageable pageable) {
         List<PrestadorDTO> resultado = prestadorRepository.findAll().stream()
                 .filter(p -> p.getLatitude() != null && p.getLongitude() != null)
@@ -100,6 +111,60 @@ public class PrestadorService {
         int end = Math.min(start + pageable.getPageSize(), resultado.size());
         List<PrestadorDTO> pagina = start > resultado.size() ? List.of() : resultado.subList(start, end);
         return new PageImpl<>(pagina, pageable, resultado.size());
+    }
+
+    public CompletudePrestadorDTO getCompletude(Long usuarioId) {
+        Prestador prestador = prestadorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil de prestador não encontrado"));
+        long fotoCount = fotoPrestadorRepository.countByPrestadorId(prestador.getId());
+        return calcularCompletude(prestador, fotoCount);
+    }
+
+    @Transactional
+    public void recalcularCompletude(Prestador prestador) {
+        long fotoCount = fotoPrestadorRepository.countByPrestadorId(prestador.getId());
+        prestador.setPercentualCompletude(calcularPercentual(prestador, fotoCount));
+        prestadorRepository.save(prestador);
+    }
+
+    private CompletudePrestadorDTO calcularCompletude(Prestador prestador, long fotoCount) {
+        User user = prestador.getUsuario();
+
+        List<ItemChecklist> itens = List.of(
+            new ItemChecklist("foto_perfil", "Foto de perfil (avatar)",
+                prestador.getFotoPerfilUrl() != null && !prestador.getFotoPerfilUrl().isBlank(),
+                15, "/prestador/perfil"),
+            new ItemChecklist("descricao", "Descrição do perfil (mín. 50 caracteres)",
+                prestador.getDescricaoPerfil() != null && prestador.getDescricaoPerfil().length() >= 50,
+                20, "/prestador/perfil"),
+            new ItemChecklist("categorias", "Pelo menos 1 categoria selecionada",
+                !prestador.getCategorias().isEmpty(),
+                15, "/prestador/perfil"),
+            new ItemChecklist("telefone", "Telefone preenchido",
+                user.getTelefone() != null && !user.getTelefone().isBlank(),
+                10, "/prestador/perfil"),
+            new ItemChecklist("localizacao", "Cidade e estado preenchidos",
+                prestador.getCidade() != null && !prestador.getCidade().isBlank()
+                    && prestador.getEstado() != null && !prestador.getEstado().isBlank(),
+                10, "/prestador/perfil"),
+            new ItemChecklist("portfolio", "Pelo menos 1 foto no portfólio",
+                fotoCount > 0,
+                20, "/prestador/perfil"),
+            new ItemChecklist("raio", "Raio de atendimento configurado (lat/lng)",
+                prestador.getLatitude() != null && prestador.getLongitude() != null,
+                10, "/prestador/perfil")
+        );
+
+        int percentual = itens.stream()
+                .filter(ItemChecklist::isConcluido)
+                .mapToInt(ItemChecklist::getPeso)
+                .sum();
+
+        return new CompletudePrestadorDTO(percentual, itens);
+    }
+
+    private int calcularPercentual(Prestador prestador, long fotoCount) {
+        return calcularCompletude(prestador, fotoCount).getPercentual();
     }
 
     private double haversine(double lat1, double lng1, double lat2, double lng2) {
@@ -124,6 +189,8 @@ public class PrestadorService {
         dto.setTotalAvaliacoes(prestador.getTotalAvaliacoes());
         dto.setLatitude(prestador.getLatitude());
         dto.setLongitude(prestador.getLongitude());
+        dto.setFotoPerfilUrl(prestador.getFotoPerfilUrl());
+        dto.setPercentualCompletude(prestador.getPercentualCompletude());
         return dto;
     }
 }

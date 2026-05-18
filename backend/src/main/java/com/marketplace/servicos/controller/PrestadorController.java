@@ -1,5 +1,6 @@
 package com.marketplace.servicos.controller;
 
+import com.marketplace.servicos.dto.CompletudePrestadorDTO;
 import com.marketplace.servicos.dto.PrestadorDTO;
 import com.marketplace.servicos.model.User;
 import com.marketplace.servicos.service.PrestadorService;
@@ -58,6 +59,13 @@ public class PrestadorController {
             @AuthenticationPrincipal User user) {
         dto.setUsuarioId(user.getId());
         return ResponseEntity.ok(prestadorService.criarOuAtualizar(dto));
+    }
+
+    @GetMapping("/me/completude")
+    @SecurityRequirement(name = "bearer-jwt")
+    @Operation(summary = "Calcular completude do perfil do prestador logado")
+    public ResponseEntity<CompletudePrestadorDTO> getCompletude(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(prestadorService.getCompletude(user.getId()));
     }
 
     @GetMapping("/proximo")

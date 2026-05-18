@@ -69,7 +69,10 @@
       "Bash(git rm *)",
       "Bash(dir *)",
       "Bash(git stash *)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(docker-compose down *)",
+      "Bash(git pull *)",
+      "Bash(./mvnw compile *)"
     ]
   }
 }
