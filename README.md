@@ -185,6 +185,7 @@ vemresolver/
 
 - ✅ **P4.1 Chat interno** entre cliente e prestador — um chat privado por proposta (pré e pós aceite); polling 3s; somente leitura após encerramento ou proposta recusada; botão "💬 Chat" integrado nos dashboards e na tela de propostas recebidas; 11 testes unitários `ChatServiceTest` (CT-01-01 a CT-01-11)
 - ✅ **fix/chat-p4-1** — DataSeeder corrigido para criar perfil de prestador, solicitação ABERTA e proposta ENVIADA de teste; chat disponível imediatamente após `docker-compose up` sem precisar de reset de banco
+- ✅ **P4.2 Portfólio de fotos** — prestador adiciona até 10 fotos (JPEG/PNG/WEBP, máx 5 MB cada) em "Meu Perfil"; grid com remoção por hover; armazenamento em volume Docker persistente; `GET /api/prestadores/{id}/fotos` público; completude do perfil passa a incluir fotos como 5º critério
 
 ### Prioridade 3 — Evolução do produto (concluída)
 
@@ -204,7 +205,7 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 | # | Funcionalidade | Justificativa | Impacto | Esforço |
 |---|---|---|---|---|
 | P4.1 | **Chat interno** — um chat por proposta, disponível antes e após o aceite | Permite negociação antes do aceite; mantém histórico dentro da plataforma; abre caminho para monetização por contato | Alto | Médio | ✅ Entregue |
-| P4.2 | **Portfólio de fotos** no perfil do prestador (até 10 imagens de trabalhos realizados) | Fotos são o principal elemento de conversão em serviços visuais (pintura, reforma, cozinha) | Alto | Baixo |
+| P4.2 | **Portfólio de fotos** no perfil do prestador (até 10 imagens de trabalhos realizados) | Fotos são o principal elemento de conversão em serviços visuais (pintura, reforma, cozinha) | Alto | Baixo | ✅ Entregue |
 | P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Prestadores sem guia visual ficam com perfis fracos; reduz taxa de prestadores cadastrados mas inativos | Médio-Alto | Baixo |
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar serviço | Prestador não tem URL pública para divulgar fora da plataforma; gera tráfego orgânico de volta | Médio-Alto | Baixo |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta recebida, proposta aceita, nova solicitação compatível) | Polling de 30 s só funciona com a aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio |
