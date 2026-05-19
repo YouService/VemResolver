@@ -344,6 +344,92 @@ class AvaliacaoServiceTest {
         assertEquals(4.5, salvo.getAvaliacaoMedia());      // média geral: (4+5)/2
     }
 
+    // ── DTO e persistência dimensional (P4.7 Tarefa 3) ──────────────────────
+
+    @Test
+    @DisplayName("criar: DTO com 3 dimensões → entidade persiste as notas dimensionais")
+    void criar_DtoComDimensoes_EntidadePersisteDimensoes() {
+        AvaliacaoDTO dto = buildAvaliacaoDTO(5, "Ótimo");
+        dto.setNotaPontualidade(5);
+        dto.setNotaQualidade(4);
+        dto.setNotaComunicacao(3);
+
+        when(solicitacaoRepository.findById(20L)).thenReturn(Optional.of(solicitacao));
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(20L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(false);
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(cliente));
+
+        ArgumentCaptor<Avaliacao> captor = ArgumentCaptor.forClass(Avaliacao.class);
+        when(avaliacaoRepository.save(captor.capture())).thenAnswer(inv -> {
+            Avaliacao a = inv.getArgument(0);
+            a.setId(70L);
+            return a;
+        });
+        stubMediaPrestadorComDimensoes(List.of());
+
+        avaliacaoService.criar(dto, 1L);
+
+        Avaliacao salva = captor.getValue();
+        assertEquals(5, salva.getNotaPontualidade());
+        assertEquals(4, salva.getNotaQualidade());
+        assertEquals(3, salva.getNotaComunicacao());
+    }
+
+    @Test
+    @DisplayName("criar: DTO sem dimensões → entidade tem notas dimensionais null")
+    void criar_DtoSemDimensoes_EntidadeSemDimensoes() {
+        AvaliacaoDTO dto = buildAvaliacaoDTO(4, null);
+
+        when(solicitacaoRepository.findById(20L)).thenReturn(Optional.of(solicitacao));
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(20L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(false);
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(cliente));
+
+        ArgumentCaptor<Avaliacao> captor = ArgumentCaptor.forClass(Avaliacao.class);
+        when(avaliacaoRepository.save(captor.capture())).thenAnswer(inv -> {
+            Avaliacao a = inv.getArgument(0);
+            a.setId(71L);
+            return a;
+        });
+        stubMediaPrestadorComDimensoes(List.of());
+
+        avaliacaoService.criar(dto, 1L);
+
+        Avaliacao salva = captor.getValue();
+        assertNull(salva.getNotaPontualidade());
+        assertNull(salva.getNotaQualidade());
+        assertNull(salva.getNotaComunicacao());
+    }
+
+    @Test
+    @DisplayName("criar: toDTO mapeia notas dimensionais da entidade de volta ao DTO retornado")
+    void criar_ToDTO_MapeiaDimensoesNoRetorno() {
+        AvaliacaoDTO dto = buildAvaliacaoDTO(5, "Top");
+        dto.setNotaPontualidade(5);
+        dto.setNotaQualidade(5);
+        dto.setNotaComunicacao(4);
+
+        when(solicitacaoRepository.findById(20L)).thenReturn(Optional.of(solicitacao));
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(20L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(false);
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(avaliacaoRepository.save(any(Avaliacao.class))).thenAnswer(inv -> {
+            Avaliacao a = inv.getArgument(0);
+            a.setId(72L);
+            return a;
+        });
+        stubMediaPrestadorComDimensoes(List.of());
+
+        AvaliacaoDTO resultado = avaliacaoService.criar(dto, 1L);
+
+        assertEquals(5, resultado.getNotaPontualidade());
+        assertEquals(5, resultado.getNotaQualidade());
+        assertEquals(4, resultado.getNotaComunicacao());
+    }
+
     // ── notas dimensionais (P4.7 Tarefa 1) ──────────────────────────────────
 
     @Test
@@ -417,6 +503,13 @@ class AvaliacaoServiceTest {
             a.setTipo(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR);
             return a;
         }).toList();
+        when(avaliacaoRepository.findByPrestadorIdAndTipo(eq(10L),
+                eq(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(avaliacoes));
+        when(prestadorRepository.save(any())).thenReturn(prestador);
+    }
+
+    private void stubMediaPrestadorComDimensoes(List<Avaliacao> avaliacoes) {
         when(avaliacaoRepository.findByPrestadorIdAndTipo(eq(10L),
                 eq(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(avaliacoes));
