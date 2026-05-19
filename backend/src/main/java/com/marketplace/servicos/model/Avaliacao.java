@@ -44,4 +44,14 @@ public class Avaliacao {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
+
+    // Dimensões opcionais — presentes apenas em avaliações CLIENTE_AVALIA_PRESTADOR
+    @Column(name = "nota_pontualidade")
+    private Integer notaPontualidade;
+
+    @Column(name = "nota_qualidade")
+    private Integer notaQualidade;
+
+    @Column(name = "nota_comunicacao")
+    private Integer notaComunicacao;
 }

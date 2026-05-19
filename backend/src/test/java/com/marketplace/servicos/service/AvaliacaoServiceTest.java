@@ -220,6 +220,59 @@ class AvaliacaoServiceTest {
                 () -> avaliacaoService.criarPorPrestador(dto, 2L));
     }
 
+    // ── notas dimensionais (P4.7 Tarefa 1) ──────────────────────────────────
+
+    @Test
+    @DisplayName("Avaliacao sem dimensões: notaPontualidade, notaQualidade e notaComunicacao são null")
+    void avaliacao_SemDimensoes_CamposSaoNull() {
+        Avaliacao a = new Avaliacao();
+        a.setNota(4);
+
+        assertNull(a.getNotaPontualidade());
+        assertNull(a.getNotaQualidade());
+        assertNull(a.getNotaComunicacao());
+    }
+
+    @Test
+    @DisplayName("Avaliacao com dimensões: campos armazenam os valores atribuídos")
+    void avaliacao_ComDimensoes_CamposArmazenamValores() {
+        Avaliacao a = new Avaliacao();
+        a.setNota(5);
+        a.setNotaPontualidade(5);
+        a.setNotaQualidade(4);
+        a.setNotaComunicacao(3);
+
+        assertEquals(5, a.getNotaPontualidade());
+        assertEquals(4, a.getNotaQualidade());
+        assertEquals(3, a.getNotaComunicacao());
+    }
+
+    @Test
+    @DisplayName("criar: avaliação sem dimensões persiste sem erros (campos nullable)")
+    void criar_SemDimensoes_PersisteSemErro() {
+        AvaliacaoDTO dto = buildAvaliacaoDTO(4, "Bom serviço");
+
+        when(solicitacaoRepository.findById(20L)).thenReturn(Optional.of(solicitacao));
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(20L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(false);
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        stubMediaPrestador(List.of(4));
+        when(avaliacaoRepository.save(any(Avaliacao.class))).thenAnswer(inv -> {
+            Avaliacao a = inv.getArgument(0);
+            a.setId(55L);
+            assertNull(a.getNotaPontualidade(), "notaPontualidade deve ser null quando não informada");
+            assertNull(a.getNotaQualidade(),    "notaQualidade deve ser null quando não informada");
+            assertNull(a.getNotaComunicacao(),  "notaComunicacao deve ser null quando não informada");
+            return a;
+        });
+
+        AvaliacaoDTO resultado = avaliacaoService.criar(dto, 1L);
+
+        assertNotNull(resultado);
+        assertEquals(4, resultado.getNota());
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private AvaliacaoDTO buildAvaliacaoDTO(int nota, String comentario) {
