@@ -78,4 +78,17 @@ export class PerfilPublicoComponent implements OnInit {
   get mostrarBotaoSolicitar(): boolean {
     return !this.authService.isPrestador();
   }
+
+  get temMediasDimensionais(): boolean {
+    return !!(this.perfil?.mediaPontualidade || this.perfil?.mediaQualidade || this.perfil?.mediaComunicacao);
+  }
+
+  get dimensoesPerfil(): Array<{ label: string; valor: number }> {
+    if (!this.perfil) return [];
+    return [
+      { label: 'Pontualidade', valor: this.perfil.mediaPontualidade! },
+      { label: 'Qualidade', valor: this.perfil.mediaQualidade! },
+      { label: 'Comunicação', valor: this.perfil.mediaComunicacao! }
+    ].filter(d => d.valor != null);
+  }
 }

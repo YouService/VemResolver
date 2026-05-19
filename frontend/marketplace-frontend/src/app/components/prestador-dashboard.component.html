@@ -24,6 +24,17 @@
                   <span class="font-semibold text-gray-800">{{ prestador?.avaliacaoMedia | number:'1.1-1' }}</span>
                   <span class="text-gray-500 text-sm">({{ prestador?.totalAvaliacoes }} avaliação{{ (prestador?.totalAvaliacoes || 0) !== 1 ? 'ões' : '' }} de clientes)</span>
                 </div>
+                @if (dimensoesDashboard.length > 0) {
+                  <div class="flex flex-wrap gap-4 mt-2">
+                    @for (dim of dimensoesDashboard; track dim.label) {
+                      <div class="flex items-center gap-1 text-xs text-gray-600">
+                        <span>{{ dim.icone }}</span>
+                        <span>{{ dim.label }}:</span>
+                        <span class="font-semibold text-gray-800">{{ dim.valor | number:'1.1-1' }}</span>
+                      </div>
+                    }
+                  </div>
+                }
               } @else {
                 <p class="text-gray-400 text-xs mt-1">Sem avaliações recebidas ainda</p>
               }
