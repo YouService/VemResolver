@@ -7,12 +7,12 @@
             <!-- Logo -->
             <div class="flex items-center">
               <a routerLink="/" class="flex items-center gap-2">
-                <img src="assets/logo.png" alt="VemResolver" class="w-[200px] h-[45px] object-contain">
+                <img src="assets/logo.png" alt="VemResolver" class="w-[140px] sm:w-[200px] h-[40px] sm:h-[45px] object-contain">
               </a>
             </div>
 
             <!-- User Menu -->
-            <div class="flex items-center space-x-6 ml-auto">
+            <div class="flex items-center space-x-2 sm:space-x-4 ml-auto">
               @if (authService.currentUser$ | async; as user) {
                 <div class="flex items-center space-x-6">
                   <div class="text-right hidden md:block">
@@ -50,7 +50,7 @@
                     </button>
 
                     @if (mostrarPainel) {
-                      <div class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                      <div class="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
                         <div class="p-3 border-b flex items-center justify-between">
                           <span class="font-semibold text-gray-900 text-sm">Notificações</span>
                           <button (click)="marcarTodasLidas()" class="text-xs text-blue-600 hover:text-blue-800">Marcar todas como lidas</button>

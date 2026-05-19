@@ -8,6 +8,13 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Previne zoom automático do iOS ao focar em campos com font-size < 16px */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea,
+select {
+  font-size: 16px;
+}
+
 @keyframes fadeInDown {
   from {
     opacity: 0;

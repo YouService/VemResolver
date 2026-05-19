@@ -1,0 +1,25 @@
+{
+  "name": "VemResolver — Marketplace de Serviços",
+  "short_name": "VemResolver",
+  "description": "Conectamos clientes a prestadores de serviços autônomos de forma rápida e segura.",
+  "theme_color": "#1a56db",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}
