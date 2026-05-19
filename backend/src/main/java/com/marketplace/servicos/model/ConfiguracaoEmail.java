@@ -23,6 +23,9 @@ public class ConfiguracaoEmail {
     @Column(nullable = false)
     private Boolean ativo = false;
 
+    @Column(name = "email_nova_solicitacao_ativo", nullable = false)
+    private Boolean emailNovaSolicitacaoAtivo = false;
+
     @Column(name = "atualizado_em")
     private LocalDateTime atualizadoEm;
 
@@ -40,6 +43,9 @@ public class ConfiguracaoEmail {
 
     public Boolean getAtivo() { return ativo; }
     public void setAtivo(Boolean ativo) { this.ativo = ativo; }
+
+    public Boolean getEmailNovaSolicitacaoAtivo() { return emailNovaSolicitacaoAtivo; }
+    public void setEmailNovaSolicitacaoAtivo(Boolean emailNovaSolicitacaoAtivo) { this.emailNovaSolicitacaoAtivo = emailNovaSolicitacaoAtivo; }
 
     public LocalDateTime getAtualizadoEm() { return atualizadoEm; }
     public void setAtualizadoEm(LocalDateTime atualizadoEm) { this.atualizadoEm = atualizadoEm; }

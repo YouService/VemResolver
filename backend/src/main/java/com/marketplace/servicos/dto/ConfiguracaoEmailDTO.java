@@ -8,6 +8,7 @@ public class ConfiguracaoEmailDTO {
     private String emailRemetente;
     private String nomeRemetente;
     private Boolean ativo;
+    private Boolean emailNovaSolicitacaoAtivo;
     private LocalDateTime atualizadoEm;
     private Boolean configurado;
 
@@ -22,6 +23,9 @@ public class ConfiguracaoEmailDTO {
 
     public Boolean getAtivo() { return ativo; }
     public void setAtivo(Boolean ativo) { this.ativo = ativo; }
+
+    public Boolean getEmailNovaSolicitacaoAtivo() { return emailNovaSolicitacaoAtivo; }
+    public void setEmailNovaSolicitacaoAtivo(Boolean emailNovaSolicitacaoAtivo) { this.emailNovaSolicitacaoAtivo = emailNovaSolicitacaoAtivo; }
 
     public LocalDateTime getAtualizadoEm() { return atualizadoEm; }
     public void setAtualizadoEm(LocalDateTime atualizadoEm) { this.atualizadoEm = atualizadoEm; }

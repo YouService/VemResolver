@@ -103,6 +103,27 @@ public class BrevoEmailService implements EmailService {
     }
 
     @Override
+    public void sendNovaSolicitacao(String to, String categoriaNome, String cidade, String estado, String descricao) {
+        Optional<ConfiguracaoEmail> configOpt = configRepo.findFirstByOrderByIdAsc();
+        if (configOpt.isEmpty() || !Boolean.TRUE.equals(configOpt.get().getEmailNovaSolicitacaoAtivo())) return;
+
+        String url = frontendUrl + "/prestador/dashboard";
+        String desc = descricao != null && descricao.length() > 80 ? descricao.substring(0, 80) + "..." : descricao;
+        String html = buildHtml(
+            "Nova solicitação de serviço",
+            "Nova solicitação disponível!",
+            "Uma nova solicitação de <strong>" + escapeHtml(categoriaNome) + "</strong> foi publicada em " +
+            "<strong>" + escapeHtml(cidade) + "/" + escapeHtml(estado) + "</strong>:<br>" +
+            "<em>\"" + escapeHtml(desc) + "\"</em><br><br>" +
+            "Acesse o painel para enviar uma proposta.",
+            url,
+            "VER OPORTUNIDADES",
+            null
+        );
+        enviar(to, "Nova solicitação de serviço — VemResolver", html);
+    }
+
+    @Override
     public void sendEmailTeste(String to) {
         String html = buildHtml(
             "E-mail de teste",

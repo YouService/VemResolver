@@ -26,4 +26,9 @@ public class ConsoleEmailService implements EmailService {
     public void sendEmailTeste(String to) {
         System.out.println("[EMAIL] TESTE → " + to);
     }
+
+    @Override
+    public void sendNovaSolicitacao(String to, String categoriaNome, String cidade, String estado, String descricao) {
+        System.out.println("[EMAIL] NOVA_SOLICITACAO → " + to + " | categoria=" + categoriaNome + " | cidade=" + cidade + "/" + estado);
+    }
 }

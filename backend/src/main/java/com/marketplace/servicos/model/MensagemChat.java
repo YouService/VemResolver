@@ -34,6 +34,9 @@ public class MensagemChat {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String texto;
 
+    @Column(name = "url_anexo", columnDefinition = "TEXT")
+    private String urlAnexo;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataEnvio;

@@ -268,6 +268,7 @@ export interface MensagemChat {
   remetenteId?: number;
   remetenteNome?: string;
   texto: string;
+  urlAnexo?: string;
   dataEnvio?: string;
   lida?: boolean;
 }

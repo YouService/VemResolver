@@ -1,6 +1,5 @@
 package com.marketplace.servicos.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,9 +17,10 @@ public class MensagemChatDTO {
     private Long remetenteId;
     private String remetenteNome;
 
-    @NotBlank(message = "Texto é obrigatório")
     @Size(max = 2000, message = "Texto deve ter no máximo 2000 caracteres")
     private String texto;
+
+    private String urlAnexo;
 
     private LocalDateTime dataEnvio;
     private Boolean lida;

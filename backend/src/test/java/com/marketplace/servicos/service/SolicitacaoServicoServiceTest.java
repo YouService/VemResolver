@@ -5,6 +5,7 @@ import com.marketplace.servicos.exception.BusinessException;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.*;
 import com.marketplace.servicos.repository.AvaliacaoRepository;
+import com.marketplace.servicos.repository.PrestadorRepository;
 import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,6 +43,9 @@ class SolicitacaoServicoServiceTest {
     private PropostaRepository propostaRepository;
 
     @Mock
+    private PrestadorRepository prestadorRepository;
+
+    @Mock
     private NotificacaoService notificacaoService;
 
     @Mock
@@ -46,6 +53,9 @@ class SolicitacaoServicoServiceTest {
 
     @Mock
     private PrestadorService prestadorService;
+
+    @Mock
+    private WebPushService webPushService;
 
     @InjectMocks
     private SolicitacaoServicoService solicitacaoService;
@@ -56,6 +66,9 @@ class SolicitacaoServicoServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Inject @Lazy field not handled by constructor injection
+        org.springframework.test.util.ReflectionTestUtils.setField(solicitacaoService, "webPushService", webPushService);
+
         cliente = new User();
         cliente.setId(1L);
         cliente.setNome("João");
