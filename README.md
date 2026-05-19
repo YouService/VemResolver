@@ -257,6 +257,21 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 
 ---
 
+## Próximos passos
+
+Todas as prioridades P1–P4 estão concluídas. O backlog completo de funcionalidades futuras está documentado em [`docs/BACKLOG.md`](docs/BACKLOG.md), organizado em fases:
+
+| Fase | Foco | Prioridade |
+|---|---|---|
+| Fase 1 | Deploy + CI/CD + Correção de vulnerabilidades (P5) | 🔴 Crítico |
+| Fase 2 | Monetização: créditos pré-pagos + gateway de pagamento (P6) | 🟠 Alta |
+| Fase 3 | Crescimento: busca full-text + categorias + mobile (P7, P11) | 🟠 Alta |
+| Fase 4 | Confiança: verificação de identidade + denúncias (P8, P10) | 🟡 Média |
+| Fase 5 | Segurança avançada: refresh token rotation + auditoria (P12) | 🟡 Média |
+| Fase 6 | Engajamento: push notifications + chat com imagens (P9) | 🟢 Normal |
+
+---
+
 ## Autor
 
 Felipe Andrade Lima — [GitHub](https://github.com/felipealima1984)
