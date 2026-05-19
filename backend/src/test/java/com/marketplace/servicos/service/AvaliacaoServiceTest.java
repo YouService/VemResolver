@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import org.mockito.ArgumentCaptor;
+
 @ExtendWith(MockitoExtension.class)
 class AvaliacaoServiceTest {
 
@@ -218,6 +220,128 @@ class AvaliacaoServiceTest {
 
         assertThrows(BusinessException.class,
                 () -> avaliacaoService.criarPorPrestador(dto, 2L));
+    }
+
+    // ── médias dimensionais no prestador (P4.7 Tarefa 2) ────────────────────
+
+    @Test
+    @DisplayName("criar: avaliação com 3 dimensões → médias salvas no prestador")
+    void criar_ComTodasDimensoes_MediasDimensionaisSalvasNoPrestador() {
+        AvaliacaoDTO dto = buildAvaliacaoDTO(5, "Excelente");
+
+        when(solicitacaoRepository.findById(20L)).thenReturn(Optional.of(solicitacao));
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(20L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(false);
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(avaliacaoRepository.save(any(Avaliacao.class))).thenAnswer(inv -> {
+            Avaliacao a = inv.getArgument(0);
+            a.setId(60L);
+            return a;
+        });
+
+        Avaliacao avaliacaoComDim = new Avaliacao();
+        avaliacaoComDim.setNota(5);
+        avaliacaoComDim.setNotaPontualidade(5);
+        avaliacaoComDim.setNotaQualidade(4);
+        avaliacaoComDim.setNotaComunicacao(3);
+        avaliacaoComDim.setCliente(cliente);
+        avaliacaoComDim.setPrestador(prestador);
+        avaliacaoComDim.setTipo(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR);
+        when(avaliacaoRepository.findByPrestadorIdAndTipo(eq(10L),
+                eq(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(avaliacaoComDim)));
+        ArgumentCaptor<Prestador> captor = ArgumentCaptor.forClass(Prestador.class);
+        when(prestadorRepository.save(captor.capture())).thenReturn(prestador);
+
+        avaliacaoService.criar(dto, 1L);
+
+        Prestador salvo = captor.getValue();
+        assertEquals(5.0, salvo.getMediaPontualidade());
+        assertEquals(4.0, salvo.getMediaQualidade());
+        assertEquals(3.0, salvo.getMediaComunicacao());
+    }
+
+    @Test
+    @DisplayName("criar: avaliações sem dimensões → mediaPontualidade/Qualidade/Comunicacao ficam null")
+    void criar_SemDimensoes_MediasDimensionaisFicamNull() {
+        AvaliacaoDTO dto = buildAvaliacaoDTO(4, null);
+
+        when(solicitacaoRepository.findById(20L)).thenReturn(Optional.of(solicitacao));
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(20L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(false);
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(avaliacaoRepository.save(any(Avaliacao.class))).thenAnswer(inv -> {
+            Avaliacao a = inv.getArgument(0);
+            a.setId(61L);
+            return a;
+        });
+
+        Avaliacao semDim = new Avaliacao();
+        semDim.setNota(4);
+        semDim.setCliente(cliente);
+        semDim.setPrestador(prestador);
+        semDim.setTipo(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR);
+        when(avaliacaoRepository.findByPrestadorIdAndTipo(eq(10L),
+                eq(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(semDim)));
+        ArgumentCaptor<Prestador> captor = ArgumentCaptor.forClass(Prestador.class);
+        when(prestadorRepository.save(captor.capture())).thenReturn(prestador);
+
+        avaliacaoService.criar(dto, 1L);
+
+        Prestador salvo = captor.getValue();
+        assertNull(salvo.getMediaPontualidade());
+        assertNull(salvo.getMediaQualidade());
+        assertNull(salvo.getMediaComunicacao());
+    }
+
+    @Test
+    @DisplayName("criar: mix de avaliações com e sem dimensões → média apenas das que têm o campo preenchido")
+    void criar_MixComESemDimensoes_MediaCalculadaApenasComValores() {
+        AvaliacaoDTO dto = buildAvaliacaoDTO(4, null);
+
+        when(solicitacaoRepository.findById(20L)).thenReturn(Optional.of(solicitacao));
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(20L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(false);
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(avaliacaoRepository.save(any(Avaliacao.class))).thenAnswer(inv -> {
+            Avaliacao a = inv.getArgument(0);
+            a.setId(62L);
+            return a;
+        });
+
+        // avaliação antiga sem dimensões
+        Avaliacao semDim = new Avaliacao();
+        semDim.setNota(4);
+        semDim.setCliente(cliente);
+        semDim.setPrestador(prestador);
+        semDim.setTipo(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR);
+
+        // avaliação nova com dimensões (pontualidade=5, qualidade=3, comunicacao=null)
+        Avaliacao comDim = new Avaliacao();
+        comDim.setNota(5);
+        comDim.setNotaPontualidade(5);
+        comDim.setNotaQualidade(3);
+        comDim.setCliente(cliente);
+        comDim.setPrestador(prestador);
+        comDim.setTipo(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR);
+
+        when(avaliacaoRepository.findByPrestadorIdAndTipo(eq(10L),
+                eq(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(semDim, comDim)));
+        ArgumentCaptor<Prestador> captor = ArgumentCaptor.forClass(Prestador.class);
+        when(prestadorRepository.save(captor.capture())).thenReturn(prestador);
+
+        avaliacaoService.criar(dto, 1L);
+
+        Prestador salvo = captor.getValue();
+        assertEquals(5.0, salvo.getMediaPontualidade());   // só comDim tem pontualidade
+        assertEquals(3.0, salvo.getMediaQualidade());      // só comDim tem qualidade
+        assertNull(salvo.getMediaComunicacao());            // nenhuma tem comunicacao
+        assertEquals(4.5, salvo.getAvaliacaoMedia());      // média geral: (4+5)/2
     }
 
     // ── notas dimensionais (P4.7 Tarefa 1) ──────────────────────────────────
