@@ -23,11 +23,16 @@ export class ChatComponent implements OnInit, OnDestroy {
   textoMensagem = '';
   enviando = false;
   carregando = false;
+  carregandoAnteriores = false;
   erro = '';
   contratoEncerrado = false;
   contratoDescricao = '';
   clienteNome = '';
   prestadorNome = '';
+
+  paginaAtual = 0;
+  totalPaginas = 1;
+  readonly tamanhoPagina = 20;
 
   private intervalo?: ReturnType<typeof setInterval>;
 
@@ -51,6 +56,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.prestadorNome = proposta.prestadorNome ?? '';
         this.contratoEncerrado =
           proposta.status === StatusProposta.RECUSADA ||
+          proposta.status === StatusProposta.CANCELADA_PELO_PRESTADOR ||
           proposta.solicitacaoStatus === StatusSolicitacao.CONCLUIDA ||
           proposta.solicitacaoStatus === StatusSolicitacao.CANCELADA;
       },
@@ -59,8 +65,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.carregarMensagens();
-    this.intervalo = setInterval(() => this.carregarMensagens(), 3000);
+    this.carregarPaginaInicial();
+    this.intervalo = setInterval(() => this.carregarNovasMensagens(), 3000);
   }
 
   ngOnDestroy(): void {
@@ -69,26 +75,76 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
-  carregarMensagens(): void {
-    if (!this.propostaId) return;
+  carregarPaginaInicial(): void {
     this.carregando = true;
-    this.chatService.listar(this.propostaId).subscribe({
-      next: (msgs) => {
-        this.mensagens = msgs;
+    this.chatService.listarPaginado(this.propostaId, 0, this.tamanhoPagina).subscribe({
+      next: (page) => {
+        this.totalPaginas = page.totalPages;
+        this.paginaAtual = 0;
+        // Backend retorna DESC (mais recente primeiro) — invertemos para exibir
+        this.mensagens = [...page.content].reverse();
         this.carregando = false;
-        const naoLidas = msgs.filter(
-          (m) => !m.lida && m.remetenteId !== this.currentUserId
-        ).length;
-        this.novasMensagens = naoLidas;
-        if (naoLidas > 0) {
-          this.chatService.marcarComoLidas(this.propostaId).subscribe();
-        }
+        this.marcarLidasSeNecessario();
         setTimeout(() => this.scrollParaFim(), 50);
       },
       error: () => {
         this.carregando = false;
       }
     });
+  }
+
+  carregarMensagensAnteriores(): void {
+    if (this.paginaAtual + 1 >= this.totalPaginas || this.carregandoAnteriores) return;
+    this.carregandoAnteriores = true;
+    const proximaPagina = this.paginaAtual + 1;
+
+    this.chatService.listarPaginado(this.propostaId, proximaPagina, this.tamanhoPagina).subscribe({
+      next: (page) => {
+        const container = document.getElementById('chat-messages');
+        const alturaAntes = container?.scrollHeight ?? 0;
+
+        const antigas = [...page.content].reverse();
+        this.mensagens = [...antigas, ...this.mensagens];
+        this.paginaAtual = proximaPagina;
+        this.carregandoAnteriores = false;
+
+        // Mantém posição do scroll após prepend
+        setTimeout(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight - alturaAntes;
+          }
+        }, 0);
+      },
+      error: () => { this.carregandoAnteriores = false; }
+    });
+  }
+
+  carregarNovasMensagens(): void {
+    if (!this.propostaId) return;
+    this.chatService.listar(this.propostaId).subscribe({
+      next: (todas) => {
+        const ids = new Set(this.mensagens.map(m => m.id));
+        const novas = todas.filter(m => m.id && !ids.has(m.id));
+        if (novas.length > 0) {
+          this.mensagens = [...this.mensagens, ...novas];
+          const naoLidas = novas.filter(m => !m.lida && m.remetenteId !== this.currentUserId).length;
+          this.novasMensagens += naoLidas;
+          if (naoLidas > 0) this.chatService.marcarComoLidas(this.propostaId).subscribe();
+          setTimeout(() => this.scrollParaFim(), 50);
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  private marcarLidasSeNecessario(): void {
+    const naoLidas = this.mensagens.filter(m => !m.lida && m.remetenteId !== this.currentUserId).length;
+    this.novasMensagens = naoLidas;
+    if (naoLidas > 0) this.chatService.marcarComoLidas(this.propostaId).subscribe();
+  }
+
+  get temMensagensAnteriores(): boolean {
+    return this.paginaAtual + 1 < this.totalPaginas;
   }
 
   enviarMensagem(): void {
@@ -117,7 +173,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: (msgReal) => {
         this.mensagens = [...this.mensagens.slice(0, -1), msgReal];
         this.enviando = false;
-        this.carregarMensagens();
       },
       error: () => {
         this.mensagens = this.mensagens.slice(0, -1);

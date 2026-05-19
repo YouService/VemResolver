@@ -332,11 +332,18 @@
                       </span>
                       <span class="text-xs text-gray-400">Enviada {{ formatarData(proposta.dataEnvio) }}</span>
                     </div>
-                    <a
-                      [routerLink]="['/chat/proposta', proposta.id]"
-                      class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm whitespace-nowrap">
-                      💬 Chat
-                    </a>
+                    <div class="flex gap-2">
+                      <a
+                        [routerLink]="['/chat/proposta', proposta.id]"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm whitespace-nowrap">
+                        💬 Chat
+                      </a>
+                      <button
+                        (click)="cancelarProposta(proposta.id!)"
+                        class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-medium text-sm whitespace-nowrap">
+                        ✕ Cancelar
+                      </button>
+                    </div>
                   </div>
                 </div>
               }

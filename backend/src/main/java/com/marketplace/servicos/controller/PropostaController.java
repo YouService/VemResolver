@@ -74,4 +74,12 @@ public class PropostaController {
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(propostaService.recusarProposta(id, user.getId()));
     }
+
+    @PatchMapping("/{id}/cancelar")
+    @Operation(summary = "Cancelar proposta (prestador)")
+    public ResponseEntity<PropostaDTO> cancelar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(propostaService.cancelarProposta(id, user.getId()));
+    }
 }

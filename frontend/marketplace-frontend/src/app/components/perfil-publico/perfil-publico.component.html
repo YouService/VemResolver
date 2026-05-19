@@ -141,38 +141,105 @@
       }
 
       <!-- Avaliações -->
-      @if (perfil.avaliacoes.length > 0) {
+      @if (perfil.totalAvaliacoes > 0) {
         <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-4">
-            Avaliações de Clientes
-            @if (perfil.totalAvaliacoes > 5) {
-              <span class="text-sm font-normal text-gray-500 ml-2">(últimas 5 de {{ perfil.totalAvaliacoes }})</span>
-            }
-          </h2>
-          <div class="space-y-4">
-            @for (av of perfil.avaliacoes; track av.nomeAvaliador) {
-              <div class="border-b pb-4 last:border-0 last:pb-0">
-                <div class="flex items-start justify-between gap-4">
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="font-semibold text-gray-800">{{ av.nomeAvaliador }}</span>
-                      <div class="flex text-yellow-400 text-sm">
-                        @for (star of [1,2,3,4,5]; track star) {
-                          <span>{{ star <= av.nota ? '★' : '☆' }}</span>
-                        }
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <h2 class="text-xl font-bold text-gray-900">
+              Avaliações de Clientes
+            </h2>
+            <!-- Chips de filtro por nota -->
+            <div class="flex flex-wrap gap-2">
+              <button
+                (click)="filtrarPorNota(null)"
+                [class]="filtroNota === null
+                  ? 'px-3 py-1 rounded-full text-sm font-semibold bg-blue-600 text-white'
+                  : 'px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                Todas
+              </button>
+              @for (n of [5,4,3,2,1]; track n) {
+                <button
+                  (click)="filtrarPorNota(n)"
+                  [class]="filtroNota === n
+                    ? 'px-3 py-1 rounded-full text-sm font-semibold bg-yellow-400 text-gray-900'
+                    : 'px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                  {{ n }}★
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (carregandoFiltro) {
+            <div class="text-center py-6 text-gray-500 text-sm">Filtrando...</div>
+          } @else if (avaliacoesExibidas.length === 0) {
+            <p class="text-gray-400 text-sm text-center py-4">Nenhuma avaliação com essa nota.</p>
+          } @else {
+            <div class="space-y-5">
+              @for (av of avaliacoesExibidas; track (av.avaliacaoId ?? av.nomeAvaliador)) {
+                <div class="border-b pb-5 last:border-0 last:pb-0">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="font-semibold text-gray-800">{{ av.nomeAvaliador }}</span>
+                        <div class="flex text-yellow-400 text-sm">
+                          @for (star of [1,2,3,4,5]; track star) {
+                            <span>{{ star <= av.nota ? '★' : '☆' }}</span>
+                          }
+                        </div>
                       </div>
+                      @if (av.comentario) {
+                        <p class="text-gray-600 text-sm">{{ av.comentario }}</p>
+                      }
+
+                      <!-- Resposta do prestador existente -->
+                      @if (av.respostaPrestador) {
+                        <div class="mt-3 ml-4 pl-3 border-l-2 border-blue-200 bg-blue-50 rounded-r p-2">
+                          <p class="text-xs font-semibold text-blue-700 mb-1">Resposta do prestador:</p>
+                          <p class="text-sm text-gray-700">{{ av.respostaPrestador }}</p>
+                          @if (av.dataResposta) {
+                            <p class="text-xs text-gray-400 mt-1">{{ av.dataResposta }}</p>
+                          }
+                        </div>
+                      }
+
+                      <!-- Caixa de resposta (só para o prestador do perfil, se ainda não respondeu) -->
+                      @if (isPrestadorDoPerfil && !av.respostaPrestador && av.avaliacaoId) {
+                        @if (respostaAberta[av.avaliacaoId]) {
+                          <div class="mt-3 ml-4">
+                            <textarea
+                              [(ngModel)]="textoResposta[av.avaliacaoId]"
+                              rows="2"
+                              placeholder="Escreva sua resposta..."
+                              class="w-full border border-gray-300 rounded p-2 text-sm resize-none focus:ring-1 focus:ring-blue-400 outline-none">
+                            </textarea>
+                            <div class="flex gap-2 mt-1">
+                              <button
+                                (click)="enviarResposta(av)"
+                                [disabled]="enviandoResposta[av.avaliacaoId]"
+                                class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50">
+                                {{ enviandoResposta[av.avaliacaoId] ? 'Enviando...' : 'Enviar' }}
+                              </button>
+                              <button (click)="fecharResposta(av.avaliacaoId)"
+                                class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200">
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        } @else {
+                          <button (click)="abrirResposta(av.avaliacaoId)"
+                            class="mt-2 ml-4 text-xs text-blue-600 hover:underline">
+                            Responder avaliação
+                          </button>
+                        }
+                      }
                     </div>
-                    @if (av.comentario) {
-                      <p class="text-gray-600 text-sm">{{ av.comentario }}</p>
+                    @if (av.dataCriacao) {
+                      <span class="text-xs text-gray-400 flex-shrink-0">{{ av.dataCriacao }}</span>
                     }
                   </div>
-                  @if (av.dataCriacao) {
-                    <span class="text-xs text-gray-400 flex-shrink-0">{{ av.dataCriacao }}</span>
-                  }
                 </div>
-              </div>
-            }
-          </div>
+              }
+            </div>
+          }
         </div>
       }
 

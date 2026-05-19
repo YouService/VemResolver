@@ -109,6 +109,14 @@ export class PrestadorDashboardComponent implements OnInit {
     });
   }
 
+  cancelarProposta(propostaId: number): void {
+    if (!confirm('Tem certeza que deseja cancelar esta proposta?')) return;
+    this.propostaService.cancelar(propostaId).subscribe({
+      next: () => { this.carregarPropostas(); },
+      error: () => { alert('Não foi possível cancelar a proposta. Tente novamente.'); }
+    });
+  }
+
   copiarLinkPerfil(): void {
     if (!this.prestador) return;
     const url = `${window.location.origin}/prestador/${this.prestador.id}`;
