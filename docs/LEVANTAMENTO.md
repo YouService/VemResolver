@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p4.7-t2-medias-dimensionais-prestador: Tarefa 2 — médias por dimensão no prestador)  
+> **Última atualização:** 2026-05-19 (feature/p4.7-t3-dto-endpoint: Tarefa 3 — DTO e endpoint de avaliação multidimensional)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p4.7-t2-medias-dimensionais-prestador → main / develop
+> **Branch analisada:** feature/p4.7-t3-dto-endpoint → main / develop
 
 ---
 
@@ -69,7 +69,9 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── LoginDTO.java
 │   ├── MensagemChatDTO.java
 │   ├── PerfilPublicoDTO.java        (sem dados sensíveis; inclui AvaliacaoResumo interno)
+│   ├── AvaliacaoDTO.java            (inclui notaPontualidade, notaQualidade, notaComunicacao — opcionais, @Min(1) @Max(5))
 │   ├── PrestadorDTO.java            (inclui fotoPerfilUrl, percentualCompletude, verificado, mediaPontualidade, mediaQualidade, mediaComunicacao)
+│   ├── PerfilPublicoDTO.java        (inclui mediaPontualidade, mediaQualidade, mediaComunicacao do prestador)
 │   ├── PropostaDTO.java
 │   ├── RegisterDTO.java
 │   ├── SolicitacaoAdminDTO.java     (id, clienteNome, clienteEmail, categoriaNome, descricao, cidade, estado, status, dataCriacao, totalPropostas)
@@ -593,7 +595,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue em 2026-05-19 |
 | P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo | ✅ Entregue em 2026-05-19 |
-| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1–T2/6 entregues) |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1–T3/6 entregues) |
 
 > Casos de uso detalhados (fluxo principal, fluxos alternativos, regras de negócio e critérios de aceite) em [`docs/CASOS-DE-USO-P4.md`](CASOS-DE-USO-P4.md).
 

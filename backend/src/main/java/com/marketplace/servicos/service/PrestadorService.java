@@ -163,6 +163,9 @@ public class PrestadorService {
                 prestador.getAvaliacaoMedia(),
                 prestador.getTotalAvaliacoes(),
                 Boolean.TRUE.equals(prestador.getVerificado()),
+                prestador.getMediaPontualidade(),
+                prestador.getMediaQualidade(),
+                prestador.getMediaComunicacao(),
                 portafolioUrls,
                 avaliacoesResumo
         );

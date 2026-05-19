@@ -20,6 +20,9 @@ public class PerfilPublicoDTO {
     private Double avaliacaoMedia;
     private Integer totalAvaliacoes;
     private boolean verificado;
+    private Double mediaPontualidade;
+    private Double mediaQualidade;
+    private Double mediaComunicacao;
     private List<String> portafolioUrls;
     private List<AvaliacaoResumo> avaliacoes;
 

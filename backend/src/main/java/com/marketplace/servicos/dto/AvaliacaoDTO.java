@@ -35,4 +35,17 @@ public class AvaliacaoDTO {
     private String comentario;
 
     private LocalDateTime dataCriacao;
+
+    // Dimensões opcionais — enviadas apenas em CLIENTE_AVALIA_PRESTADOR
+    @Min(value = 1, message = "Nota de pontualidade mínima é 1")
+    @Max(value = 5, message = "Nota de pontualidade máxima é 5")
+    private Integer notaPontualidade;
+
+    @Min(value = 1, message = "Nota de qualidade mínima é 1")
+    @Max(value = 5, message = "Nota de qualidade máxima é 5")
+    private Integer notaQualidade;
+
+    @Min(value = 1, message = "Nota de comunicação mínima é 1")
+    @Max(value = 5, message = "Nota de comunicação máxima é 5")
+    private Integer notaComunicacao;
 }
