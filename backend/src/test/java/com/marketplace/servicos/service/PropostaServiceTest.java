@@ -28,6 +28,7 @@ class PropostaServiceTest {
     @Mock private PrestadorRepository prestadorRepository;
     @Mock private AvaliacaoRepository avaliacaoRepository;
     @Mock private NotificacaoService notificacaoService;
+    @Mock private EmailService emailService;
 
     @InjectMocks
     private PropostaService propostaService;

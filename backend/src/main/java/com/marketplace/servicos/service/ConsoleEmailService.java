@@ -1,19 +1,29 @@
 package com.marketplace.servicos.service;
 
-import org.springframework.stereotype.Service;
-
 public class ConsoleEmailService implements EmailService {
+
     @Override
     public void sendVerificationEmail(String to, String token) {
-        // Link para o frontend
-        String url = "http://localhost:4200/verificar-conta?token=" + token;
-        
-        System.out.println("==================================================");
-        System.out.println("SIMULAÇÃO DE ENVIO DE EMAIL");
-        System.out.println("PARA: " + to);
-        System.out.println("ASSUNTO: Confirmação de Cadastro");
-        System.out.println("MENSAGEM: Olá! Confirme seu cadastro clicando no link abaixo:");
-        System.out.println("LINK DE ATIVAÇÃO: " + url);
-        System.out.println("==================================================");
+        System.out.println("[EMAIL] VERIFICAÇÃO → " + to + " | token=" + token);
+    }
+
+    @Override
+    public void sendPropostaRecebida(String to, String prestadorNome, String descricaoServico) {
+        System.out.println("[EMAIL] PROPOSTA_RECEBIDA → " + to + " | prestador=" + prestadorNome);
+    }
+
+    @Override
+    public void sendPropostaAceita(String to, String clienteNome, String descricaoServico) {
+        System.out.println("[EMAIL] PROPOSTA_ACEITA → " + to + " | cliente=" + clienteNome);
+    }
+
+    @Override
+    public void sendContratoFinalizado(String to, String descricaoServico) {
+        System.out.println("[EMAIL] CONTRATO_FINALIZADO → " + to);
+    }
+
+    @Override
+    public void sendEmailTeste(String to) {
+        System.out.println("[EMAIL] TESTE → " + to);
     }
 }

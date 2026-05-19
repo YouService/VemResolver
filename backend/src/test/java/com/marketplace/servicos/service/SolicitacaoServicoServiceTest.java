@@ -41,6 +41,9 @@ class SolicitacaoServicoServiceTest {
     @Mock
     private NotificacaoService notificacaoService;
 
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private SolicitacaoServicoService solicitacaoService;
 

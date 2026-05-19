@@ -266,3 +266,12 @@ export interface SolicitacaoAdminDTO {
   dataCriacao: string;
   totalPropostas: number;
 }
+
+export interface ConfiguracaoEmailDTO {
+  brevoApiKey?: string;
+  emailRemetente?: string;
+  nomeRemetente?: string;
+  ativo?: boolean;
+  atualizadoEm?: string;
+  configurado?: boolean;
+}

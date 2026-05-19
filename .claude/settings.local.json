@@ -92,7 +92,9 @@
       "Bash(git *)",
       "PowerShell(git add *)",
       "Bash(docker-compose -f C:/dev/workspace/vemresolver/docker-compose.yml up --build -d backend)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\" -Recurse | Where-Object { $_.Extension -eq \".java\" } | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\dev\\\\workspace\\\\vemresolver\\\\frontend\\\\src\\\\app\" -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object Name | Sort-Object Name)"
     ]
   }
 }

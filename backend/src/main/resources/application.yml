@@ -22,24 +22,6 @@ spring:
     baseline-on-migrate: true
     baseline-version: 1
 
-  spring:
-  mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          # Timeout de segurança para evitar que o app trave esperando o servidor
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-
   servlet:
     multipart:
       max-file-size: 5MB
