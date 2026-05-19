@@ -118,6 +118,15 @@ export class PrestadorDashboardComponent implements OnInit {
     });
   }
 
+  get dimensoesDashboard(): Array<{ label: string; icone: string; valor: number }> {
+    if (!this.prestador) return [];
+    return [
+      { label: 'Pontualidade', icone: '⏱', valor: this.prestador.mediaPontualidade! },
+      { label: 'Qualidade', icone: '⭐', valor: this.prestador.mediaQualidade! },
+      { label: 'Comunicação', icone: '💬', valor: this.prestador.mediaComunicacao! }
+    ].filter(d => d.valor != null);
+  }
+
   formatarData(data: any): string {
     if (!data) return '';
     const date = new Date(data);

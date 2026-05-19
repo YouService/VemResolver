@@ -162,4 +162,54 @@ describe('PerfilPublicoComponent', () => {
     component.fecharFoto();
     expect(component.fotoAmpliada).toBeUndefined();
   });
+
+  // ── temMediasDimensionais ────────────────────────────────────────────────────
+
+  it('temMediasDimensionais deve ser false quando nenhuma média dimensional é definida', () => {
+    component.perfil = { ...mockPerfil, mediaPontualidade: undefined, mediaQualidade: undefined, mediaComunicacao: undefined };
+    expect(component.temMediasDimensionais).toBeFalse();
+  });
+
+  it('temMediasDimensionais deve ser false quando perfil não está carregado', () => {
+    component.perfil = undefined;
+    expect(component.temMediasDimensionais).toBeFalse();
+  });
+
+  it('temMediasDimensionais deve ser true quando apenas mediaPontualidade está definida', () => {
+    component.perfil = { ...mockPerfil, mediaPontualidade: 4.5, mediaQualidade: undefined, mediaComunicacao: undefined };
+    expect(component.temMediasDimensionais).toBeTrue();
+  });
+
+  it('temMediasDimensionais deve ser true quando todas as médias dimensionais estão definidas', () => {
+    component.perfil = { ...mockPerfil, mediaPontualidade: 4.8, mediaQualidade: 4.5, mediaComunicacao: 4.2 };
+    expect(component.temMediasDimensionais).toBeTrue();
+  });
+
+  // ── dimensoesPerfil ──────────────────────────────────────────────────────────
+
+  it('dimensoesPerfil deve retornar array vazio quando perfil não está carregado', () => {
+    component.perfil = undefined;
+    expect(component.dimensoesPerfil).toEqual([]);
+  });
+
+  it('dimensoesPerfil deve retornar array vazio quando nenhuma média é definida', () => {
+    component.perfil = { ...mockPerfil, mediaPontualidade: undefined, mediaQualidade: undefined, mediaComunicacao: undefined };
+    expect(component.dimensoesPerfil.length).toBe(0);
+  });
+
+  it('dimensoesPerfil deve retornar apenas as dimensões com valor definido', () => {
+    component.perfil = { ...mockPerfil, mediaPontualidade: 4.8, mediaQualidade: undefined, mediaComunicacao: 4.0 };
+    const dims = component.dimensoesPerfil;
+    expect(dims.length).toBe(2);
+    expect(dims.map(d => d.label)).toEqual(['Pontualidade', 'Comunicação']);
+  });
+
+  it('dimensoesPerfil deve retornar todas as 3 dimensões quando todas estão definidas', () => {
+    component.perfil = { ...mockPerfil, mediaPontualidade: 4.8, mediaQualidade: 4.5, mediaComunicacao: 4.2 };
+    const dims = component.dimensoesPerfil;
+    expect(dims.length).toBe(3);
+    expect(dims[0]).toEqual({ label: 'Pontualidade', valor: 4.8 });
+    expect(dims[1]).toEqual({ label: 'Qualidade', valor: 4.5 });
+    expect(dims[2]).toEqual({ label: 'Comunicação', valor: 4.2 });
+  });
 });

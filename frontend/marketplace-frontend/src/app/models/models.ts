@@ -117,6 +117,9 @@ export interface Prestador {
   fotoPerfilUrl?: string;
   percentualCompletude?: number;
   verificado?: boolean;
+  mediaPontualidade?: number;
+  mediaQualidade?: number;
+  mediaComunicacao?: number;
 }
 
 export interface ItemChecklist {
@@ -244,6 +247,9 @@ export interface PerfilPublico {
   avaliacaoMedia: number;
   totalAvaliacoes: number;
   verificado: boolean;
+  mediaPontualidade?: number;
+  mediaQualidade?: number;
+  mediaComunicacao?: number;
   portafolioUrls: string[];
   avaliacoes: AvaliacaoResumo[];
 }

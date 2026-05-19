@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p4.7-t4-form-dimensional: Tarefa 4 — Formulário frontend com avaliação dimensional)  
+> **Última atualização:** 2026-05-19 (feature/p4.7-t5-exibicao-dimensional: Tarefa 5 — Exibição frontend das médias dimensionais)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p4.7-t4-form-dimensional → main / develop
+> **Branch analisada:** feature/p4.7-t5-exibicao-dimensional → main / develop
 
 ---
 
@@ -418,6 +418,8 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | `ClientePerfilComponent` | `/cliente/perfil` | clienteGuard | ✅ Funcional — edição de dados pessoais e endereço; aba "Minhas Avaliações" com média agregada |
 | `ClientePropostasRecebidasComponent` | `/cliente/solicitacao/:id/propostas` | clienteGuard | ✅ Funcional — aceitar/recusar com confirmação |
 | `ClienteAvaliacaoComponent` | `/cliente/solicitacao/:id/avaliacao` | clienteGuard | ✅ Funcional — estrelas 1–5, comentário, estados completos; **P4.7-T4**: 3 grupos de estrelas opcionais (pontualidade, qualidade, comunicação); payload inclui apenas dimensões com nota > 0 |
+| `PerfilPublicoComponent` | `/prestador/:id` | público | ✅ Funcional; **P4.7-T5**: card "Desempenho por Dimensão" com barras de progresso proporcionais (escala 0–5); getters `temMediasDimensionais` e `dimensoesPerfil` |
+| `PrestadorDashboardComponent` | `/prestador/dashboard` | prestadorGuard | ✅ Funcional; **P4.7-T5**: badges compactos de médias dimensionais (⏱ Pontualidade, ⭐ Qualidade, 💬 Comunicação) no header quando há avaliações dimensionais; getter `dimensoesDashboard` |
 | `PrestadorDashboardComponent` | `/prestador/dashboard` | prestadorGuard | ✅ Funcional — oportunidades no topo, filtro cidade/estado, botão "Ver perfil público" + "Copiar link" |
 | `PrestadorPerfilComponent` | `/prestador/perfil` | prestadorGuard | ✅ Funcional — avatar upload, telefone, forkJoin salva perfil+usuário em paralelo |
 | `PrestadorEnviarPropostaComponent` | `/prestador/solicitacao/:id` | prestadorGuard | ✅ Funcional — detalhes da solicitação + formulário de proposta |
@@ -565,7 +567,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | Onboarding guiado com progress bar de perfil | ✅ | ✅ | ❌ |
 | Notificações por e-mail transacionais | ✅ | ✅ | ❌ |
 | Badge de destaque / profissional verificado | — | ✅ (Top 5%) | ✅ (≥5 contratos + média ≥4,0) |
-| Avaliação multidimensional | — | ✅ (0–10 + dimensões) | 🔄 (em progresso — T1–T4/6 entregues) |
+| Avaliação multidimensional | — | ✅ (0–10 + dimensões) | 🔄 (em progresso — T1–T5/6 entregues) |
 | Verificação de identidade (documento + selfie) | ✅ (IdWall) | ✅ (manual) | ❌ |
 | Mais de 100 categorias de serviço | ✅ (500+) | ✅ (200+) | ❌ (19) |
 
@@ -595,7 +597,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue em 2026-05-19 |
 | P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo | ✅ Entregue em 2026-05-19 |
-| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1–T4/6 entregues) |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1–T5/6 entregues) |
 
 > Casos de uso detalhados (fluxo principal, fluxos alternativos, regras de negócio e critérios de aceite) em [`docs/CASOS-DE-USO-P4.md`](CASOS-DE-USO-P4.md).
 

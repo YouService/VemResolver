@@ -154,4 +154,40 @@ describe('PrestadorDashboardComponent', () => {
     expect(component.solicitacoesFiltradas.length).toBe(1);
     expect(component.solicitacoesFiltradas[0].id).toBe(1);
   });
+
+  // ── dimensoesDashboard ────────────────────────────────────────────────────────
+
+  it('dimensoesDashboard deve retornar array vazio quando prestador não está carregado', () => {
+    component.prestador = undefined;
+    expect(component.dimensoesDashboard).toEqual([]);
+  });
+
+  it('dimensoesDashboard deve retornar array vazio quando nenhuma média dimensional é definida', () => {
+    component.prestador = { ...mockPrestador, mediaPontualidade: undefined, mediaQualidade: undefined, mediaComunicacao: undefined };
+    expect(component.dimensoesDashboard.length).toBe(0);
+  });
+
+  it('dimensoesDashboard deve retornar apenas as dimensões com valor definido', () => {
+    component.prestador = { ...mockPrestador, mediaPontualidade: 4.8, mediaQualidade: undefined, mediaComunicacao: 4.0 };
+    const dims = component.dimensoesDashboard;
+    expect(dims.length).toBe(2);
+    expect(dims.map(d => d.label)).toEqual(['Pontualidade', 'Comunicação']);
+  });
+
+  it('dimensoesDashboard deve retornar todas as 3 dimensões com icones quando todas estão definidas', () => {
+    component.prestador = { ...mockPrestador, mediaPontualidade: 4.8, mediaQualidade: 4.5, mediaComunicacao: 4.2 };
+    const dims = component.dimensoesDashboard;
+    expect(dims.length).toBe(3);
+    expect(dims[0]).toEqual({ label: 'Pontualidade', icone: '⏱', valor: 4.8 });
+    expect(dims[1]).toEqual({ label: 'Qualidade', icone: '⭐', valor: 4.5 });
+    expect(dims[2]).toEqual({ label: 'Comunicação', icone: '💬', valor: 4.2 });
+  });
+
+  it('dimensoesDashboard deve retornar apenas mediaPontualidade quando somente ela está definida', () => {
+    component.prestador = { ...mockPrestador, mediaPontualidade: 5.0 };
+    const dims = component.dimensoesDashboard;
+    expect(dims.length).toBe(1);
+    expect(dims[0].label).toBe('Pontualidade');
+    expect(dims[0].valor).toBe(5.0);
+  });
 });
