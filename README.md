@@ -206,7 +206,8 @@ vemresolver/
 - ✅ **39 testes de segurança backend** passando — `PrestadorSegurancaTest`, `ChatSegurancaTest`, `AdminSegurancaTest`; 9 novos testes para os endpoints admin de online e solicitações; gap de segurança corrigido: `GET /api/prestadores/me/**` agora exige `ROLE_PRESTADOR`
 - ✅ **83/84 testes frontend** passando — `ChatComponent`, `OnboardingChecklist`, `PerfilPublico`, `PrestadorDashboard`, `AdminDashboardComponent` (13 novos)
 - ✅ **P4.5 E-mail transacional via Brevo** — 8 testes `BrevoEmailServiceTest` + 11 testes `AdminEmailSegurancaTest`
-- ✅ **P4.6 Badge "Verificado"** — 2 testes em `PrestadorServiceTest` (`recalcularVerificado_CriteriosAtendidos_SetaTrue`, `recalcularVerificado_MenosContratos_MantemFalse`); totais: **150 testes backend** (exceto `FluxoPrincipalTest` pré-existente), **90/91 frontend**
+- ✅ **P4.6 Badge "Verificado"** — 2 testes em `PrestadorServiceTest`; totais antes do P4.7: 150 backend, 90/91 frontend
+- 🔄 **P4.7 Avaliação multidimensional — Tarefa 1** — Flyway V13: colunas `nota_pontualidade`, `nota_qualidade`, `nota_comunicacao` (`INTEGER NULL`) em `avaliacoes`; 3 novos campos nullable em `Avaliacao.java`; 3 novos testes em `AvaliacaoServiceTest` verificando comportamento nullable; **totais: 153 testes backend**, 90/91 frontend
 
 ### Prioridade 4 — Competitividade (em andamento)
 
@@ -218,6 +219,10 @@ vemresolver/
 - ✅ **P4.6 Badge "Verificado"** — badge automático para prestadores com ≥5 contratos concluídos e média ≥4,0; coluna `verificado BOOLEAN` persistida em `prestadores` (`V12__add_verificado_prestador.sql`); recalculado automaticamente a cada nova avaliação de cliente e a cada conclusão de serviço; exibido no perfil público, no painel do prestador e nos cards da busca por geolocalização; `PrestadorDTO.verificado` exposto na API; 2 novos testes unitários em `PrestadorServiceTest`
 - ✅ **P4.4 Perfil público compartilhável** — página pública em `/prestador/:id` acessível sem login; exibe avatar, nome, badge "Verificado" (≥5 contratos + média ≥4,0), categorias, portfólio em grid com ampliação, últimas 5 avaliações; botão "Solicitar Serviço" redireciona para `/register` se visitante ou `/cliente/nova-solicitacao` se cliente logado; botão "Copiar link" com Clipboard API; botão "Ver perfil público" e "Copiar link do perfil" no painel do prestador; `GET /api/prestadores/{id}/publico` (sem dados sensíveis); 404 amigável para perfil não encontrado ou inativo
 - ✅ **P4.3 Onboarding guiado** — checklist de completude do perfil com 7 critérios ponderados (foto de perfil 15%, descrição 20%, categorias 15%, telefone 10%, cidade+estado 10%, portfólio 20%, lat/lng 10%); barra de progresso com cor dinâmica (vermelho <50%, amarelo 50–79%, verde ≥80%); collapse automático ao 100% com mensagem de parabéns; `OnboardingChecklistComponent` exibido no topo do painel do prestador; avatar upload via `POST /api/prestadores/me/foto-perfil`; campo de telefone editável na tela de perfil; `percentual_completude` persistido em `prestadores` e recalculado a cada save ou upload de foto; endpoint `GET /api/prestadores/me/completude` com `CompletudePrestadorDTO`; `V9__add_foto_perfil_e_completude.sql`
+
+### Prioridade 4 — P4.7 Avaliação multidimensional (em progresso)
+
+- 🔄 **Tarefa 1 — Migração e modelo de dados** (`feature/p4.7-avaliacao-multidimensional`): `V13__add_notas_dimensionais_avaliacoes.sql` adiciona `nota_pontualidade`, `nota_qualidade`, `nota_comunicacao` como `INTEGER NULL` em `avaliacoes`; `Avaliacao.java` recebe os 3 campos nullable (compatível com avaliações existentes); 3 testes unitários verificam comportamento nullable
 
 ### Prioridade 3 — Evolução do produto (concluída)
 
@@ -242,7 +247,7 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar serviço | Prestador não tem URL pública para divulgar fora da plataforma; gera tráfego orgânico de volta | Médio-Alto | Baixo | ✅ Entregue |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta recebida, proposta aceita, nova solicitação compatível) | Polling de 30 s só funciona com a aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue |
 | P4.6 | **Badge "Verificado"** automático para prestadores com 5+ contratos concluídos e média ≥ 4,0 | Nenhum diferencial visual entre prestadores hoje; badge cria gamificação de reputação | Médio | Baixo | ✅ Entregue |
-| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade do serviço e comunicação (além da nota geral) | Nota única 1–5 é pouco granular; dimensões separadas ajudam o cliente a escolher e o prestador a melhorar | Médio | Médio |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade do serviço e comunicação (além da nota geral) | Nota única 1–5 é pouco granular; dimensões separadas ajudam o cliente a escolher e o prestador a melhorar | Médio | Médio | 🔄 Em progresso (Tarefa 1/6 entregue) |
 
 ---
 
