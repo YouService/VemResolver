@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p12-seguranca-avancada: P12.1 Refresh Token Theft Detection + P12.2 Auditoria Admin)  
+> **Última atualização:** 2026-05-19 (feature/p11-mobile-pwa: P11.1 PWA + P11.2 Layout Otimizado para Mobile)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p12-seguranca-avancada → main / develop
+> **Branch analisada:** feature/p11-mobile-pwa → main / develop
 
 ---
 
@@ -698,4 +698,13 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
-*Atualizado em 2026-05-19 (feature/p12-seguranca-avancada) — sincronizado com README.md.*
+### P11 — Mobile e PWA
+
+| Item | Branch | Data |
+|------|--------|------|
+| P11.1 Progressive Web App: `@angular/service-worker@~19.2.0` instalado; `manifest.webmanifest` com `name`, `short_name`, `theme_color: #1a56db`, `display: standalone`, `start_url: /`, ícones 192×192 e 512×512 gerados a partir do logo existente via Python Pillow; `ngsw-config.json` com grupos `app-shell` (prefetch), `assets` (lazy) e cache da API de categorias (strategy performance, TTL 1h); `angular.json` com `serviceWorker: ngsw-config.json`; `index.html` com `<link rel="manifest">`, `<meta name="theme-color">`, `<meta name="description">`, `<link rel="apple-touch-icon">`; `app.config.ts` com `provideServiceWorker('ngsw-worker.js', { enabled: !isDevMode(), registrationStrategy: 'registerWhenStable:30000' })`; 6 testes em `pwa.spec.ts` | `feature/p11-mobile-pwa` | 2026-05-19 |
+| P11.2 Layout Otimizado para Mobile: `navbar.component.html` — logo `w-[140px] sm:w-[200px]`, dropdown de notificações `w-[calc(100vw-2rem)] max-w-80` (evita overflow em telas pequenas), espaçamento `space-x-2 sm:space-x-4`; `cliente-dashboard.component.html` — header `flex flex-col sm:flex-row gap-4`, título `text-2xl sm:text-3xl`, botões `flex flex-col sm:flex-row gap-3`; `prestador-dashboard.component.html` — header `flex flex-col sm:flex-row gap-4`, título `text-2xl sm:text-3xl`, linha título/badge `flex-wrap`; `styles.scss` — regra global `font-size: 16px` em inputs/textarea/select para prevenir zoom automático do iOS; 6 testes em `mobile-layout.spec.ts`; `webpack` adicionado como devDependency para corrigir erro `webpack-subresource-integrity MODULE_NOT_FOUND` no Karma; **totais: 180 testes backend**, 128/129 frontend | `feature/p11-mobile-pwa` | 2026-05-19 |
+
+---
+
+*Atualizado em 2026-05-19 (feature/p11-mobile-pwa) — sincronizado com README.md.*
