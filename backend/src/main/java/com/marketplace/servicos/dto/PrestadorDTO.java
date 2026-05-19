@@ -34,4 +34,5 @@ public class PrestadorDTO {
     private Double longitude;
     private String fotoPerfilUrl;
     private Integer percentualCompletude;
+    private Boolean verificado;
 }

@@ -195,12 +195,11 @@ class PrestadorServiceTest {
     @Test
     @DisplayName("buscarPerfilPublico: prestador ativo retorna PerfilPublicoDTO com badge não verificado")
     void buscarPerfilPublico_PrestadorAtivo_RetornaDTO() {
+        // verificado = false (default)
         when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
         when(fotoPrestadorRepository.findByPrestadorIdOrderByDataUploadAsc(10L)).thenReturn(List.of());
         when(avaliacaoRepository.findTop5ByPrestadorIdAndTipoOrderByDataCriacaoDesc(10L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
                 .thenReturn(List.of());
-        when(propostaRepository.countByPrestadorIdAndStatusAndSolicitacaoStatus(
-                10L, StatusProposta.ACEITA, StatusSolicitacao.CONCLUIDA)).thenReturn(2L);
 
         PerfilPublicoDTO dto = prestadorService.buscarPerfilPublico(10L);
 
@@ -211,17 +210,14 @@ class PrestadorServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPerfilPublico: 5+ contratos e média >= 4.0 → verificado=true")
-    void buscarPerfilPublico_CriteriosVerificado_RetornaVerificado() {
-        prestador.setAvaliacaoMedia(4.5);
-        prestador.setTotalAvaliacoes(10);
+    @DisplayName("buscarPerfilPublico: campo verificado=true reflete no DTO")
+    void buscarPerfilPublico_PrestadorVerificado_RetornaVerificado() {
+        prestador.setVerificado(true);
 
         when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
         when(fotoPrestadorRepository.findByPrestadorIdOrderByDataUploadAsc(10L)).thenReturn(List.of());
         when(avaliacaoRepository.findTop5ByPrestadorIdAndTipoOrderByDataCriacaoDesc(10L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
                 .thenReturn(List.of());
-        when(propostaRepository.countByPrestadorIdAndStatusAndSolicitacaoStatus(
-                10L, StatusProposta.ACEITA, StatusSolicitacao.CONCLUIDA)).thenReturn(5L);
 
         PerfilPublicoDTO dto = prestadorService.buscarPerfilPublico(10L);
 
@@ -259,5 +255,36 @@ class PrestadorServiceTest {
         prestadorService.recalcularCompletude(prestador);
 
         verify(prestadorRepository).save(prestador);
+    }
+
+    // ── recalcularVerificado ─────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("recalcularVerificado: 5+ contratos e média>=4.0 seta verificado=true")
+    void recalcularVerificado_CriteriosAtendidos_SetaTrue() {
+        prestador.setAvaliacaoMedia(4.5);
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(propostaRepository.countByPrestadorIdAndStatusAndSolicitacaoStatus(
+                10L, StatusProposta.ACEITA, StatusSolicitacao.CONCLUIDA)).thenReturn(5L);
+        when(prestadorRepository.save(any(Prestador.class))).thenReturn(prestador);
+
+        prestadorService.recalcularVerificado(10L);
+
+        assertTrue(prestador.getVerificado());
+        verify(prestadorRepository).save(prestador);
+    }
+
+    @Test
+    @DisplayName("recalcularVerificado: menos de 5 contratos mantém verificado=false")
+    void recalcularVerificado_MenosContratos_MantemFalse() {
+        prestador.setAvaliacaoMedia(5.0);
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(propostaRepository.countByPrestadorIdAndStatusAndSolicitacaoStatus(
+                10L, StatusProposta.ACEITA, StatusSolicitacao.CONCLUIDA)).thenReturn(4L);
+        when(prestadorRepository.save(any(Prestador.class))).thenReturn(prestador);
+
+        prestadorService.recalcularVerificado(10L);
+
+        assertFalse(prestador.getVerificado());
     }
 }

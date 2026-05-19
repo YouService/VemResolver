@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p4.5-email-transacional: e-mail transacional via Brevo configurável pelo admin)  
+> **Última atualização:** 2026-05-19 (feature/p4.6-badge-verificado: badge automático para prestadores verificados)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p4.5-email-transacional → main / develop
+> **Branch analisada:** feature/p4.6-badge-verificado → main / develop
 
 ---
 
@@ -69,7 +69,7 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── LoginDTO.java
 │   ├── MensagemChatDTO.java
 │   ├── PerfilPublicoDTO.java        (sem dados sensíveis; inclui AvaliacaoResumo interno)
-│   ├── PrestadorDTO.java            (inclui fotoPerfilUrl, percentualCompletude)
+│   ├── PrestadorDTO.java            (inclui fotoPerfilUrl, percentualCompletude, verificado)
 │   ├── PropostaDTO.java
 │   ├── RegisterDTO.java
 │   ├── SolicitacaoAdminDTO.java     (id, clienteNome, clienteEmail, categoriaNome, descricao, cidade, estado, status, dataCriacao, totalPropostas)
@@ -86,7 +86,7 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── FotoPrestador.java       (id, prestador, url, dataUpload)
 │   ├── MensagemChat.java        (id, proposta, remetente, texto, dataEnvio, lida)
 │   ├── Notificacao.java
-│   ├── Prestador.java           (fotoPerfilUrl, percentualCompletude, latitude, longitude)
+│   ├── Prestador.java           (fotoPerfilUrl, percentualCompletude, latitude, longitude, verificado)
 │   ├── Proposta.java
 │   ├── RefreshToken.java
 │   ├── SolicitacaoServico.java
@@ -122,7 +122,7 @@ backend/src/main/java/com/marketplace/servicos/
     ├── FotoPrestadorService.java    (@Lazy em PrestadorService para evitar dependência circular)
     ├── NotificacaoService.java
     ├── PerfilService.java
-    ├── PrestadorService.java        (getCompletude, recalcularCompletude, buscarPerfilPublico)
+    ├── PrestadorService.java        (getCompletude, recalcularCompletude, recalcularVerificado, buscarPerfilPublico)
     ├── PropostaService.java
     ├── RefreshTokenService.java
     ├── SolicitacaoServicoService.java
@@ -238,6 +238,7 @@ frontend/marketplace-frontend/src/app/
 | longitude | Double | nullable (V3) |
 | fotoPerfilUrl | String | TEXT, nullable (V9) |
 | percentualCompletude | Integer | NOT NULL, default 0 (V9) — recalculado a cada save |
+| verificado | Boolean | NOT NULL, default false (V12) — recalculado a cada avaliação e a cada conclusão de serviço |
 
 #### `SolicitacaoServico` → tabela `solicitacoes_servico`
 | Campo | Tipo | Restrições |
@@ -555,7 +556,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | Perfil público e URL compartilhável | ✅ | ✅ | ❌ |
 | Onboarding guiado com progress bar de perfil | ✅ | ✅ | ❌ |
 | Notificações por e-mail transacionais | ✅ | ✅ | ❌ |
-| Badge de destaque / profissional verificado | — | ✅ (Top 5%) | ❌ |
+| Badge de destaque / profissional verificado | — | ✅ (Top 5%) | ✅ (≥5 contratos + média ≥4,0) |
 | Avaliação multidimensional | — | ✅ (0–10 + dimensões) | ❌ (só 1–5) |
 | Verificação de identidade (documento + selfie) | ✅ (IdWall) | ✅ (manual) | ❌ |
 | Mais de 100 categorias de serviço | ✅ (500+) | ✅ (200+) | ❌ (19) |
@@ -585,7 +586,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Reduz taxa de prestadores inativos por perfil incompleto | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue em 2026-05-19 |
-| P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo |
+| P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo | ✅ Entregue em 2026-05-19 |
 | P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio |
 
 > Casos de uso detalhados (fluxo principal, fluxos alternativos, regras de negócio e critérios de aceite) em [`docs/CASOS-DE-USO-P4.md`](CASOS-DE-USO-P4.md).

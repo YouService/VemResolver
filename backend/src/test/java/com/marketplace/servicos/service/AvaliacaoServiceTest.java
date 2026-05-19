@@ -31,6 +31,7 @@ class AvaliacaoServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private PropostaRepository propostaRepository;
     @Mock private NotificacaoService notificacaoService;
+    @Mock private PrestadorService prestadorService;
 
     @InjectMocks
     private AvaliacaoService avaliacaoService;

@@ -116,6 +116,7 @@ export interface Prestador {
   longitude?: number;
   fotoPerfilUrl?: string;
   percentualCompletude?: number;
+  verificado?: boolean;
 }
 
 export interface ItemChecklist {
