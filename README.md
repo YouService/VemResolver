@@ -230,6 +230,11 @@ vemresolver/
 - ✅ **Tarefa 5 — Exibição frontend** (`feature/p4.7-t5-exibicao-dimensional`): `PerfilPublicoComponent` exibe card "Desempenho por Dimensão" com barras de progresso proporcionais (escala 0–5 → 0–100%); `PrestadorDashboardComponent` exibe badges compactos no header quando há avaliações dimensionais; `Prestador` e `PerfilPublico` recebem os 3 campos opcionais; getters `temMediasDimensionais`, `dimensoesPerfil`, `dimensoesDashboard`; 9 novos testes; **totais: 158 testes backend**, 116/117 frontend
 - ✅ **Tarefa 6 — Testes de integração** (`feature/p4.7-t6-testes-integracao`): `AvaliacaoDimensionalControllerTest` (WebMvcTest, 7 testes: validações `@Min`/`@Max` nas dimensões, payload com e sem dimensões, segurança 403, 400 validation); `PerfilPublicoDimensionalControllerTest` (WebMvcTest, 5 testes: resposta JSON com médias dimensionais, ausência de campos nulos, endpoint público sem auth, 404 para inexistente); **totais: 170 testes backend**, 116/117 frontend
 
+### P12 — Segurança Avançada (concluída)
+
+- ✅ **P12.1 — Refresh Token Theft Detection** (`feature/p12-seguranca-avancada`): `RefreshTokenService.validateAndRotate()` agora marca o token rotacionado como `revoked=true` em vez de deletá-lo; se um token já revogado for reutilizado (sinal de roubo), todos os tokens do usuário são invalidados e uma exceção `"Atividade suspeita detectada"` é lançada; TTL do refresh token ajustado de 7 para **30 dias**; 6 testes unitários em `RefreshTokenTheftDetectionTest` (válido → rotaciona, revogado → detecta roubo + invalida todos, expirado → exceção, inexistente → exceção, revokeByUser, generateRefreshToken com TTL correto)
+- ✅ **P12.2 — Auditoria de Ações Administrativas** (`feature/p12-seguranca-avancada`): `V15__add_admin_audit_log.sql` cria tabela `admin_audit_log` com índices por `admin_id`, `criado_em` e `acao`; `AdminAuditLog` entity + `AdminAuditLogRepository` com query filtrada por ação, admin, intervalo de datas; `AdminAuditService.registrar()` com `Propagation.REQUIRES_NEW` (auditoria não afetada por rollback da operação principal); `AdminAuditLogDTO` com factory method `from()`; `AdminController` registra automaticamente: ativar/desativar usuário, alterar status de solicitação, salvar config de e-mail, enviar e-mail de teste; `GET /api/admin/auditoria` paginado com filtros opcionais de ação, adminId e intervalo de datas; IP resolvido via `X-Forwarded-For` (transparente a proxies); 4 testes em `AdminAuditControllerTest` (200 como ADMIN, 200 com filtro, 403 sem auth, 403 como CLIENTE); **totais: 180 testes backend**, 116/117 frontend
+
 ### Prioridade 3 — Evolução do produto (concluída)
 
 - ✅ Migração de todos os templates HTML inline para arquivos `.html` separados — 19 componentes migrados
@@ -267,7 +272,7 @@ Todas as prioridades P1–P4 estão concluídas. O backlog completo de funcional
 | Fase 2 | Monetização: créditos pré-pagos + gateway de pagamento (P6) | 🟠 Alta |
 | Fase 3 | Crescimento: busca full-text + categorias + mobile (P7, P11) | 🟠 Alta |
 | Fase 4 | Confiança: verificação de identidade + denúncias (P8, P10) | 🟡 Média |
-| Fase 5 | Segurança avançada: refresh token rotation + auditoria (P12) | 🟡 Média |
+| Fase 5 | Segurança avançada: refresh token rotation + auditoria (P12) | ✅ Entregue |
 | Fase 6 | Engajamento: push notifications + chat com imagens (P9) | 🟢 Normal |
 
 ---
