@@ -53,4 +53,7 @@ public class Prestador {
 
     @Column(name = "percentual_completude", nullable = false)
     private Integer percentualCompletude = 0;
+
+    @Column(nullable = false)
+    private Boolean verificado = false;
 }

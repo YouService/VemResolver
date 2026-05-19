@@ -28,6 +28,7 @@ public class SolicitacaoServicoService {
     private final PropostaRepository propostaRepository;
     private final NotificacaoService notificacaoService;
     private final EmailService emailService;
+    private final PrestadorService prestadorService;
 
     public SolicitacaoServicoService(SolicitacaoServicoRepository solicitacaoRepository,
                                      UserRepository userRepository,
@@ -35,7 +36,8 @@ public class SolicitacaoServicoService {
                                      AvaliacaoRepository avaliacaoRepository,
                                      PropostaRepository propostaRepository,
                                      NotificacaoService notificacaoService,
-                                     EmailService emailService) {
+                                     EmailService emailService,
+                                     PrestadorService prestadorService) {
         this.solicitacaoRepository = solicitacaoRepository;
         this.userRepository = userRepository;
         this.categoriaRepository = categoriaRepository;
@@ -43,6 +45,7 @@ public class SolicitacaoServicoService {
         this.propostaRepository = propostaRepository;
         this.notificacaoService = notificacaoService;
         this.emailService = emailService;
+        this.prestadorService = prestadorService;
     }
     
     @Transactional
@@ -162,6 +165,7 @@ public class SolicitacaoServicoService {
                 propostaAceita.getPrestador().getUsuario().getEmail(),
                 solicitacao.getDescricao()
             );
+            prestadorService.recalcularVerificado(propostaAceita.getPrestador().getId());
         }
 
         log.info("Solicitacao id={} concluida pelo cliente id={}", id, clienteId);
