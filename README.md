@@ -222,7 +222,8 @@ vemresolver/
 
 ### Prioridade 4 — P4.7 Avaliação multidimensional (em progresso)
 
-- 🔄 **Tarefa 1 — Migração e modelo de dados** (`feature/p4.7-avaliacao-multidimensional`): `V13__add_notas_dimensionais_avaliacoes.sql` adiciona `nota_pontualidade`, `nota_qualidade`, `nota_comunicacao` como `INTEGER NULL` em `avaliacoes`; `Avaliacao.java` recebe os 3 campos nullable (compatível com avaliações existentes); 3 testes unitários verificam comportamento nullable
+- ✅ **Tarefa 1 — Migração e modelo de dados** (`feature/p4.7-avaliacao-multidimensional`): `V13` adiciona `nota_pontualidade`, `nota_qualidade`, `nota_comunicacao` (`INTEGER NULL`) em `avaliacoes`; `Avaliacao.java` recebe os 3 campos nullable; 3 testes unitários
+- ✅ **Tarefa 2 — Médias por dimensão no prestador** (`feature/p4.7-t2-medias-dimensionais-prestador`): `V14` adiciona `media_pontualidade`, `media_qualidade`, `media_comunicacao` (`DOUBLE NULL`) em `prestadores`; `Prestador.java` e `PrestadorDTO.java` recebem os 3 campos; `AvaliacaoService.atualizarMediaPrestador()` recalcula as 3 médias a cada nova avaliação (ignora nulls, retorna null se nenhuma avaliação dimensional existir); 3 novos testes em `AvaliacaoServiceTest`; **totais: 156 testes backend**, 90/91 frontend
 
 ### Prioridade 3 — Evolução do produto (concluída)
 
@@ -247,7 +248,7 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar serviço | Prestador não tem URL pública para divulgar fora da plataforma; gera tráfego orgânico de volta | Médio-Alto | Baixo | ✅ Entregue |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta recebida, proposta aceita, nova solicitação compatível) | Polling de 30 s só funciona com a aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue |
 | P4.6 | **Badge "Verificado"** automático para prestadores com 5+ contratos concluídos e média ≥ 4,0 | Nenhum diferencial visual entre prestadores hoje; badge cria gamificação de reputação | Médio | Baixo | ✅ Entregue |
-| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade do serviço e comunicação (além da nota geral) | Nota única 1–5 é pouco granular; dimensões separadas ajudam o cliente a escolher e o prestador a melhorar | Médio | Médio | 🔄 Em progresso (Tarefa 1/6 entregue) |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade do serviço e comunicação (além da nota geral) | Nota única 1–5 é pouco granular; dimensões separadas ajudam o cliente a escolher e o prestador a melhorar | Médio | Médio | 🔄 Em progresso (Tarefas 1–2/6 entregues) |
 
 ---
 
