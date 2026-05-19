@@ -102,7 +102,7 @@
             <!-- Formulário -->
             <div class="px-6 py-6">
 
-              <!-- Nota com estrelas -->
+              <!-- Nota geral com estrelas -->
               <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-3">
                   Qual nota você dá para este serviço? <span class="text-red-500">*</span>
@@ -126,6 +126,38 @@
                 @if (tentouEnviar && nota === 0) {
                   <p class="text-red-500 text-sm mt-1">Selecione uma nota para continuar.</p>
                 }
+              </div>
+
+              <!-- Avaliações dimensionais -->
+              <div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 px-5 py-4">
+                <p class="text-sm font-semibold text-gray-700 mb-4">
+                  Avalie em detalhes <span class="text-gray-400 font-normal">(opcional)</span>
+                </p>
+                <div class="space-y-4">
+                  @for (dim of dimensoes; track dim.field) {
+                    <div>
+                      <p class="text-sm text-gray-600 mb-1">{{ dim.label }}</p>
+                      <div class="flex items-center gap-1">
+                        @for (star of [1,2,3,4,5]; track star) {
+                          <button
+                            type="button"
+                            (click)="dim.nota = star"
+                            (mouseenter)="dim.hover = star"
+                            (mouseleave)="dim.hover = 0"
+                            class="text-2xl transition-transform hover:scale-110 focus:outline-none text-yellow-400"
+                            [attr.aria-label]="dim.label + ': ' + star + ' estrela' + (star > 1 ? 's' : '')">
+                            {{ estrelaAtiva(dim, star) ? '★' : '☆' }}
+                          </button>
+                        }
+                        @if (dim.nota > 0) {
+                          <span class="ml-2 text-xs font-medium" [class]="classNota(dim.nota)">
+                            {{ textoNota(dim.nota) }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
 
               <!-- Comentário -->
