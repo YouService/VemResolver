@@ -150,10 +150,6 @@ public class PrestadorService {
                         a.getDataCriacao() != null ? a.getDataCriacao().toLocalDate().toString() : null))
                 .toList();
 
-        long contratosConcluidosCount = propostaRepository.countByPrestadorIdAndStatusAndSolicitacaoStatus(
-                prestadorId, StatusProposta.ACEITA, StatusSolicitacao.CONCLUIDA);
-        boolean verificado = contratosConcluidosCount >= 5 && prestador.getAvaliacaoMedia() >= 4.0;
-
         List<String> categoriaNomes = prestador.getCategorias().stream()
                 .map(Categoria::getNome).toList();
 
@@ -166,7 +162,7 @@ public class PrestadorService {
                 prestador.getEstado(),
                 prestador.getAvaliacaoMedia(),
                 prestador.getTotalAvaliacoes(),
-                verificado,
+                Boolean.TRUE.equals(prestador.getVerificado()),
                 portafolioUrls,
                 avaliacoesResumo
         );
@@ -183,6 +179,16 @@ public class PrestadorService {
     public void recalcularCompletude(Prestador prestador) {
         long fotoCount = fotoPrestadorRepository.countByPrestadorId(prestador.getId());
         prestador.setPercentualCompletude(calcularPercentual(prestador, fotoCount));
+        prestadorRepository.save(prestador);
+    }
+
+    @Transactional
+    public void recalcularVerificado(Long prestadorId) {
+        Prestador prestador = prestadorRepository.findById(prestadorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Prestador não encontrado"));
+        long contratos = propostaRepository.countByPrestadorIdAndStatusAndSolicitacaoStatus(
+                prestadorId, StatusProposta.ACEITA, StatusSolicitacao.CONCLUIDA);
+        prestador.setVerificado(contratos >= 5 && prestador.getAvaliacaoMedia() >= 4.0);
         prestadorRepository.save(prestador);
     }
 
@@ -250,6 +256,7 @@ public class PrestadorService {
         dto.setLongitude(prestador.getLongitude());
         dto.setFotoPerfilUrl(prestador.getFotoPerfilUrl());
         dto.setPercentualCompletude(prestador.getPercentualCompletude());
+        dto.setVerificado(Boolean.TRUE.equals(prestador.getVerificado()));
         return dto;
     }
 }

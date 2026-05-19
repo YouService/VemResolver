@@ -44,6 +44,9 @@ class SolicitacaoServicoServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private PrestadorService prestadorService;
+
     @InjectMocks
     private SolicitacaoServicoService solicitacaoService;
 

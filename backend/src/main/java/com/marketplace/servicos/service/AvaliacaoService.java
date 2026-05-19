@@ -23,19 +23,22 @@ public class AvaliacaoService {
     private final UserRepository userRepository;
     private final PropostaRepository propostaRepository;
     private final NotificacaoService notificacaoService;
+    private final PrestadorService prestadorService;
 
     public AvaliacaoService(AvaliacaoRepository avaliacaoRepository,
                             SolicitacaoServicoRepository solicitacaoRepository,
                             PrestadorRepository prestadorRepository,
                             UserRepository userRepository,
                             PropostaRepository propostaRepository,
-                            NotificacaoService notificacaoService) {
+                            NotificacaoService notificacaoService,
+                            PrestadorService prestadorService) {
         this.avaliacaoRepository = avaliacaoRepository;
         this.solicitacaoRepository = solicitacaoRepository;
         this.prestadorRepository = prestadorRepository;
         this.userRepository = userRepository;
         this.propostaRepository = propostaRepository;
         this.notificacaoService = notificacaoService;
+        this.prestadorService = prestadorService;
     }
 
     @Transactional
@@ -71,6 +74,7 @@ public class AvaliacaoService {
 
         avaliacao = avaliacaoRepository.save(avaliacao);
         atualizarMediaPrestador(prestador);
+        prestadorService.recalcularVerificado(prestador.getId());
 
         notificacaoService.criar(
             avaliacao.getPrestador().getUsuario().getId(),
