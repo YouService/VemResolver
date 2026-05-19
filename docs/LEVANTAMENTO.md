@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p4.7-t6-testes-integracao: Tarefa 6 — Testes de integração de controller — P4.7 COMPLETA)  
+> **Última atualização:** 2026-05-19 (feature/p12-seguranca-avancada: P12.1 Refresh Token Theft Detection + P12.2 Auditoria Admin)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p4.7-t6-testes-integracao → main / develop
+> **Branch analisada:** feature/p12-seguranca-avancada → main / develop
 
 ---
 
@@ -689,4 +689,13 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
-*Atualizado em 2026-05-18 (feature/admin-online-solicitacoes) — sincronizado com README.md.*
+### P12 — Segurança Avançada
+
+| Item | Branch | Data |
+|------|--------|------|
+| P12.1 Refresh Token Theft Detection: `validateAndRotate()` marca token rotacionado como `revoked=true`; reutilização de token revogado invalida todos os tokens do usuário e lança `"Atividade suspeita detectada"`; TTL ajustado de 7 para 30 dias; 6 testes em `RefreshTokenTheftDetectionTest`; `AdminSegurancaTest` e `AdminEmailSegurancaTest` receberam `@MockBean AdminAuditService` e `@MockBean AdminAuditLogRepository` para manter contexto válido após adição dos novos beans ao `AdminController` | `feature/p12-seguranca-avancada` | 2026-05-19 |
+| P12.2 Auditoria Admin: `V15__add_admin_audit_log.sql` cria tabela `admin_audit_log` com índices em `admin_id`, `criado_em` e `acao`; `AdminAuditLog` entity + `AdminAuditLogRepository` com query JPQL filtrada; `AdminAuditService.registrar()` usa `Propagation.REQUIRES_NEW`; `AdminController` chama `registrar()` em ativar/desativar usuário, alterar status de solicitação, salvar config de e-mail, enviar e-mail de teste; `GET /api/admin/auditoria` paginado com filtros opcionais; IP resolvido via `X-Forwarded-For`; 4 testes em `AdminAuditControllerTest`; **totais: 180 testes backend**, 116/117 frontend | `feature/p12-seguranca-avancada` | 2026-05-19 |
+
+---
+
+*Atualizado em 2026-05-19 (feature/p12-seguranca-avancada) — sincronizado com README.md.*
