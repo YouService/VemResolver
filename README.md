@@ -207,7 +207,7 @@ vemresolver/
 - ✅ **83/84 testes frontend** passando — `ChatComponent`, `OnboardingChecklist`, `PerfilPublico`, `PrestadorDashboard`, `AdminDashboardComponent` (13 novos)
 - ✅ **P4.5 E-mail transacional via Brevo** — 8 testes `BrevoEmailServiceTest` + 11 testes `AdminEmailSegurancaTest`
 - ✅ **P4.6 Badge "Verificado"** — 2 testes em `PrestadorServiceTest`; totais antes do P4.7: 150 backend, 90/91 frontend
-- 🔄 **P4.7 Avaliação multidimensional — Tarefa 1** — Flyway V13: colunas `nota_pontualidade`, `nota_qualidade`, `nota_comunicacao` (`INTEGER NULL`) em `avaliacoes`; 3 novos campos nullable em `Avaliacao.java`; 3 novos testes em `AvaliacaoServiceTest` verificando comportamento nullable; **totais: 153 testes backend**, 90/91 frontend
+- ✅ **P4.7 Avaliação multidimensional — Tarefa 4** — Formulário de avaliação do cliente atualizado com 3 grupos de estrelas opcionais (pontualidade, qualidade do serviço, comunicação); `DimensaoRating` interface interna; `enviar()` inclui apenas dimensões com nota > 0 no payload; `Avaliacao` interface do modelo frontend recebe `notaPontualidade`, `notaQualidade`, `notaComunicacao`; 13 testes Jasmine em `ClienteAvaliacaoComponent`; **totais: 161 testes backend**, 103/104 frontend
 
 ### Prioridade 4 — Competitividade (em andamento)
 
@@ -225,6 +225,7 @@ vemresolver/
 - ✅ **Tarefa 1 — Migração e modelo de dados** (`feature/p4.7-avaliacao-multidimensional`): `V13` adiciona `nota_pontualidade`, `nota_qualidade`, `nota_comunicacao` (`INTEGER NULL`) em `avaliacoes`; `Avaliacao.java` recebe os 3 campos nullable; 3 testes unitários
 - ✅ **Tarefa 2 — Médias por dimensão no prestador** (`feature/p4.7-t2-medias-dimensionais-prestador`): `V14` adiciona `media_pontualidade`, `media_qualidade`, `media_comunicacao` (`DOUBLE NULL`) em `prestadores`; `Prestador.java` e `PrestadorDTO.java` recebem os 3 campos; `AvaliacaoService.atualizarMediaPrestador()` recalcula as 3 médias a cada nova avaliação; 3 novos testes em `AvaliacaoServiceTest`
 - ✅ **Tarefa 3 — DTO e endpoint** (`feature/p4.7-t3-dto-endpoint`): `AvaliacaoDTO` recebe `notaPontualidade`, `notaQualidade`, `notaComunicacao` (Integer, opcionais, `@Min(1) @Max(5)`); `AvaliacaoService.criar()` persiste as dimensões do DTO; `toDTO()` as mapeia no retorno; `PerfilPublicoDTO` expõe as 3 médias dimensionais do prestador; 3 testes em `AvaliacaoServiceTest` + 2 em `PrestadorServiceTest`; **totais: 161 testes backend**, 90/91 frontend
+- ✅ **Tarefa 4 — Formulário frontend** (`feature/p4.7-t4-form-dimensional`): `ClienteAvaliacaoComponent` atualizado com 3 grupos de estrelas opcionais (pontualidade, qualidade do serviço, comunicação); `DimensaoRating` interface; payload enviado inclui apenas dimensões com nota > 0; `Avaliacao` interface do modelo frontend recebe os 3 campos opcionais; 13 novos testes Jasmine; **totais: 161 testes backend**, 103/104 frontend
 
 ### Prioridade 3 — Evolução do produto (concluída)
 
@@ -249,7 +250,7 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar serviço | Prestador não tem URL pública para divulgar fora da plataforma; gera tráfego orgânico de volta | Médio-Alto | Baixo | ✅ Entregue |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta recebida, proposta aceita, nova solicitação compatível) | Polling de 30 s só funciona com a aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue |
 | P4.6 | **Badge "Verificado"** automático para prestadores com 5+ contratos concluídos e média ≥ 4,0 | Nenhum diferencial visual entre prestadores hoje; badge cria gamificação de reputação | Médio | Baixo | ✅ Entregue |
-| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade do serviço e comunicação (além da nota geral) | Nota única 1–5 é pouco granular; dimensões separadas ajudam o cliente a escolher e o prestador a melhorar | Médio | Médio | 🔄 Em progresso (Tarefas 1–3/6 entregues) |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade do serviço e comunicação (além da nota geral) | Nota única 1–5 é pouco granular; dimensões separadas ajudam o cliente a escolher e o prestador a melhorar | Médio | Médio | 🔄 Em progresso (Tarefas 1–4/6 entregues) |
 
 ---
 

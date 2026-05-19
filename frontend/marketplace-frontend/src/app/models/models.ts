@@ -208,6 +208,9 @@ export interface Avaliacao {
   nomeAvaliado?: string;
   nota: number;
   comentario?: string;
+  notaPontualidade?: number;
+  notaQualidade?: number;
+  notaComunicacao?: number;
 }
 
 export interface PageResponse<T> {

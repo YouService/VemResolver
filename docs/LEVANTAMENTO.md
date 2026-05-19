@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p4.7-t3-dto-endpoint: Tarefa 3 — DTO e endpoint de avaliação multidimensional)  
+> **Última atualização:** 2026-05-19 (feature/p4.7-t4-form-dimensional: Tarefa 4 — Formulário frontend com avaliação dimensional)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p4.7-t3-dto-endpoint → main / develop
+> **Branch analisada:** feature/p4.7-t4-form-dimensional → main / develop
 
 ---
 
@@ -417,7 +417,7 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | `ClienteEditarSolicitacaoComponent` | `/cliente/editar-solicitacao/:id` | clienteGuard | ⚠️ Existente — verificar se totalmente implementado |
 | `ClientePerfilComponent` | `/cliente/perfil` | clienteGuard | ✅ Funcional — edição de dados pessoais e endereço; aba "Minhas Avaliações" com média agregada |
 | `ClientePropostasRecebidasComponent` | `/cliente/solicitacao/:id/propostas` | clienteGuard | ✅ Funcional — aceitar/recusar com confirmação |
-| `ClienteAvaliacaoComponent` | `/cliente/solicitacao/:id/avaliacao` | clienteGuard | ✅ Funcional — estrelas 1–5, comentário, estados completos |
+| `ClienteAvaliacaoComponent` | `/cliente/solicitacao/:id/avaliacao` | clienteGuard | ✅ Funcional — estrelas 1–5, comentário, estados completos; **P4.7-T4**: 3 grupos de estrelas opcionais (pontualidade, qualidade, comunicação); payload inclui apenas dimensões com nota > 0 |
 | `PrestadorDashboardComponent` | `/prestador/dashboard` | prestadorGuard | ✅ Funcional — oportunidades no topo, filtro cidade/estado, botão "Ver perfil público" + "Copiar link" |
 | `PrestadorPerfilComponent` | `/prestador/perfil` | prestadorGuard | ✅ Funcional — avatar upload, telefone, forkJoin salva perfil+usuário em paralelo |
 | `PrestadorEnviarPropostaComponent` | `/prestador/solicitacao/:id` | prestadorGuard | ✅ Funcional — detalhes da solicitação + formulário de proposta |
@@ -565,7 +565,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | Onboarding guiado com progress bar de perfil | ✅ | ✅ | ❌ |
 | Notificações por e-mail transacionais | ✅ | ✅ | ❌ |
 | Badge de destaque / profissional verificado | — | ✅ (Top 5%) | ✅ (≥5 contratos + média ≥4,0) |
-| Avaliação multidimensional | — | ✅ (0–10 + dimensões) | 🔄 (em progresso — T1/6 entregue) |
+| Avaliação multidimensional | — | ✅ (0–10 + dimensões) | 🔄 (em progresso — T1–T4/6 entregues) |
 | Verificação de identidade (documento + selfie) | ✅ (IdWall) | ✅ (manual) | ❌ |
 | Mais de 100 categorias de serviço | ✅ (500+) | ✅ (200+) | ❌ (19) |
 
@@ -595,7 +595,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue em 2026-05-19 |
 | P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo | ✅ Entregue em 2026-05-19 |
-| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1–T3/6 entregues) |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1–T4/6 entregues) |
 
 > Casos de uso detalhados (fluxo principal, fluxos alternativos, regras de negócio e critérios de aceite) em [`docs/CASOS-DE-USO-P4.md`](CASOS-DE-USO-P4.md).
 
