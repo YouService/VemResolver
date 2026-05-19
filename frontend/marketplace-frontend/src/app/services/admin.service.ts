@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AdminStats, UserResumoDTO, PageResponse, SolicitacaoAdminDTO } from '../models/models';
+import { AdminStats, UserResumoDTO, PageResponse, SolicitacaoAdminDTO, ConfiguracaoEmailDTO } from '../models/models';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -42,5 +42,17 @@ export class AdminService {
   alterarStatusSolicitacao(id: number, status: string): Observable<void> {
     const params = new HttpParams().set('status', status);
     return this.http.patch<void>(`${this.apiUrl}/solicitacoes/${id}/status`, null, { params });
+  }
+
+  getEmailConfig(): Observable<ConfiguracaoEmailDTO> {
+    return this.http.get<ConfiguracaoEmailDTO>(`${this.apiUrl}/email/config`);
+  }
+
+  salvarEmailConfig(dto: Partial<ConfiguracaoEmailDTO>): Observable<ConfiguracaoEmailDTO> {
+    return this.http.put<ConfiguracaoEmailDTO>(`${this.apiUrl}/email/config`, dto);
+  }
+
+  testarEmail(emailDestino: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/email/testar`, { emailDestino });
   }
 }

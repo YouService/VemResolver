@@ -27,19 +27,22 @@ public class SolicitacaoServicoService {
     private final AvaliacaoRepository avaliacaoRepository;
     private final PropostaRepository propostaRepository;
     private final NotificacaoService notificacaoService;
+    private final EmailService emailService;
 
     public SolicitacaoServicoService(SolicitacaoServicoRepository solicitacaoRepository,
                                      UserRepository userRepository,
                                      CategoriaRepository categoriaRepository,
                                      AvaliacaoRepository avaliacaoRepository,
                                      PropostaRepository propostaRepository,
-                                     NotificacaoService notificacaoService) {
+                                     NotificacaoService notificacaoService,
+                                     EmailService emailService) {
         this.solicitacaoRepository = solicitacaoRepository;
         this.userRepository = userRepository;
         this.categoriaRepository = categoriaRepository;
         this.avaliacaoRepository = avaliacaoRepository;
         this.propostaRepository = propostaRepository;
         this.notificacaoService = notificacaoService;
+        this.emailService = emailService;
     }
     
     @Transactional
@@ -154,6 +157,10 @@ public class SolicitacaoServicoService {
                 "O cliente marcou o serviço como concluído. Avalie sua experiência!",
                 "SERVICO_CONCLUIDO",
                 "/prestador/solicitacao/" + solicitacao.getId() + "/avaliacao"
+            );
+            emailService.sendContratoFinalizado(
+                propostaAceita.getPrestador().getUsuario().getEmail(),
+                solicitacao.getDescricao()
             );
         }
 

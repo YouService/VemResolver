@@ -77,7 +77,24 @@
       "Bash(docker-compose logs *)",
       "Bash(xargs grep -l \"\")",
       "Bash(xargs grep -n \"permitAll\\\\|requestMatchers\")",
-      "Bash(xargs grep -h \"CONCLUIDA\\\\|ACEITA\")"
+      "Bash(xargs grep -h \"CONCLUIDA\\\\|ACEITA\")",
+      "Bash(Get-Content *)",
+      "Bash(python -c \"import sys,json; cats=json.load\\(sys.stdin\\); [print\\(f'{c[\\\\\"id\\\\\"]}: {c[\\\\\"nome\\\\\"]}'\\) for c in cats]\")",
+      "Bash(python seed_dados.py)",
+      "Bash(pip install *)",
+      "Bash(python \"C:\\\\dev\\\\workspace\\\\vemresolver\\\\seed_dados.py\")",
+      "Bash(python -X utf8 seed_dados.py)",
+      "Bash(Start-Sleep -Seconds 65)",
+      "Bash(git -C C:/dev/workspace/vemresolver status)",
+      "Bash(git -C C:/dev/workspace/vemresolver log --oneline -5)",
+      "Bash(git -C C:/dev/workspace/vemresolver branch -a)",
+      "Bash(git -C C:/dev/workspace/vemresolver add README.md docs/LEVANTAMENTO.md seed_dados.py)",
+      "Bash(git *)",
+      "PowerShell(git add *)",
+      "Bash(docker-compose -f C:/dev/workspace/vemresolver/docker-compose.yml up --build -d backend)",
+      "Bash(python *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\dev\\\\workspace\\\\vemresolver\\\\backend\" -Recurse | Where-Object { $_.Extension -eq \".java\" } | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\dev\\\\workspace\\\\vemresolver\\\\frontend\\\\src\\\\app\" -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object Name | Sort-Object Name)"
     ]
   }
 }
