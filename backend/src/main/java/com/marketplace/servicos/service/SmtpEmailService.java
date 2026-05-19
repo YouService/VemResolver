@@ -55,6 +55,12 @@ public class SmtpEmailService implements EmailService {
                 "<h2>Funcionando!</h2><p>Configuração SMTP ativa no VemResolver.</p>");
     }
 
+    @Override
+    public void sendNovaSolicitacao(String to, String categoriaNome, String cidade, String estado, String descricao) {
+        sendHtml(to, "Nova solicitação de serviço — VemResolver",
+                "<h2>Nova oportunidade!</h2><p>Categoria: <strong>" + categoriaNome + "</strong> em " + cidade + "/" + estado + "<br>" + descricao + "</p>");
+    }
+
     private void sendHtml(String to, String subject, String html) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

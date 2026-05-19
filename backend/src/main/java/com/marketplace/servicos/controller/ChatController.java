@@ -10,9 +10,11 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -53,6 +55,16 @@ public class ChatController {
             @AuthenticationPrincipal User user) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(chatService.enviarMensagem(propostaId, user.getId(), dto.getTexto()));
+    }
+
+    @PostMapping(value = "/proposta/{propostaId}/imagem", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Enviar imagem no chat (JPEG/PNG/WEBP, máx 5 MB)")
+    public ResponseEntity<MensagemChatDTO> uploadImagem(
+            @PathVariable Long propostaId,
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(chatService.uploadImagem(propostaId, user.getId(), file));
     }
 
     @PatchMapping("/proposta/{propostaId}/ler")

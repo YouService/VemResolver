@@ -7,6 +7,7 @@ import { ChatService } from '../../services/chat.service';
 import { PropostaService } from '../../services/proposta.service';
 import { AuthService } from '../../services/auth.service';
 import { MensagemChat, StatusProposta, StatusSolicitacao } from '../../models/models';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-chat',
@@ -22,6 +23,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   novasMensagens: number = 0;
   textoMensagem = '';
   enviando = false;
+  uploadandoImagem = false;
   carregando = false;
   carregandoAnteriores = false;
   erro = '';
@@ -29,6 +31,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   contratoDescricao = '';
   clienteNome = '';
   prestadorNome = '';
+
+  backendUrl = environment.apiUrl.replace('/api', '');
 
   paginaAtual = 0;
   totalPaginas = 1;
@@ -190,6 +194,37 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   get caractereRestantes(): number {
     return 2000 - this.textoMensagem.length;
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      this.erro = 'Formato inválido. Use JPEG, PNG ou WEBP.';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.erro = 'A imagem deve ter no máximo 5 MB.';
+      return;
+    }
+    this.uploadandoImagem = true;
+    this.chatService.uploadImagem(this.propostaId, file).subscribe({
+      next: (msg) => {
+        this.mensagens = [...this.mensagens, msg];
+        this.uploadandoImagem = false;
+        setTimeout(() => this.scrollParaFim(), 50);
+      },
+      error: () => {
+        this.erro = 'Não foi possível enviar a imagem. Tente novamente.';
+        this.uploadandoImagem = false;
+      }
+    });
+    input.value = '';
+  }
+
+  abrirImagem(url: string): void {
+    window.open(this.backendUrl + url, '_blank');
   }
 
   onKeydownEnter(event: Event): void {

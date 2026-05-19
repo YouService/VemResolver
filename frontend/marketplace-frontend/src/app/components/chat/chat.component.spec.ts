@@ -36,7 +36,7 @@ describe('ChatComponent', () => {
   let routerSpy: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    chatServiceSpy = jasmine.createSpyObj('ChatService', ['listar', 'listarPaginado', 'enviar', 'marcarComoLidas']);
+    chatServiceSpy = jasmine.createSpyObj('ChatService', ['listar', 'listarPaginado', 'enviar', 'marcarComoLidas', 'uploadImagem']);
     propostaServiceSpy = jasmine.createSpyObj('PropostaService', ['buscarPorId']);
     authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
@@ -219,5 +219,59 @@ describe('ChatComponent', () => {
     component['intervalo'] = intervalo;
     component.ngOnDestroy();
     expect(spy).toHaveBeenCalledWith(intervalo);
+  });
+
+  // ── onFileSelected — upload de imagem (P9.2) ─────────────────────────────────
+
+  it('onFileSelected deve exibir erro para tipo de arquivo inválido (PDF)', () => {
+    const file = new File(['conteudo'], 'doc.pdf', { type: 'application/pdf' });
+    const input = { files: [file], value: '' } as any;
+    const event = { target: input } as any;
+    component.onFileSelected(event);
+    expect(component.erro).toContain('Formato inválido');
+    expect(chatServiceSpy.uploadImagem).not.toHaveBeenCalled();
+  });
+
+  it('onFileSelected deve exibir erro para arquivo maior que 5 MB', () => {
+    const bigContent = new Uint8Array(6 * 1024 * 1024);
+    const file = new File([bigContent], 'grande.jpg', { type: 'image/jpeg' });
+    const input = { files: [file], value: '' } as any;
+    const event = { target: input } as any;
+    component.onFileSelected(event);
+    expect(component.erro).toContain('5 MB');
+    expect(chatServiceSpy.uploadImagem).not.toHaveBeenCalled();
+  });
+
+  it('onFileSelected deve chamar uploadImagem e adicionar mensagem na lista', () => {
+    const imgMsg = mockMensagem(50, 1, '');
+    chatServiceSpy.uploadImagem.and.returnValue(of({ ...imgMsg, urlAnexo: '/uploads/chat/20/img.jpg' } as any));
+
+    const file = new File(['img'], 'foto.jpg', { type: 'image/jpeg' });
+    const input = { files: [file], value: '' } as any;
+    const event = { target: input } as any;
+    component.onFileSelected(event);
+
+    expect(chatServiceSpy.uploadImagem).toHaveBeenCalledWith(20, file);
+    expect(component.mensagens.length).toBeGreaterThan(0);
+    expect(component.uploadandoImagem).toBeFalse();
+  });
+
+  it('onFileSelected deve exibir erro quando uploadImagem falha', () => {
+    chatServiceSpy.uploadImagem.and.returnValue(throwError(() => new Error('Falha')));
+
+    const file = new File(['img'], 'foto.png', { type: 'image/png' });
+    const input = { files: [file], value: '' } as any;
+    const event = { target: input } as any;
+    component.onFileSelected(event);
+
+    expect(component.erro).toContain('Não foi possível enviar a imagem');
+    expect(component.uploadandoImagem).toBeFalse();
+  });
+
+  it('onFileSelected não deve fazer nada quando não há arquivo selecionado', () => {
+    const input = { files: null } as any;
+    const event = { target: input } as any;
+    component.onFileSelected(event);
+    expect(chatServiceSpy.uploadImagem).not.toHaveBeenCalled();
   });
 });

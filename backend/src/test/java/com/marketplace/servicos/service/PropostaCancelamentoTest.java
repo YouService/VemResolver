@@ -29,6 +29,7 @@ class PropostaCancelamentoTest {
     @Mock private AvaliacaoRepository avaliacaoRepository;
     @Mock private NotificacaoService notificacaoService;
     @Mock private EmailService emailService;
+    @Mock private WebPushService webPushService;
 
     @InjectMocks
     private PropostaService propostaService;

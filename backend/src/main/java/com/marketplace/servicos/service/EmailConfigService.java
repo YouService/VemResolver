@@ -41,6 +41,9 @@ public class EmailConfigService {
         if (dto.getAtivo() != null) {
             cfg.setAtivo(dto.getAtivo());
         }
+        if (dto.getEmailNovaSolicitacaoAtivo() != null) {
+            cfg.setEmailNovaSolicitacaoAtivo(dto.getEmailNovaSolicitacaoAtivo());
+        }
         cfg.setAtualizadoEm(LocalDateTime.now());
 
         cfg = repo.save(cfg);
@@ -57,6 +60,7 @@ public class EmailConfigService {
         dto.setEmailRemetente(cfg.getEmailRemetente());
         dto.setNomeRemetente(cfg.getNomeRemetente());
         dto.setAtivo(cfg.getAtivo());
+        dto.setEmailNovaSolicitacaoAtivo(cfg.getEmailNovaSolicitacaoAtivo());
         dto.setAtualizadoEm(cfg.getAtualizadoEm());
         dto.setConfigurado(cfg.getBrevoApiKey() != null && !cfg.getBrevoApiKey().isBlank()
                 && cfg.getEmailRemetente() != null && !cfg.getEmailRemetente().isBlank());
