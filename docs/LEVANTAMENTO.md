@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p4.6-badge-verificado: badge automático para prestadores verificados)  
+> **Última atualização:** 2026-05-19 (feature/p4.7-avaliacao-multidimensional: Tarefa 1 — migração e modelo de dados)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p4.6-badge-verificado → main / develop
+> **Branch analisada:** feature/p4.7-avaliacao-multidimensional → main / develop
 
 ---
 
@@ -274,6 +274,9 @@ frontend/marketplace-frontend/src/app/
 | nota | Integer | NOT NULL |
 | comentario | String | TEXT, nullable |
 | dataCriacao | LocalDateTime | NOT NULL, auto (`@CreationTimestamp`) |
+| notaPontualidade | Integer | nullable (V13) — apenas em CLIENTE_AVALIA_PRESTADOR |
+| notaQualidade | Integer | nullable (V13) — apenas em CLIENTE_AVALIA_PRESTADOR |
+| notaComunicacao | Integer | nullable (V13) — apenas em CLIENTE_AVALIA_PRESTADOR |
 
 #### `VerificationToken` → tabela `verification_tokens`
 Armazena token de verificação de e-mail enviado ao registrar. Usuário só ativa a conta via link no e-mail.
@@ -557,7 +560,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | Onboarding guiado com progress bar de perfil | ✅ | ✅ | ❌ |
 | Notificações por e-mail transacionais | ✅ | ✅ | ❌ |
 | Badge de destaque / profissional verificado | — | ✅ (Top 5%) | ✅ (≥5 contratos + média ≥4,0) |
-| Avaliação multidimensional | — | ✅ (0–10 + dimensões) | ❌ (só 1–5) |
+| Avaliação multidimensional | — | ✅ (0–10 + dimensões) | 🔄 (em progresso — T1/6 entregue) |
 | Verificação de identidade (documento + selfie) | ✅ (IdWall) | ✅ (manual) | ❌ |
 | Mais de 100 categorias de serviço | ✅ (500+) | ✅ (200+) | ❌ (19) |
 
@@ -587,7 +590,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue em 2026-05-19 |
 | P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo | ✅ Entregue em 2026-05-19 |
-| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1/6: migração V13 + Avaliacao.java entregues) |
 
 > Casos de uso detalhados (fluxo principal, fluxos alternativos, regras de negócio e critérios de aceite) em [`docs/CASOS-DE-USO-P4.md`](CASOS-DE-USO-P4.md).
 
