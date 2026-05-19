@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
-import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO } from '../../models/models';
+import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, ConfiguracaoEmailDTO } from '../../models/models';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -17,7 +17,7 @@ export class AdminDashboardComponent implements OnInit {
   usuariosOnline: UserResumoDTO[] = [];
   solicitacoes: SolicitacaoAdminDTO[] = [];
 
-  aba: 'usuarios' | 'online' | 'solicitacoes' = 'usuarios';
+  aba: 'usuarios' | 'online' | 'solicitacoes' | 'email' = 'usuarios';
 
   paginaAtual = 0;
   totalPaginas = 0;
@@ -38,6 +38,17 @@ export class AdminDashboardComponent implements OnInit {
 
   readonly statusOpcoes = ['', 'ABERTA', 'EM_ANDAMENTO', 'CONCLUIDA', 'CANCELADA'];
 
+  // Email config
+  emailConfig: ConfiguracaoEmailDTO = { ativo: false };
+  emailForm: ConfiguracaoEmailDTO & { apiKeyNova?: string } = { ativo: false };
+  loadingEmail = false;
+  savingEmail = false;
+  testingEmail = false;
+  emailTesteDest = '';
+  emailSucess = '';
+  emailError = '';
+  mostrarApiKey = false;
+
   constructor(private adminService: AdminService) {}
 
   ngOnInit(): void {
@@ -45,11 +56,14 @@ export class AdminDashboardComponent implements OnInit {
     this.carregarUsuarios(0);
   }
 
-  selecionarAba(aba: 'usuarios' | 'online' | 'solicitacoes'): void {
+  selecionarAba(aba: 'usuarios' | 'online' | 'solicitacoes' | 'email'): void {
     this.aba = aba;
     this.errorMessage = '';
+    this.emailSucess = '';
+    this.emailError = '';
     if (aba === 'online' && this.usuariosOnline.length === 0) this.carregarOnline();
     if (aba === 'solicitacoes' && this.solicitacoes.length === 0) this.carregarSolicitacoes(0);
+    if (aba === 'email') this.carregarEmailConfig();
   }
 
   carregarStats(): void {
@@ -132,6 +146,61 @@ export class AdminDashboardComponent implements OnInit {
       error: () => { this.errorMessage = 'Erro ao alterar status da solicitação.'; this.alterandoSolId = null; }
     });
   }
+
+  // ── Email config ────────────────────────────────────────────────
+
+  carregarEmailConfig(): void {
+    this.loadingEmail = true;
+    this.adminService.getEmailConfig().subscribe({
+      next: cfg => {
+        this.emailConfig = cfg;
+        this.emailForm = {
+          emailRemetente: cfg.emailRemetente ?? '',
+          nomeRemetente: cfg.nomeRemetente ?? 'VemResolver',
+          ativo: cfg.ativo ?? false,
+          apiKeyNova: ''
+        };
+        this.loadingEmail = false;
+      },
+      error: () => { this.emailError = 'Erro ao carregar configuração de e-mail.'; this.loadingEmail = false; }
+    });
+  }
+
+  salvarEmailConfig(): void {
+    this.savingEmail = true;
+    this.emailSucess = '';
+    this.emailError = '';
+    const payload: ConfiguracaoEmailDTO = {
+      emailRemetente: this.emailForm.emailRemetente,
+      nomeRemetente:  this.emailForm.nomeRemetente,
+      ativo:          this.emailForm.ativo
+    };
+    if (this.emailForm.apiKeyNova && this.emailForm.apiKeyNova.trim()) {
+      payload.brevoApiKey = this.emailForm.apiKeyNova.trim();
+    }
+    this.adminService.salvarEmailConfig(payload).subscribe({
+      next: cfg => {
+        this.emailConfig = cfg;
+        this.emailForm.apiKeyNova = '';
+        this.emailSucess = 'Configuração salva com sucesso!';
+        this.savingEmail = false;
+      },
+      error: () => { this.emailError = 'Erro ao salvar configuração.'; this.savingEmail = false; }
+    });
+  }
+
+  enviarEmailTeste(): void {
+    if (!this.emailTesteDest) return;
+    this.testingEmail = true;
+    this.emailSucess = '';
+    this.emailError = '';
+    this.adminService.testarEmail(this.emailTesteDest).subscribe({
+      next: () => { this.emailSucess = 'E-mail de teste enviado para ' + this.emailTesteDest; this.testingEmail = false; },
+      error: () => { this.emailError = 'Erro ao enviar e-mail de teste. Verifique a configuração.'; this.testingEmail = false; }
+    });
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────
 
   badgeStatus(status: string): string {
     const map: Record<string, string> = {

@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-18 (feature/admin-online-solicitacoes: painel admin com usuários online, listagem e alteração de status de solicitações)  
+> **Última atualização:** 2026-05-19 (feature/p4.5-email-transacional: e-mail transacional via Brevo configurável pelo admin)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** main / develop (sincronizadas)
+> **Branch analisada:** feature/p4.5-email-transacional → main / develop
 
 ---
 
@@ -365,6 +365,9 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | GET | `/api/admin/usuarios/online` | JWT (`ROLE_ADMIN`) | Usuários ativos nos últimos 5 min (lista `UserResumoDTO`) |
 | GET | `/api/admin/solicitacoes` | JWT (`ROLE_ADMIN`) | Lista todas as solicitações com filtro opcional `?status=` (paginado, `SolicitacaoAdminDTO`) |
 | PATCH | `/api/admin/solicitacoes/{id}/status` | JWT (`ROLE_ADMIN`) | Altera status de solicitação (bypass de ownership) |
+| GET | `/api/admin/email/config` | JWT (`ROLE_ADMIN`) | Retorna configuração Brevo atual (API key mascarada) |
+| PUT | `/api/admin/email/config` | JWT (`ROLE_ADMIN`) | Salva configuração de e-mail (API key, remetente, toggle ativo) |
+| POST | `/api/admin/email/testar` | JWT (`ROLE_ADMIN`) | Envia e-mail de teste para o endereço informado |
 
 ### `/api/avaliacoes`
 | Método | Path | Auth | O que faz | Observações |
@@ -581,7 +584,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | P4.2 | **Portfólio de fotos** no perfil do prestador (até 10 imagens) | Principal elemento de conversão em serviços visuais (pintura, reforma, cozinha) | Alto | Baixo | ✅ Entregue em 2026-05-17 |
 | P4.3 | **Onboarding guiado** com barra de progresso e checklist do perfil | Reduz taxa de prestadores inativos por perfil incompleto | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
-| P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio |
+| P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue em 2026-05-19 |
 | P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo |
 | P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio |
 
@@ -653,6 +656,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | feat/p4.3-onboarding-checklist: checklist de completude do perfil do prestador com 7 critérios ponderados (foto de perfil 15%, descrição 20%, categorias 15%, telefone 10%, cidade+estado 10%, portfólio de fotos 20%, lat/lng 10%); barra de progresso com cor dinâmica (vermelho <50%, amarelo 50–79%, verde ≥80%); collapse automático ao 100%; avatar upload (`POST/DELETE /api/prestadores/me/foto-perfil`); campo de telefone editável na tela de perfil; `percentual_completude` persistido em `prestadores` e recalculado a cada save de perfil ou foto; `V9__add_foto_perfil_e_completude.sql`; `OnboardingChecklistComponent` integrado no `PrestadorDashboardComponent`; endpoint `GET /api/prestadores/me/completude` retorna `CompletudePrestadorDTO` com itens | `feature/p4.3-onboarding-checklist` | 2026-05-18 |
 | fix: "Perfil não encontrado" ao acessar perfil público — container backend rodava JAR pré-P4.4; `GET /api/prestadores/{id}/publico` inexistente causava 404; corrigido via `docker-compose up --build -d backend` | `main` | 2026-05-18 |
 | fix/cobertura-de-testes: testes backend (117 unitarios + 30 segurança) e frontend (69/70) corrigidos e expandidos; gap de segurança em `SecurityConfig` corrigido (`GET /api/prestadores/me/**` exige `ROLE_PRESTADOR`); tecnicas: `.with(user(buildUser(...)))` para autenticacao com User customizado, `PageRequest.of(0,10)` para serializar PageImpl corretamente | `fix/cobertura-de-testes` | 2026-05-18 |
+| feature/p4.5-email-transacional: e-mail transacional via Brevo HTTP API (sem SMTP); `BrevoEmailService` usa `java.net.http.HttpClient`; `ConfiguracaoEmail` entity + repository + `EmailConfigService`; 3 endpoints admin (`GET/PUT /api/admin/email/config`, `POST /api/admin/email/testar`); API key mascarada na resposta; disparos em proposta recebida, aceita e contrato concluído; `V11__add_configuracoes_email.sql`; aba "✉️ E-mail" no admin dashboard com form, toggle ativo e botão de teste; 8 `BrevoEmailServiceTest` + 11 `AdminEmailSegurancaTest`; totais: 146 backend, 90/91 frontend | `feature/p4.5-email-transacional` | 2026-05-19 |
 | seed_dados.py: script Python na raiz do projeto para popular o banco com dados de demonstracao — 10 clientes + 10 prestadores com perfil completo + 15 fluxos completos (solicitacao, proposta, 4 mensagens de chat por fluxo, aceitar, concluir, avaliacao mutua); notas variadas de 2 a 5 estrelas; pausas automaticas de 65s para respeitar o rate limit de 10 logins/min | raiz | 2026-05-18 |
 | feature/admin-online-solicitacoes: painel admin expandido com 3 funcionalidades novas — (1) rastreamento de presença via `OnlineTrackingFilter` (throttle 2 min, não @Component, registrado via `addFilterAfter`); campo `ultimo_acesso` em `usuarios` via `V10__add_ultimo_acesso_usuario.sql`; (2) aba "Online agora" com grid de usuários ativos nos últimos 5 min; (3) aba "Solicitações" com listagem paginada + filtro por status + alteração inline de status pelo admin; `SolicitacaoAdminDTO` com `totalPropostas`; `UserResumoDTO` ampliado com `ultimoAcesso` e `online`; `AdminStats` com `usuariosOnline`; 9 novos testes de segurança backend (AdminSegurancaTest); 13 novos testes frontend (AdminDashboardComponent); `@MockBean UserRepository` adicionado a `CategoriaSecurityTest`, `ChatSegurancaTest` e `PrestadorSegurancaTest` para corrigir context load após SecurityConfig depender de UserRepository | `feature/admin-online-solicitacoes` | 2026-05-18 |
 

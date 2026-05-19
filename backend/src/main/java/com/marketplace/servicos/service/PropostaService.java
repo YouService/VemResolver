@@ -25,17 +25,20 @@ public class PropostaService {
     private final PrestadorRepository prestadorRepository;
     private final AvaliacaoRepository avaliacaoRepository;
     private final NotificacaoService notificacaoService;
+    private final EmailService emailService;
 
     public PropostaService(PropostaRepository propostaRepository,
                            SolicitacaoServicoRepository solicitacaoRepository,
                            PrestadorRepository prestadorRepository,
                            AvaliacaoRepository avaliacaoRepository,
-                           NotificacaoService notificacaoService) {
+                           NotificacaoService notificacaoService,
+                           EmailService emailService) {
         this.propostaRepository = propostaRepository;
         this.solicitacaoRepository = solicitacaoRepository;
         this.prestadorRepository = prestadorRepository;
         this.avaliacaoRepository = avaliacaoRepository;
         this.notificacaoService = notificacaoService;
+        this.emailService = emailService;
     }
     
     @Transactional
@@ -67,6 +70,12 @@ public class PropostaService {
             "Nova proposta de " + prestador.getUsuario().getNome() + " para sua solicitação: " + solicitacao.getDescricao().substring(0, Math.min(50, solicitacao.getDescricao().length())),
             "NOVA_PROPOSTA",
             "/cliente/solicitacao/" + solicitacao.getId() + "/propostas"
+        );
+
+        emailService.sendPropostaRecebida(
+            solicitacao.getCliente().getEmail(),
+            prestador.getUsuario().getNome(),
+            solicitacao.getDescricao()
         );
 
         log.info("Proposta criada id={} para solicitacao={}", proposta.getId(), solicitacao.getId());
@@ -129,6 +138,12 @@ public class PropostaService {
             "Sua proposta foi aceita! Serviço: " + proposta.getSolicitacao().getDescricao().substring(0, Math.min(50, proposta.getSolicitacao().getDescricao().length())),
             "PROPOSTA_ACEITA",
             "/prestador/dashboard"
+        );
+
+        emailService.sendPropostaAceita(
+            proposta.getPrestador().getUsuario().getEmail(),
+            proposta.getSolicitacao().getCliente().getNome(),
+            proposta.getSolicitacao().getDescricao()
         );
 
         log.info("Proposta id={} aceita, notificacao enviada ao prestador", propostaId);

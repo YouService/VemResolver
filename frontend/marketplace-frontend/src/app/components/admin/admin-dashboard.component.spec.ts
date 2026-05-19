@@ -4,7 +4,7 @@ import { of, throwError } from 'rxjs';
 
 import { AdminDashboardComponent } from './admin-dashboard.component';
 import { AdminService } from '../../services/admin.service';
-import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, PageResponse } from '../../models/models';
+import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, PageResponse, ConfiguracaoEmailDTO } from '../../models/models';
 
 const mockStats: AdminStats = {
   totalUsuarios: 25, totalPrestadores: 10, totalSolicitacoes: 43,
@@ -24,6 +24,14 @@ const mockSol: SolicitacaoAdminDTO = {
   dataCriacao: '2026-05-01', totalPropostas: 2
 };
 
+const mockEmailConfig: ConfiguracaoEmailDTO = {
+  brevoApiKey: 'xkey••••••••789',
+  emailRemetente: 'noreply@vemresolver.com',
+  nomeRemetente: 'VemResolver',
+  ativo: true,
+  configurado: true
+};
+
 const mockPage = <T>(items: T[]): PageResponse<T> => ({
   content: items, totalElements: items.length, totalPages: 1, number: 0, size: 15
 });
@@ -36,13 +44,17 @@ describe('AdminDashboardComponent', () => {
   beforeEach(async () => {
     adminServiceSpy = jasmine.createSpyObj('AdminService', [
       'buscarStats', 'listarUsuarios', 'listarOnline',
-      'listarSolicitacoes', 'alterarAtivacao', 'alterarStatusSolicitacao'
+      'listarSolicitacoes', 'alterarAtivacao', 'alterarStatusSolicitacao',
+      'getEmailConfig', 'salvarEmailConfig', 'testarEmail'
     ]);
 
     adminServiceSpy.buscarStats.and.returnValue(of(mockStats));
     adminServiceSpy.listarUsuarios.and.returnValue(of(mockPage([mockUsuario])));
     adminServiceSpy.listarOnline.and.returnValue(of([mockUsuario]));
     adminServiceSpy.listarSolicitacoes.and.returnValue(of(mockPage([mockSol])));
+    adminServiceSpy.getEmailConfig.and.returnValue(of(mockEmailConfig));
+    adminServiceSpy.salvarEmailConfig.and.returnValue(of(mockEmailConfig));
+    adminServiceSpy.testarEmail.and.returnValue(of(undefined));
 
     await TestBed.configureTestingModule({
       imports: [AdminDashboardComponent],
@@ -96,6 +108,13 @@ describe('AdminDashboardComponent', () => {
     expect(adminServiceSpy.listarOnline).not.toHaveBeenCalled();
   });
 
+  it('selecionarAba("email") deve carregar config de email', () => {
+    component.selecionarAba('email');
+    expect(adminServiceSpy.getEmailConfig).toHaveBeenCalled();
+    expect(component.aba).toBe('email');
+    expect(component.emailConfig.configurado).toBeTrue();
+  });
+
   // ── alterarAtivacao ───────────────────────────────────────────────────────
 
   it('alterarAtivacao deve inverter ativo do usuario', () => {
@@ -124,6 +143,49 @@ describe('AdminDashboardComponent', () => {
     const sol = { ...mockSol, status: 'ABERTA' };
     component.alterarStatusSolicitacao(sol, 'ABERTA');
     expect(adminServiceSpy.alterarStatusSolicitacao).not.toHaveBeenCalled();
+  });
+
+  // ── E-mail config ─────────────────────────────────────────────────────────
+
+  it('salvarEmailConfig deve chamar service e exibir sucesso', () => {
+    component.emailForm = { emailRemetente: 'novo@test.com', nomeRemetente: 'Test', ativo: true };
+    component.salvarEmailConfig();
+    expect(adminServiceSpy.salvarEmailConfig).toHaveBeenCalled();
+    expect(component.emailSucess).toBeTruthy();
+  });
+
+  it('salvarEmailConfig deve enviar apiKeyNova se preenchida', () => {
+    component.emailForm = { emailRemetente: 'a@b.com', nomeRemetente: 'T', ativo: true, apiKeyNova: 'nova-key-abc' };
+    component.salvarEmailConfig();
+    const payload = adminServiceSpy.salvarEmailConfig.calls.mostRecent().args[0];
+    expect(payload.brevoApiKey).toBe('nova-key-abc');
+  });
+
+  it('salvarEmailConfig deve exibir erro em falha', () => {
+    adminServiceSpy.salvarEmailConfig.and.returnValue(throwError(() => new Error('erro')));
+    component.emailForm = { ativo: false };
+    component.salvarEmailConfig();
+    expect(component.emailError).toBeTruthy();
+  });
+
+  it('enviarEmailTeste deve chamar service e exibir sucesso', () => {
+    component.emailTesteDest = 'destino@test.com';
+    component.enviarEmailTeste();
+    expect(adminServiceSpy.testarEmail).toHaveBeenCalledWith('destino@test.com');
+    expect(component.emailSucess).toContain('destino@test.com');
+  });
+
+  it('enviarEmailTeste nao deve chamar service se emailTesteDest vazio', () => {
+    component.emailTesteDest = '';
+    component.enviarEmailTeste();
+    expect(adminServiceSpy.testarEmail).not.toHaveBeenCalled();
+  });
+
+  it('enviarEmailTeste deve exibir erro em falha', () => {
+    adminServiceSpy.testarEmail.and.returnValue(throwError(() => new Error('erro')));
+    component.emailTesteDest = 'fail@test.com';
+    component.enviarEmailTeste();
+    expect(component.emailError).toBeTruthy();
   });
 
   // ── badgeStatus / badgeTipo ───────────────────────────────────────────────

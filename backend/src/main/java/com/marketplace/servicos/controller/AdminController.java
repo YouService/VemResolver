@@ -1,6 +1,8 @@
 package com.marketplace.servicos.controller;
 
+import com.marketplace.servicos.dto.ConfiguracaoEmailDTO;
 import com.marketplace.servicos.dto.SolicitacaoAdminDTO;
+import com.marketplace.servicos.dto.TesteEmailDTO;
 import com.marketplace.servicos.dto.UserResumoDTO;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.SolicitacaoServico;
@@ -10,9 +12,11 @@ import com.marketplace.servicos.repository.PrestadorRepository;
 import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import com.marketplace.servicos.repository.UserRepository;
+import com.marketplace.servicos.service.EmailConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -40,15 +44,18 @@ public class AdminController {
     private final PrestadorRepository prestadorRepository;
     private final SolicitacaoServicoRepository solicitacaoServicoRepository;
     private final PropostaRepository propostaRepository;
+    private final EmailConfigService emailConfigService;
 
     public AdminController(UserRepository userRepository,
                            PrestadorRepository prestadorRepository,
                            SolicitacaoServicoRepository solicitacaoServicoRepository,
-                           PropostaRepository propostaRepository) {
+                           PropostaRepository propostaRepository,
+                           EmailConfigService emailConfigService) {
         this.userRepository = userRepository;
         this.prestadorRepository = prestadorRepository;
         this.solicitacaoServicoRepository = solicitacaoServicoRepository;
         this.propostaRepository = propostaRepository;
+        this.emailConfigService = emailConfigService;
     }
 
     @GetMapping("/stats")
@@ -125,6 +132,32 @@ public class AdminController {
         log.info("Admin alterou status da solicitacao id={} de {} para {}", id, statusAnterior, status);
         return ResponseEntity.noContent().build();
     }
+
+    // ── E-mail config ────────────────────────────────────────────────────────
+
+    @GetMapping("/email/config")
+    @Operation(summary = "Retorna a configuração atual de e-mail (API key mascarada)")
+    public ResponseEntity<ConfiguracaoEmailDTO> getEmailConfig() {
+        return ResponseEntity.ok(emailConfigService.buscar());
+    }
+
+    @PutMapping("/email/config")
+    @Operation(summary = "Salva configuração de e-mail (Brevo API key, remetente, ativo)")
+    public ResponseEntity<ConfiguracaoEmailDTO> salvarEmailConfig(@Valid @RequestBody ConfiguracaoEmailDTO dto) {
+        ConfiguracaoEmailDTO salvo = emailConfigService.salvar(dto);
+        log.info("Configuração de e-mail atualizada pelo admin");
+        return ResponseEntity.ok(salvo);
+    }
+
+    @PostMapping("/email/testar")
+    @Operation(summary = "Envia um e-mail de teste para o endereço informado")
+    public ResponseEntity<Void> testarEmail(@Valid @RequestBody TesteEmailDTO dto) {
+        emailConfigService.enviarTeste(dto.getEmailDestino());
+        log.info("E-mail de teste enviado para {}", dto.getEmailDestino());
+        return ResponseEntity.noContent().build();
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private UserResumoDTO toResumoDTO(User user, LocalDateTime limiar) {
         UserResumoDTO dto = new UserResumoDTO();

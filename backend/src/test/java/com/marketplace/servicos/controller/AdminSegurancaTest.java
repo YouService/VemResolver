@@ -7,6 +7,7 @@ import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import com.marketplace.servicos.repository.UserRepository;
 import com.marketplace.servicos.security.CustomUserDetailsService;
 import com.marketplace.servicos.security.JwtAuthenticationFilter;
+import com.marketplace.servicos.service.EmailConfigService;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +48,7 @@ class AdminSegurancaTest {
     @MockBean private PrestadorRepository prestadorRepository;
     @MockBean private SolicitacaoServicoRepository solicitacaoServicoRepository;
     @MockBean private PropostaRepository propostaRepository;
+    @MockBean private EmailConfigService emailConfigService;
     @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockBean private CustomUserDetailsService customUserDetailsService;
 
