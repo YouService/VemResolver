@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class AvaliacaoService {
 
@@ -144,8 +146,9 @@ public class AvaliacaoService {
     }
 
     private void atualizarMediaPrestador(Prestador prestador) {
-        Page<Avaliacao> avaliacoes = avaliacaoRepository.findByPrestadorIdAndTipo(
+        Page<Avaliacao> pagina = avaliacaoRepository.findByPrestadorIdAndTipo(
                 prestador.getId(), TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR, Pageable.unpaged());
+        List<Avaliacao> avaliacoes = pagina.getContent();
 
         double media = avaliacoes.stream()
                 .mapToInt(Avaliacao::getNota)
@@ -153,8 +156,26 @@ public class AvaliacaoService {
                 .orElse(0.0);
 
         prestador.setAvaliacaoMedia(media);
-        prestador.setTotalAvaliacoes((int) avaliacoes.getTotalElements());
+        prestador.setTotalAvaliacoes((int) pagina.getTotalElements());
+
+        prestador.setMediaPontualidade(calcularMediaDimensao(avaliacoes, Avaliacao::getNotaPontualidade));
+        prestador.setMediaQualidade(calcularMediaDimensao(avaliacoes, Avaliacao::getNotaQualidade));
+        prestador.setMediaComunicacao(calcularMediaDimensao(avaliacoes, Avaliacao::getNotaComunicacao));
+
         prestadorRepository.save(prestador);
+    }
+
+    private Double calcularMediaDimensao(List<Avaliacao> avaliacoes,
+                                          java.util.function.Function<Avaliacao, Integer> extrator) {
+        return avaliacoes.stream()
+                .map(extrator)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average()
+                .stream()
+                .boxed()
+                .findFirst()
+                .orElse(null);
     }
 
     private void atualizarMediaCliente(User cliente) {

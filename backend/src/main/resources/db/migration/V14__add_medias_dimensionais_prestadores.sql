@@ -1,0 +1,3 @@
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS media_pontualidade DOUBLE PRECISION;
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS media_qualidade     DOUBLE PRECISION;
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS media_comunicacao   DOUBLE PRECISION;

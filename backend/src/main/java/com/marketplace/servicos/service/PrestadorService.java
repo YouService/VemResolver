@@ -257,6 +257,9 @@ public class PrestadorService {
         dto.setFotoPerfilUrl(prestador.getFotoPerfilUrl());
         dto.setPercentualCompletude(prestador.getPercentualCompletude());
         dto.setVerificado(Boolean.TRUE.equals(prestador.getVerificado()));
+        dto.setMediaPontualidade(prestador.getMediaPontualidade());
+        dto.setMediaQualidade(prestador.getMediaQualidade());
+        dto.setMediaComunicacao(prestador.getMediaComunicacao());
         return dto;
     }
 }

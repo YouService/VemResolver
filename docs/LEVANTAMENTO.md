@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p4.7-avaliacao-multidimensional: Tarefa 1 — migração e modelo de dados)  
+> **Última atualização:** 2026-05-19 (feature/p4.7-t2-medias-dimensionais-prestador: Tarefa 2 — médias por dimensão no prestador)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p4.7-avaliacao-multidimensional → main / develop
+> **Branch analisada:** feature/p4.7-t2-medias-dimensionais-prestador → main / develop
 
 ---
 
@@ -69,7 +69,7 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── LoginDTO.java
 │   ├── MensagemChatDTO.java
 │   ├── PerfilPublicoDTO.java        (sem dados sensíveis; inclui AvaliacaoResumo interno)
-│   ├── PrestadorDTO.java            (inclui fotoPerfilUrl, percentualCompletude, verificado)
+│   ├── PrestadorDTO.java            (inclui fotoPerfilUrl, percentualCompletude, verificado, mediaPontualidade, mediaQualidade, mediaComunicacao)
 │   ├── PropostaDTO.java
 │   ├── RegisterDTO.java
 │   ├── SolicitacaoAdminDTO.java     (id, clienteNome, clienteEmail, categoriaNome, descricao, cidade, estado, status, dataCriacao, totalPropostas)
@@ -86,7 +86,7 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── FotoPrestador.java       (id, prestador, url, dataUpload)
 │   ├── MensagemChat.java        (id, proposta, remetente, texto, dataEnvio, lida)
 │   ├── Notificacao.java
-│   ├── Prestador.java           (fotoPerfilUrl, percentualCompletude, latitude, longitude, verificado)
+│   ├── Prestador.java           (fotoPerfilUrl, percentualCompletude, latitude, longitude, verificado, mediaPontualidade, mediaQualidade, mediaComunicacao)
 │   ├── Proposta.java
 │   ├── RefreshToken.java
 │   ├── SolicitacaoServico.java
@@ -239,6 +239,9 @@ frontend/marketplace-frontend/src/app/
 | fotoPerfilUrl | String | TEXT, nullable (V9) |
 | percentualCompletude | Integer | NOT NULL, default 0 (V9) — recalculado a cada save |
 | verificado | Boolean | NOT NULL, default false (V12) — recalculado a cada avaliação e a cada conclusão de serviço |
+| mediaPontualidade | Double | nullable (V14) — média das notas de pontualidade recebidas |
+| mediaQualidade | Double | nullable (V14) — média das notas de qualidade recebidas |
+| mediaComunicacao | Double | nullable (V14) — média das notas de comunicação recebidas |
 
 #### `SolicitacaoServico` → tabela `solicitacoes_servico`
 | Campo | Tipo | Restrições |
@@ -590,7 +593,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue em 2026-05-19 |
 | P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo | ✅ Entregue em 2026-05-19 |
-| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1/6: migração V13 + Avaliacao.java entregues) |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1–T2/6 entregues) |
 
 > Casos de uso detalhados (fluxo principal, fluxos alternativos, regras de negócio e critérios de aceite) em [`docs/CASOS-DE-USO-P4.md`](CASOS-DE-USO-P4.md).
 
