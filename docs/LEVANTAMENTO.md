@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p4.7-t5-exibicao-dimensional: Tarefa 5 — Exibição frontend das médias dimensionais)  
+> **Última atualização:** 2026-05-19 (feature/p4.7-t6-testes-integracao: Tarefa 6 — Testes de integração de controller — P4.7 COMPLETA)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p4.7-t5-exibicao-dimensional → main / develop
+> **Branch analisada:** feature/p4.7-t6-testes-integracao → main / develop
 
 ---
 
@@ -567,7 +567,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | Onboarding guiado com progress bar de perfil | ✅ | ✅ | ❌ |
 | Notificações por e-mail transacionais | ✅ | ✅ | ❌ |
 | Badge de destaque / profissional verificado | — | ✅ (Top 5%) | ✅ (≥5 contratos + média ≥4,0) |
-| Avaliação multidimensional | — | ✅ (0–10 + dimensões) | 🔄 (em progresso — T1–T5/6 entregues) |
+| Avaliação multidimensional | — | ✅ (0–10 + dimensões) | ✅ (P4.7 completa — T1–T6/6 entregues) |
 | Verificação de identidade (documento + selfie) | ✅ (IdWall) | ✅ (manual) | ❌ |
 | Mais de 100 categorias de serviço | ✅ (500+) | ✅ (200+) | ❌ (19) |
 
@@ -597,7 +597,7 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | P4.4 | **Perfil público compartilhável** em `/prestador/{id}` com CTA para solicitar | Prestador não tem URL pública para divulgar; gera tráfego orgânico | Médio-Alto | Baixo | ✅ Entregue em 2026-05-18 |
 | P4.5 | **Notificações por e-mail** transacionais (nova proposta, proposta aceita, nova solicitação) | Polling 30s depende da aba aberta; e-mail garante alcance offline | Alto | Baixo-Médio | ✅ Entregue em 2026-05-19 |
 | P4.6 | **Badge "Verificado"** (5+ contratos + média ≥ 4,0) | Nenhum diferencial visual entre prestadores; cria gamificação de reputação | Médio | Baixo | ✅ Entregue em 2026-05-19 |
-| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | 🔄 Em progresso (T1–T5/6 entregues) |
+| P4.7 | **Avaliação multidimensional** — pontualidade, qualidade, comunicação | Nota única é pouco granular; dimensões ajudam cliente a escolher e prestador a melhorar | Médio | Médio | ✅ Entregue em 2026-05-19 |
 
 > Casos de uso detalhados (fluxo principal, fluxos alternativos, regras de negócio e critérios de aceite) em [`docs/CASOS-DE-USO-P4.md`](CASOS-DE-USO-P4.md).
 
