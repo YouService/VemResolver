@@ -14,7 +14,8 @@ export enum StatusSolicitacao {
 export enum StatusProposta {
   ENVIADA = 'ENVIADA',
   ACEITA = 'ACEITA',
-  RECUSADA = 'RECUSADA'
+  RECUSADA = 'RECUSADA',
+  CANCELADA_PELO_PRESTADOR = 'CANCELADA_PELO_PRESTADOR'
 }
 
 export enum TipoAvaliacao {
@@ -214,6 +215,9 @@ export interface Avaliacao {
   notaPontualidade?: number;
   notaQualidade?: number;
   notaComunicacao?: number;
+  respostaPrestador?: string;
+  dataResposta?: string;
+  dataCriacao?: string;
 }
 
 export interface PageResponse<T> {
@@ -231,14 +235,18 @@ export interface FotoPrestador {
 }
 
 export interface AvaliacaoResumo {
+  avaliacaoId?: number;
   nomeAvaliador: string;
   nota: number;
   comentario?: string;
   dataCriacao?: string;
+  respostaPrestador?: string;
+  dataResposta?: string;
 }
 
 export interface PerfilPublico {
   id: number;
+  usuarioId?: number;
   nome: string;
   fotoPerfilUrl?: string;
   categorias: string[];

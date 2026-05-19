@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -137,8 +138,8 @@ public class AvaliacaoService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AvaliacaoDTO> listarPorPrestador(Long prestadorId, Pageable pageable) {
-        return avaliacaoRepository.findByPrestadorIdAndTipo(prestadorId, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR, pageable)
+    public Page<AvaliacaoDTO> listarPorPrestador(Long prestadorId, Integer nota, Pageable pageable) {
+        return avaliacaoRepository.filtrarPorNota(prestadorId, nota, pageable)
                 .map(this::toDTO);
     }
 
@@ -181,6 +182,59 @@ public class AvaliacaoService {
                 .orElse(null);
     }
 
+    @Transactional
+    public AvaliacaoDTO responderAvaliacao(Long avaliacaoId, String resposta, Long prestadorUserId) {
+        Avaliacao avaliacao = avaliacaoRepository.findById(avaliacaoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Avaliação não encontrada"));
+
+        if (avaliacao.getTipo() != TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR) {
+            throw new BusinessException("Apenas avaliações de clientes podem ser respondidas");
+        }
+
+        if (!avaliacao.getPrestador().getUsuario().getId().equals(prestadorUserId)) {
+            throw new BusinessException("Você não pode responder a esta avaliação");
+        }
+
+        if (resposta == null || resposta.isBlank()) {
+            throw new BusinessException("A resposta não pode ser vazia");
+        }
+
+        avaliacao.setRespostaPrestador(resposta.strip());
+        avaliacao.setDataResposta(LocalDateTime.now());
+        avaliacao = avaliacaoRepository.save(avaliacao);
+
+        log.info("Resposta registrada na avaliacao id={} pelo prestador usuario id={}", avaliacaoId, prestadorUserId);
+        return toDTO(avaliacao);
+    }
+
+    @Transactional
+    public AvaliacaoDTO editarAvaliacao(Long avaliacaoId, Integer nota, String comentario, Long clienteId) {
+        Avaliacao avaliacao = avaliacaoRepository.findById(avaliacaoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Avaliação não encontrada"));
+
+        if (!avaliacao.getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Você não pode editar esta avaliação");
+        }
+
+        if (avaliacao.getDataCriacao() != null &&
+                avaliacao.getDataCriacao().isBefore(LocalDateTime.now().minusDays(7))) {
+            throw new BusinessException("Avaliações só podem ser editadas nos primeiros 7 dias");
+        }
+
+        if (nota != null) avaliacao.setNota(nota);
+        if (comentario != null) avaliacao.setComentario(comentario);
+
+        avaliacao = avaliacaoRepository.save(avaliacao);
+
+        if (nota != null) {
+            atualizarMediaPrestador(avaliacao.getPrestador());
+            prestadorService.recalcularVerificado(avaliacao.getPrestador().getId());
+        }
+
+        log.info("Avaliacao id={} editada pelo cliente id={}", avaliacaoId, clienteId);
+        return toDTO(avaliacao);
+    }
+
     private void atualizarMediaCliente(User cliente) {
         Page<Avaliacao> avaliacoes = avaliacaoRepository.findByClienteIdAndTipo(
                 cliente.getId(), TipoAvaliacao.PRESTADOR_AVALIA_CLIENTE, Pageable.unpaged());
@@ -209,6 +263,8 @@ public class AvaliacaoService {
         dto.setNotaPontualidade(avaliacao.getNotaPontualidade());
         dto.setNotaQualidade(avaliacao.getNotaQualidade());
         dto.setNotaComunicacao(avaliacao.getNotaComunicacao());
+        dto.setRespostaPrestador(avaliacao.getRespostaPrestador());
+        dto.setDataResposta(avaliacao.getDataResposta());
 
         if (avaliacao.getTipo() == TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR) {
             dto.setNomeAvaliador(avaliacao.getCliente().getNome());

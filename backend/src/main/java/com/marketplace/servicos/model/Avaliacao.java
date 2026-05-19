@@ -54,4 +54,10 @@ public class Avaliacao {
 
     @Column(name = "nota_comunicacao")
     private Integer notaComunicacao;
+
+    @Column(name = "resposta_prestador", columnDefinition = "TEXT")
+    private String respostaPrestador;
+
+    @Column(name = "data_resposta")
+    private LocalDateTime dataResposta;
 }

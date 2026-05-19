@@ -54,7 +54,7 @@ class PerfilPublicoDimensionalControllerTest {
 
     private PerfilPublicoDTO buildPerfilDTO(Double pontualidade, Double qualidade, Double comunicacao) {
         return new PerfilPublicoDTO(
-                10L, "Maria Silva", null,
+                10L, 99L, "Maria Silva", null,
                 List.of("Eletricista"), "São Paulo", "SP",
                 4.5, 12, true,
                 pontualidade, qualidade, comunicacao,

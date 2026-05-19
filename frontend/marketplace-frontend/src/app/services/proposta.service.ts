@@ -41,4 +41,8 @@ export class PropostaService {
   recusar(id: number): Observable<Proposta> {
     return this.http.patch<Proposta>(`${this.apiUrl}/${id}/recusar`, null);
   }
+
+  cancelar(id: number): Observable<Proposta> {
+    return this.http.patch<Proposta>(`${this.apiUrl}/${id}/cancelar`, null);
+  }
 }

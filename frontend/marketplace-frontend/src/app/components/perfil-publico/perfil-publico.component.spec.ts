@@ -5,6 +5,7 @@ import { EMPTY, of, throwError } from 'rxjs';
 
 import { PerfilPublicoComponent } from './perfil-publico.component';
 import { PrestadorService } from '../../services/prestador.service';
+import { AvaliacaoService } from '../../services/avaliacao.service';
 import { FotoService } from '../../services/foto.service';
 import { AuthService } from '../../services/auth.service';
 import { PerfilPublico } from '../../models/models';
@@ -27,14 +28,16 @@ describe('PerfilPublicoComponent', () => {
   let component: PerfilPublicoComponent;
   let fixture: ComponentFixture<PerfilPublicoComponent>;
   let prestadorServiceSpy: jasmine.SpyObj<PrestadorService>;
+  let avaliacaoServiceSpy: jasmine.SpyObj<AvaliacaoService>;
   let fotoServiceSpy: jasmine.SpyObj<FotoService>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let routerSpy: jasmine.SpyObj<Router>;
 
   function createComponent(paramId = '10', isAutenticado = false, isCliente = false, isPrestador = false) {
     prestadorServiceSpy = jasmine.createSpyObj('PrestadorService', ['getPerfilPublico']);
+    avaliacaoServiceSpy = jasmine.createSpyObj('AvaliacaoService', ['listarPorPrestador', 'responder', 'editar']);
     fotoServiceSpy = jasmine.createSpyObj('FotoService', ['urlCompleta']);
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['isAuthenticated', 'isCliente', 'isPrestador']);
+    authServiceSpy = jasmine.createSpyObj('AuthService', ['isAuthenticated', 'isCliente', 'isPrestador', 'getCurrentUser']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl'], { events: EMPTY, url: '/' });
     routerSpy.createUrlTree.and.returnValue(null as any);
     routerSpy.serializeUrl.and.returnValue('/');
@@ -42,6 +45,7 @@ describe('PerfilPublicoComponent', () => {
     authServiceSpy.isAuthenticated.and.returnValue(isAutenticado);
     authServiceSpy.isCliente.and.returnValue(isCliente);
     authServiceSpy.isPrestador.and.returnValue(isPrestador);
+    authServiceSpy.getCurrentUser.and.returnValue(null as any);
     prestadorServiceSpy.getPerfilPublico.and.returnValue(of(mockPerfil));
 
     TestBed.resetTestingModule();
@@ -54,6 +58,7 @@ describe('PerfilPublicoComponent', () => {
         },
         { provide: Router, useValue: routerSpy },
         { provide: PrestadorService, useValue: prestadorServiceSpy },
+        { provide: AvaliacaoService, useValue: avaliacaoServiceSpy },
         { provide: FotoService, useValue: fotoServiceSpy },
         { provide: AuthService, useValue: authServiceSpy }
       ]

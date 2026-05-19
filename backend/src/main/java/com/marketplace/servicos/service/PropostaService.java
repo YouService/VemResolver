@@ -168,6 +168,26 @@ public class PropostaService {
 
         return toDTO(proposta);
     }
+
+    @Transactional
+    public PropostaDTO cancelarProposta(Long propostaId, Long usuarioId) {
+        Proposta proposta = propostaRepository.findById(propostaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Proposta não encontrada"));
+
+        if (!proposta.getPrestador().getUsuario().getId().equals(usuarioId)) {
+            throw new BusinessException("Apenas o prestador dono da proposta pode cancelá-la");
+        }
+
+        if (proposta.getStatus() != StatusProposta.ENVIADA) {
+            throw new BusinessException("Só é possível cancelar propostas aguardando resposta");
+        }
+
+        proposta.setStatus(StatusProposta.CANCELADA_PELO_PRESTADOR);
+        proposta = propostaRepository.save(proposta);
+
+        log.info("Proposta id={} cancelada pelo prestador usuarioId={}", propostaId, usuarioId);
+        return toDTO(proposta);
+    }
     
     private PropostaDTO toDTO(Proposta proposta) {
         PropostaDTO dto = new PropostaDTO();

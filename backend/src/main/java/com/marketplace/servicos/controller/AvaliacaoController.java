@@ -44,11 +44,12 @@ public class AvaliacaoController {
     }
 
     @GetMapping("/prestador/{prestadorId}")
-    @Operation(summary = "Listar avaliações recebidas por um prestador")
+    @Operation(summary = "Listar avaliações recebidas por um prestador (filtro opcional por nota)")
     public ResponseEntity<Page<AvaliacaoDTO>> listarPorPrestador(
             @PathVariable Long prestadorId,
+            @RequestParam(required = false) Integer nota,
             Pageable pageable) {
-        return ResponseEntity.ok(avaliacaoService.listarPorPrestador(prestadorId, pageable));
+        return ResponseEntity.ok(avaliacaoService.listarPorPrestador(prestadorId, nota, pageable));
     }
 
     @GetMapping("/cliente/{clienteId}")
@@ -57,5 +58,25 @@ public class AvaliacaoController {
             @PathVariable Long clienteId,
             Pageable pageable) {
         return ResponseEntity.ok(avaliacaoService.listarPorCliente(clienteId, pageable));
+    }
+
+    @PatchMapping("/{id}/resposta")
+    @SecurityRequirement(name = "bearer-jwt")
+    @Operation(summary = "Prestador responde a uma avaliação")
+    public ResponseEntity<AvaliacaoDTO> responder(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(avaliacaoService.responderAvaliacao(id, body.get("resposta"), user.getId()));
+    }
+
+    @PatchMapping("/{id}")
+    @SecurityRequirement(name = "bearer-jwt")
+    @Operation(summary = "Cliente edita sua avaliação (até 7 dias após criação)")
+    public ResponseEntity<AvaliacaoDTO> editar(
+            @PathVariable Long id,
+            @RequestBody AvaliacaoDTO dto,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(avaliacaoService.editarAvaliacao(id, dto.getNota(), dto.getComentario(), user.getId()));
     }
 }
