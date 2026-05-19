@@ -29,6 +29,7 @@ class PropostaServiceTest {
     @Mock private AvaliacaoRepository avaliacaoRepository;
     @Mock private NotificacaoService notificacaoService;
     @Mock private EmailService emailService;
+    @Mock private WebPushService webPushService;
 
     @InjectMocks
     private PropostaService propostaService;
@@ -41,6 +42,9 @@ class PropostaServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Inject @Lazy field not handled by constructor injection
+        org.springframework.test.util.ReflectionTestUtils.setField(propostaService, "webPushService", webPushService);
+
         cliente = new User();
         cliente.setId(1L);
         cliente.setNome("João");

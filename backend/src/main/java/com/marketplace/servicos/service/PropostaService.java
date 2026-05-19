@@ -10,6 +10,8 @@ import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,9 @@ public class PropostaService {
     private final AvaliacaoRepository avaliacaoRepository;
     private final NotificacaoService notificacaoService;
     private final EmailService emailService;
+
+    @Autowired @Lazy
+    private WebPushService webPushService;
 
     public PropostaService(PropostaRepository propostaRepository,
                            SolicitacaoServicoRepository solicitacaoRepository,
@@ -76,6 +81,12 @@ public class PropostaService {
             solicitacao.getCliente().getEmail(),
             prestador.getUsuario().getNome(),
             solicitacao.getDescricao()
+        );
+
+        webPushService.notificar(
+            solicitacao.getCliente().getId(),
+            "Nova proposta recebida!",
+            prestador.getUsuario().getNome() + " enviou uma proposta para: " + solicitacao.getDescricao().substring(0, Math.min(50, solicitacao.getDescricao().length()))
         );
 
         log.info("Proposta criada id={} para solicitacao={}", proposta.getId(), solicitacao.getId());
@@ -144,6 +155,12 @@ public class PropostaService {
             proposta.getPrestador().getUsuario().getEmail(),
             proposta.getSolicitacao().getCliente().getNome(),
             proposta.getSolicitacao().getDescricao()
+        );
+
+        webPushService.notificar(
+            proposta.getPrestador().getUsuario().getId(),
+            "Proposta aceita!",
+            "Sua proposta foi aceita. Entre em contato pelo chat."
         );
 
         log.info("Proposta id={} aceita, notificacao enviada ao prestador", propostaId);

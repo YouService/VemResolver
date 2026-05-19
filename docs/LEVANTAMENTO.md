@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p10-ux: P10.1 Cancelamento Proposta + P10.2 Paginação Chat + P10.3 Filtro Avaliações + P10.4 Resposta a Avaliações)  
+> **Última atualização:** 2026-05-19 (feature/p9-comunicacao-notificacoes: P9.1 Push Notifications + P9.2 Chat com Imagens + P9.3 E-mail Nova Solicitação)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p10-ux → main / develop
+> **Branch analisada:** feature/p9-comunicacao-notificacoes → main / develop
 
 ---
 
@@ -59,6 +59,7 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── PerfilController.java    (gerencia perfil via DTOs)
 │   ├── PrestadorController.java (inclui /me/completude e /{id}/publico)
 │   ├── PropostaController.java
+│   ├── PushNotificacaoController.java (GET public-key, POST subscribe, DELETE unsubscribe)
 │   └── SolicitacaoServicoController.java
 ├── dto/
 │   ├── AlterarSenhaDTO.java
@@ -67,7 +68,8 @@ backend/src/main/java/com/marketplace/servicos/
 │   ├── CategoriaDTO.java
 │   ├── CompletudePrestadorDTO.java  (percentual + List<ItemChecklist>)
 │   ├── LoginDTO.java
-│   ├── MensagemChatDTO.java
+│   ├── MensagemChatDTO.java         (inclui urlAnexo para imagens P9.2)
+│   ├── PushSubscriptionDTO.java     (endpoint, p256dh, auth — P9.1)
 │   ├── PerfilPublicoDTO.java        (sem dados sensíveis; inclui AvaliacaoResumo interno)
 │   ├── AvaliacaoDTO.java            (inclui notaPontualidade, notaQualidade, notaComunicacao — opcionais, @Min(1) @Max(5))
 │   ├── PrestadorDTO.java            (inclui fotoPerfilUrl, percentualCompletude, verificado, mediaPontualidade, mediaQualidade, mediaComunicacao)
@@ -85,8 +87,10 @@ backend/src/main/java/com/marketplace/servicos/
 ├── model/
 │   ├── Avaliacao.java           (tipo: TipoAvaliacao, dataCriacao: @CreationTimestamp)
 │   ├── Categoria.java
+│   ├── ConfiguracaoPush.java    (vapidPublicKey, vapidPrivateKey, atualizadoEm — P9.1)
 │   ├── FotoPrestador.java       (id, prestador, url, dataUpload)
-│   ├── MensagemChat.java        (id, proposta, remetente, texto, dataEnvio, lida)
+│   ├── MensagemChat.java        (id, proposta, remetente, texto, dataEnvio, lida, urlAnexo)
+│   ├── PushSubscription.java    (usuario FK, endpoint, p256dh, auth, criadoEm — P9.1)
 │   ├── Notificacao.java
 │   ├── Prestador.java           (fotoPerfilUrl, percentualCompletude, latitude, longitude, verificado, mediaPontualidade, mediaQualidade, mediaComunicacao)
 │   ├── Proposta.java
@@ -101,11 +105,13 @@ backend/src/main/java/com/marketplace/servicos/
 ├── repository/
 │   ├── AvaliacaoRepository.java     (inclui findTop5 para perfil público)
 │   ├── CategoriaRepository.java
+│   ├── ConfiguracaoPushRepository.java (findFirstByOrderByIdAsc — P9.1)
 │   ├── FotoPrestadorRepository.java
 │   ├── MensagemChatRepository.java
 │   ├── NotificacaoRepository.java
 │   ├── PrestadorRepository.java
 │   ├── PropostaRepository.java      (inclui countByPrestadorIdAndStatusAndSolicitacaoStatus)
+│   ├── PushSubscriptionRepository.java (findByUsuarioId, findByUsuarioIdAndEndpoint — P9.1)
 │   ├── RefreshTokenRepository.java
 │   ├── SolicitacaoServicoRepository.java
 │   ├── UserRepository.java          (inclui atualizarUltimoAcesso, findOnline, countByUltimoAcessoAfterAndAtivoTrue)
@@ -119,16 +125,17 @@ backend/src/main/java/com/marketplace/servicos/
     ├── AuthService.java
     ├── AvaliacaoService.java
     ├── CategoriaService.java
-    ├── ChatService.java
-    ├── EmailService.java
+    ├── ChatService.java             (inclui uploadImagem — P9.2)
+    ├── EmailService.java            (interface; inclui sendNovaSolicitacao — P9.3)
     ├── FotoPrestadorService.java    (@Lazy em PrestadorService para evitar dependência circular)
     ├── NotificacaoService.java
     ├── PerfilService.java
     ├── PrestadorService.java        (getCompletude, recalcularCompletude, recalcularVerificado, buscarPerfilPublico)
-    ├── PropostaService.java
+    ├── PropostaService.java         (injeta WebPushService @Lazy — P9.1)
     ├── RefreshTokenService.java
-    ├── SolicitacaoServicoService.java
-    └── UserService.java
+    ├── SolicitacaoServicoService.java (injeta WebPushService @Lazy; dispara e-mail para prestadores — P9.1/P9.3)
+    ├── UserService.java
+    └── WebPushService.java          (@PostConstruct gera VAPID keys; subscribe/unsubscribe/notificar — P9.1)
 ```
 
 ### Estrutura de pastas — Frontend
@@ -186,6 +193,7 @@ frontend/marketplace-frontend/src/app/
 │   ├── notification.service.ts
 │   ├── prestador.service.ts                   (inclui getCompletude, getPerfilPublico, buscarProximos)
 │   ├── proposta.service.ts
+│   ├── push.service.ts                        (getPublicKey, subscribeIfEnabled — P9.1)
 │   ├── snack.service.ts
 │   ├── solicitacao.service.ts
 │   ├── user.service.ts
@@ -286,6 +294,29 @@ frontend/marketplace-frontend/src/app/
 #### `VerificationToken` → tabela `verification_tokens`
 Armazena token de verificação de e-mail enviado ao registrar. Usuário só ativa a conta via link no e-mail.
 
+#### `ConfiguracaoPush` → tabela `configuracoes_push` *(P9.1)*
+Armazena o par de chaves VAPID gerado automaticamente em `@PostConstruct`. Gerado uma vez e persistido — sobrevive a reinicializações do container.
+
+| Campo | Tipo | Restrições |
+|-------|------|-----------|
+| id | Long | PK, auto |
+| vapidPublicKey | String | TEXT, nullable (gerado automaticamente) |
+| vapidPrivateKey | String | TEXT, nullable (gerado automaticamente) |
+| atualizadoEm | LocalDateTime | nullable |
+
+#### `PushSubscription` → tabela `push_subscriptions` *(P9.1)*
+Armazena as inscrições Web Push de cada usuário. Um usuário pode ter múltiplas subscrições (dispositivos diferentes).
+
+| Campo | Tipo | Restrições |
+|-------|------|-----------|
+| id | Long | PK, auto |
+| usuario | User | FK, NOT NULL (ManyToOne) |
+| endpoint | String | TEXT, NOT NULL |
+| p256dh | String | TEXT, NOT NULL |
+| auth | String | TEXT, NOT NULL |
+| criadoEm | LocalDateTime | NOT NULL, auto (`@CreationTimestamp`) |
+| UNIQUE | — | (usuario_id, endpoint) — evita duplicatas |
+
 ---
 
 ## 4. ENDPOINTS EXISTENTES
@@ -354,7 +385,16 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | Método | Path | Auth | O que faz | Observações |
 |--------|------|------|-----------|-------------|
 | GET | `/api/chat/proposta/{propostaId}` | JWT | Lista mensagens do chat de uma proposta | Somente leitura se proposta RECUSADA ou solicitação CONCLUIDA/CANCELADA |
-| POST | `/api/chat/proposta/{propostaId}` | JWT | Envia mensagem no chat | — |
+| GET | `/api/chat/proposta/{propostaId}/paginado` | JWT | Lista mensagens paginadas (DESC) | P10.2 — `?page=0&size=20` |
+| POST | `/api/chat/proposta/{propostaId}` | JWT | Envia mensagem de texto no chat | — |
+| POST | `/api/chat/proposta/{propostaId}/imagem` | JWT | Upload de imagem no chat (max 5 MB, JPEG/PNG/WEBP) | P9.2 — salvo em `/uploads/chat/{propostaId}/`; retorna `MensagemChatDTO` com `urlAnexo` |
+
+### `/api/notificacoes/push` *(P9.1)*
+| Método | Path | Auth | O que faz | Observações |
+|--------|------|------|-----------|-------------|
+| GET | `/api/notificacoes/push/public-key` | JWT | Retorna chave pública VAPID | `{publicKey: "..."}` |
+| POST | `/api/notificacoes/push/subscribe` | JWT | Registra subscrição Web Push | Body: `PushSubscriptionDTO` (endpoint, p256dh, auth) |
+| DELETE | `/api/notificacoes/push/unsubscribe` | JWT | Remove subscrição Web Push | Body: `PushSubscriptionDTO` |
 
 ### `/api/notificacoes`
 | Método | Path | Auth | O que faz |
@@ -442,7 +482,8 @@ Armazena token de verificação de e-mail enviado ao registrar. Usuário só ati
 | `PropostaService` | `environment.apiUrl/propostas` | ✅ Centralizado em `environment.ts` |
 | `AvaliacaoService` | `environment.apiUrl/avaliacoes` | ✅ Centralizado em `environment.ts` |
 | `FotoService` | `environment.apiUrl/prestadores` | ✅ uploadAvatar, deletarAvatar, upload portfólio, listar fotos |
-| `ChatService` | `environment.apiUrl/chat` | ✅ listar e enviar mensagens por propostaId |
+| `ChatService` | `environment.apiUrl/chat` | ✅ listar, enviar mensagens e `uploadImagem` por propostaId |
+| `PushService` | `environment.apiUrl/notificacoes/push` | ✅ `getPublicKey()`, `subscribeIfEnabled()` — P9.1 |
 | `AdminService` | `environment.apiUrl/admin` | ✅ stats, listarUsuarios, ativarUsuario, listarOnline, listarSolicitacoes, alterarStatusSolicitacao |
 | `UserService` | `environment.apiUrl/users` | ✅ Centralizado em `environment.ts` |
 | `ViaCEPService` | `https://viacep.com.br` | ✅ Busca endereço por CEP |
@@ -689,6 +730,16 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
+### P9 — Comunicação e Notificações
+
+| Item | Branch | Data |
+|------|--------|------|
+| P9.2 Chat com Anexos de Imagem: `V17__add_url_anexo_mensagem_chat.sql` adiciona `url_anexo TEXT` em `mensagens_chat`; `MensagemChat.urlAnexo` e `MensagemChatDTO.urlAnexo`; `ChatService.uploadImagem()` valida tipo (JPEG/PNG/WEBP), tamanho (máx 5 MB), salva em `/uploads/chat/{propostaId}/`; endpoint `POST /api/chat/proposta/{id}/imagem` com `@RequestParam("file") MultipartFile`; Angular: `ChatService.uploadImagem()` com `FormData`; `ChatComponent.onFileSelected()` com validações idênticas; bloco `@if (msg.urlAnexo)` exibe imagem clicável; botão upload com ícone SVG + input file hidden; 5 novos testes em `chat.component.spec.ts` (tipo inválido, >5 MB, sucesso, falha, sem arquivo); `ChatAnexoTest.java` com 5 testes (CA-01 a CA-05) | `feature/p9-comunicacao-notificacoes` | 2026-05-19 |
+| P9.3 E-mail de Nova Solicitação para Prestadores: `V18__add_email_nova_solicitacao_config.sql` adiciona `email_nova_solicitacao_ativo BOOLEAN DEFAULT FALSE` em `configuracoes_email`; `EmailService.sendNovaSolicitacao()` implementado em `BrevoEmailService`, `ConsoleEmailService`, `SmtpEmailService`; `SolicitacaoServicoService.criar()` dispara e-mail para até 50 prestadores da mesma categoria via `PrestadorRepository.findByCategoria()` em try-catch; `NovaSolicitacaoEmailTest.java` com 3 testes (NS-01 a NS-03) | `feature/p9-comunicacao-notificacoes` | 2026-05-19 |
+| P9.1 Notificações Push (PWA): `V19__add_push_subscriptions.sql` cria tabelas `configuracoes_push` e `push_subscriptions`; `ConfiguracaoPush` e `PushSubscription` entities; `WebPushService` com `@PostConstruct` gera chaves VAPID EC P-256 via BouncyCastle (`ECNamedCurveTable`, `prime256v1`), persiste em DB, reutiliza entre reinicializações; `subscribe/unsubscribe/notificar()`; dependência `nl.martijndwars:web-push:5.1.1` + `bcprov-jdk18on:1.78.1` (excluindo `bcprov-jdk15on` conflitante); `PushNotificacaoController` com 3 endpoints; `PropostaService` dispara push ao criar/aceitar proposta; `SolicitacaoServicoService` dispara push ao concluir serviço; `PushService` Angular com `SwPush` + `getPublicKey()` + `subscribeIfEnabled()`; `PushNotificacaoSegurancaTest.java` com 5 testes (PN-01 a PN-05); `push.service.spec.ts` com 4 testes; **totais: 208 testes backend, 141/142 frontend** | `feature/p9-comunicacao-notificacoes` | 2026-05-19 |
+
+---
+
 ### P12 — Segurança Avançada
 
 | Item | Branch | Data |
@@ -718,4 +769,4 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
-*Atualizado em 2026-05-19 (feature/p10-ux) — sincronizado com README.md.*
+*Atualizado em 2026-05-19 (feature/p9-comunicacao-notificacoes) — sincronizado com README.md.*

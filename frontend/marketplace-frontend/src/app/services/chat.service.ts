@@ -26,4 +26,10 @@ export class ChatService {
   marcarComoLidas(propostaId: number): Observable<void> {
     return this.http.patch<void>(`${this.apiUrl}/proposta/${propostaId}/ler`, null);
   }
+
+  uploadImagem(propostaId: number, file: File): Observable<MensagemChat> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<MensagemChat>(`${this.apiUrl}/proposta/${propostaId}/imagem`, formData);
+  }
 }

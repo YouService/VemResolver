@@ -13,12 +13,20 @@ import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -30,6 +38,9 @@ public class ChatService {
     private final PropostaRepository propostaRepository;
     private final UserRepository userRepository;
     private final NotificacaoService notificacaoService;
+
+    @Value("${upload.dir:/uploads}")
+    private String uploadDir;
 
     public ChatService(MensagemChatRepository mensagemRepository,
                        PropostaRepository propostaRepository,
@@ -104,6 +115,64 @@ public class ChatService {
         return toDTO(salva);
     }
 
+    public MensagemChatDTO uploadImagem(Long propostaId, Long remetenteId, MultipartFile file) {
+        Proposta proposta = buscarPropostaValidada(propostaId);
+        validarParticipante(proposta, remetenteId);
+
+        if (proposta.getStatus() == StatusProposta.RECUSADA) {
+            throw new BusinessException("Não é possível enviar imagens em propostas recusadas");
+        }
+        StatusSolicitacao s = proposta.getSolicitacao().getStatus();
+        if (s == StatusSolicitacao.CONCLUIDA || s == StatusSolicitacao.CANCELADA) {
+            throw new BusinessException("O chat está disponível apenas para contratos ativos");
+        }
+
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("Arquivo obrigatório");
+        }
+        long maxBytes = 5 * 1024 * 1024;
+        Set<String> tiposPermitidos = Set.of("image/jpeg", "image/png", "image/webp");
+        if (file.getSize() > maxBytes) {
+            throw new BusinessException("Imagem deve ter no máximo 5 MB");
+        }
+        if (!tiposPermitidos.contains(file.getContentType())) {
+            throw new BusinessException("Formato inválido. Use JPEG, PNG ou WEBP");
+        }
+
+        String contentType = file.getContentType();
+        String ext = contentType != null && contentType.contains("png") ? ".png"
+                : contentType != null && contentType.contains("webp") ? ".webp"
+                : ".jpg";
+        String nomeArquivo = UUID.randomUUID() + ext;
+        Path dir = Paths.get(uploadDir, "chat", propostaId.toString());
+        try {
+            Files.createDirectories(dir);
+            file.transferTo(dir.resolve(nomeArquivo));
+        } catch (IOException e) {
+            throw new BusinessException("Erro ao salvar imagem");
+        }
+        String url = "/uploads/chat/" + propostaId + "/" + nomeArquivo;
+
+        User remetente = userRepository.findById(remetenteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+
+        MensagemChat msg = new MensagemChat();
+        msg.setProposta(proposta);
+        msg.setRemetente(remetente);
+        msg.setTexto("");
+        msg.setUrlAnexo(url);
+        msg.setLida(false);
+        MensagemChat salva = mensagemRepository.save(msg);
+
+        Long clienteId = proposta.getSolicitacao().getCliente().getId();
+        Long prestadorUId = proposta.getPrestador().getUsuario().getId();
+        Long destId = remetenteId.equals(clienteId) ? prestadorUId : clienteId;
+        notificacaoService.criar(destId, remetente.getNome() + " enviou uma imagem no chat", "NOVA_MENSAGEM_CHAT", "/chat/proposta/" + propostaId);
+
+        log.info("Imagem enviada no chat: propostaId={} remetenteId={} url={}", propostaId, remetenteId, url);
+        return toDTO(salva);
+    }
+
     public void marcarComoLidas(Long propostaId, Long usuarioId) {
         Proposta proposta = buscarPropostaValidada(propostaId);
         validarParticipante(proposta, usuarioId);
@@ -135,6 +204,7 @@ public class ChatService {
         dto.setRemetenteId(m.getRemetente().getId());
         dto.setRemetenteNome(m.getRemetente().getNome());
         dto.setTexto(m.getTexto());
+        dto.setUrlAnexo(m.getUrlAnexo());
         dto.setDataEnvio(m.getDataEnvio());
         dto.setLida(m.getLida());
         return dto;

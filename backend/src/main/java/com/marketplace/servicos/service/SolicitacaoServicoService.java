@@ -6,12 +6,16 @@ import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.*;
 import com.marketplace.servicos.repository.AvaliacaoRepository;
 import com.marketplace.servicos.repository.CategoriaRepository;
+import com.marketplace.servicos.repository.PrestadorRepository;
 import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import com.marketplace.servicos.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +30,20 @@ public class SolicitacaoServicoService {
     private final CategoriaRepository categoriaRepository;
     private final AvaliacaoRepository avaliacaoRepository;
     private final PropostaRepository propostaRepository;
+    private final PrestadorRepository prestadorRepository;
     private final NotificacaoService notificacaoService;
     private final EmailService emailService;
     private final PrestadorService prestadorService;
+
+    @Autowired @Lazy
+    private WebPushService webPushService;
 
     public SolicitacaoServicoService(SolicitacaoServicoRepository solicitacaoRepository,
                                      UserRepository userRepository,
                                      CategoriaRepository categoriaRepository,
                                      AvaliacaoRepository avaliacaoRepository,
                                      PropostaRepository propostaRepository,
+                                     PrestadorRepository prestadorRepository,
                                      NotificacaoService notificacaoService,
                                      EmailService emailService,
                                      PrestadorService prestadorService) {
@@ -43,6 +52,7 @@ public class SolicitacaoServicoService {
         this.categoriaRepository = categoriaRepository;
         this.avaliacaoRepository = avaliacaoRepository;
         this.propostaRepository = propostaRepository;
+        this.prestadorRepository = prestadorRepository;
         this.notificacaoService = notificacaoService;
         this.emailService = emailService;
         this.prestadorService = prestadorService;
@@ -64,6 +74,26 @@ public class SolicitacaoServicoService {
         solicitacao.setEstado(dto.getEstado());
 
         solicitacao = solicitacaoRepository.save(solicitacao);
+
+        // P9.3: notificar prestadores da categoria por e-mail
+        final SolicitacaoServico solicitacaoFinal = solicitacao;
+        try {
+            Categoria cat = solicitacaoFinal.getCategoria();
+            prestadorRepository.findByCategoria(cat.getId(), PageRequest.of(0, 50)).getContent().forEach(p -> {
+                try {
+                    emailService.sendNovaSolicitacao(
+                        p.getUsuario().getEmail(),
+                        cat.getNome(),
+                        solicitacaoFinal.getCidade(),
+                        solicitacaoFinal.getEstado(),
+                        solicitacaoFinal.getDescricao()
+                    );
+                } catch (Exception ignored) {}
+            });
+        } catch (Exception e) {
+            log.warn("Falha ao enviar e-mails de nova solicitação: {}", e.getMessage());
+        }
+
         return toDTO(solicitacao);
     }
 
@@ -164,6 +194,11 @@ public class SolicitacaoServicoService {
             emailService.sendContratoFinalizado(
                 propostaAceita.getPrestador().getUsuario().getEmail(),
                 solicitacao.getDescricao()
+            );
+            webPushService.notificar(
+                propostaAceita.getPrestador().getUsuario().getId(),
+                "Serviço concluído!",
+                "O cliente marcou o serviço como concluído. Avalie sua experiência!"
             );
             prestadorService.recalcularVerificado(propostaAceita.getPrestador().getId());
         }
