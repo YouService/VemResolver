@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -7,7 +7,7 @@ import { ChatComponent } from './chat.component';
 import { ChatService } from '../../services/chat.service';
 import { PropostaService } from '../../services/proposta.service';
 import { AuthService } from '../../services/auth.service';
-import { MensagemChat, StatusProposta, StatusSolicitacao, Proposta } from '../../models/models';
+import { MensagemChat, StatusProposta, StatusSolicitacao, Proposta, PageResponse } from '../../models/models';
 
 const mockProposta: Partial<Proposta> = {
   id: 20,
@@ -23,6 +23,10 @@ const mockMensagem = (id: number, remetenteId: number, texto: string): MensagemC
   dataEnvio: new Date().toISOString(), lida: false
 });
 
+const emptyPage: PageResponse<MensagemChat> = {
+  content: [], totalElements: 0, totalPages: 1, size: 20, number: 0
+};
+
 describe('ChatComponent', () => {
   let component: ChatComponent;
   let fixture: ComponentFixture<ChatComponent>;
@@ -32,12 +36,13 @@ describe('ChatComponent', () => {
   let routerSpy: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    chatServiceSpy = jasmine.createSpyObj('ChatService', ['listar', 'enviar', 'marcarComoLidas']);
+    chatServiceSpy = jasmine.createSpyObj('ChatService', ['listar', 'listarPaginado', 'enviar', 'marcarComoLidas']);
     propostaServiceSpy = jasmine.createSpyObj('PropostaService', ['buscarPorId']);
     authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     chatServiceSpy.listar.and.returnValue(of([]));
+    chatServiceSpy.listarPaginado.and.returnValue(of(emptyPage));
     chatServiceSpy.marcarComoLidas.and.returnValue(of(undefined as any));
     propostaServiceSpy.buscarPorId.and.returnValue(of(mockProposta as Proposta));
     authServiceSpy.getCurrentUser.and.returnValue({ userId: 1, nome: 'João', email: 'j@j.com', tipoUsuario: 'CLIENTE' } as any);
@@ -86,12 +91,36 @@ describe('ChatComponent', () => {
     expect(component.contratoEncerrado).toBeTrue();
   });
 
+  it('deve setar contratoEncerrado=true quando proposta CANCELADA_PELO_PRESTADOR', () => {
+    propostaServiceSpy.buscarPorId.and.returnValue(of({
+      ...mockProposta, status: StatusProposta.CANCELADA_PELO_PRESTADOR
+    } as Proposta));
+    component.ngOnInit();
+    expect(component.contratoEncerrado).toBeTrue();
+  });
+
   it('deve setar contratoEncerrado=true quando solicitação CONCLUIDA', () => {
     propostaServiceSpy.buscarPorId.and.returnValue(of({
       ...mockProposta, solicitacaoStatus: StatusSolicitacao.CONCLUIDA
     } as Proposta));
     component.ngOnInit();
     expect(component.contratoEncerrado).toBeTrue();
+  });
+
+  it('ngOnInit chama listarPaginado para carregar mensagens iniciais', () => {
+    expect(chatServiceSpy.listarPaginado).toHaveBeenCalledWith(20, 0, 20);
+  });
+
+  it('temMensagensAnteriores é false quando totalPaginas=1', () => {
+    component.totalPaginas = 1;
+    component.paginaAtual = 0;
+    expect(component.temMensagensAnteriores).toBeFalse();
+  });
+
+  it('temMensagensAnteriores é true quando há mais páginas', () => {
+    component.totalPaginas = 3;
+    component.paginaAtual = 0;
+    expect(component.temMensagensAnteriores).toBeTrue();
   });
 
   // ── enviarMensagem ────────────────────────────────────────────────────────────
@@ -118,7 +147,6 @@ describe('ChatComponent', () => {
   it('enviarMensagem adiciona mensagem otimista e chama chatService.enviar', () => {
     const msgReal = mockMensagem(99, 1, 'Oi');
     chatServiceSpy.enviar.and.returnValue(of(msgReal));
-    chatServiceSpy.listar.and.returnValue(of([msgReal]));
 
     component.textoMensagem = 'Oi';
     component.enviarMensagem();

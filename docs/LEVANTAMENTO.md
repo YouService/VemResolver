@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p11-mobile-pwa: P11.1 PWA + P11.2 Layout Otimizado para Mobile)  
+> **Última atualização:** 2026-05-19 (feature/p10-ux: P10.1 Cancelamento Proposta + P10.2 Paginação Chat + P10.3 Filtro Avaliações + P10.4 Resposta a Avaliações)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p11-mobile-pwa → main / develop
+> **Branch analisada:** feature/p10-ux → main / develop
 
 ---
 
@@ -707,4 +707,15 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 
 ---
 
-*Atualizado em 2026-05-19 (feature/p11-mobile-pwa) — sincronizado com README.md.*
+### P10 — Experiência do Usuário (UX)
+
+| Item | Branch | Data |
+|------|--------|------|
+| P10.1 Cancelamento de Proposta pelo Prestador: `StatusProposta.CANCELADA_PELO_PRESTADOR` adicionado ao enum (sem migration — `@Enumerated(EnumType.STRING)`); `PropostaService.cancelarProposta()` valida proprietário e status `ENVIADA`; `PATCH /api/propostas/{id}/cancelar` no `PropostaController`; `PropostaService.cancelar()` no Angular; botão "✕ Cancelar" no `PrestadorDashboardComponent` com `confirm()` de segurança; `ChatComponent` bloqueia envio quando `status == CANCELADA_PELO_PRESTADOR`; 6 testes em `PropostaCancelamentoTest` (PC-01 a PC-06) | `feature/p10-ux` | 2026-05-19 |
+| P10.2 Paginação no Chat (infinite scroll reverso): `MensagemChatRepository.findByPropostaIdOrderByDataEnvioDesc()` com `Pageable`; `ChatService.listarMensagensPaginado()` (endpoint legado preservado); `GET /api/chat/proposta/{id}/paginado` com `Pageable`; `ChatComponent` reescrito — `carregarPaginaInicial()` carrega página 0 (DESC) e reverte para exibição ASC, `carregarMensagensAnteriores()` incrementa página e preserva posição de scroll via `scrollHeight`, `carregarNovasMensagens()` via polling; getter `temMensagensAnteriores`; botão "Carregar mensagens anteriores" no topo da janela de chat; `PageResponse<MensagemChat>` no `chat.service.ts` | `feature/p10-ux` | 2026-05-19 |
+| P10.3 Filtro de Avaliações por Nota no Perfil Público: `AvaliacaoRepository.filtrarPorNota()` com `@Query` JPQL usando `(:nota IS NULL OR a.nota = :nota)`; `AvaliacaoService.listarPorPrestador()` atualizado com parâmetro `nota` opcional; `GET /api/avaliacoes/prestador/{id}?nota=N` com `Pageable`; `AvaliacaoService.listarPorPrestador()` no Angular com `HttpParams`; chips ★ 1–5 com filtro reativo no `PerfilPublicoComponent`; 2 testes em `AvaliacaoUxTest` (AU-01 a AU-02) | `feature/p10-ux` | 2026-05-19 |
+| P10.4 Edição e Resposta a Avaliações: `V16__add_resposta_avaliacao.sql` — colunas `resposta_prestador TEXT` e `data_resposta TIMESTAMP` em `avaliacoes`; `Avaliacao` entity e `AvaliacaoDTO` atualizados; `AvaliacaoService.responderAvaliacao()` valida dono e resposta não vazia; `AvaliacaoService.editarAvaliacao()` valida dono, janela de 7 dias e recalcula média; `PATCH /api/avaliacoes/{id}/resposta` e `PATCH /api/avaliacoes/{id}`; `AvaliacaoService.responder()` e `editar()` no Angular; `PerfilPublicoDTO.AvaliacaoResumo` expandido com `avaliacaoId`, `respostaPrestador` e `dataResposta`; `PerfilPublicoDimensionalControllerTest` corrigido para novo construtor; resposta do prestador exibida indentada abaixo de cada avaliação no `PerfilPublicoComponent`; caixa de resposta inline para o prestador dono do perfil; 7 testes em `AvaliacaoUxTest` (AU-03 a AU-09); **totais: 195 testes backend**, 132/133 frontend | `feature/p10-ux` | 2026-05-19 |
+
+---
+
+*Atualizado em 2026-05-19 (feature/p10-ux) — sincronizado com README.md.*

@@ -144,10 +144,13 @@ public class PrestadorService {
 
         List<PerfilPublicoDTO.AvaliacaoResumo> avaliacoesResumo = avaliacoes.stream()
                 .map(a -> new PerfilPublicoDTO.AvaliacaoResumo(
+                        a.getId(),
                         a.getCliente().getNome(),
                         a.getNota(),
                         a.getComentario(),
-                        a.getDataCriacao() != null ? a.getDataCriacao().toLocalDate().toString() : null))
+                        a.getDataCriacao() != null ? a.getDataCriacao().toLocalDate().toString() : null,
+                        a.getRespostaPrestador(),
+                        a.getDataResposta() != null ? a.getDataResposta().toLocalDate().toString() : null))
                 .toList();
 
         List<String> categoriaNomes = prestador.getCategorias().stream()
@@ -155,6 +158,7 @@ public class PrestadorService {
 
         return new PerfilPublicoDTO(
                 prestador.getId(),
+                prestador.getUsuario().getId(),
                 prestador.getUsuario().getNome(),
                 prestador.getFotoPerfilUrl(),
                 categoriaNomes,

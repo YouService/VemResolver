@@ -13,6 +13,8 @@ import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +49,14 @@ public class ChatService {
                 .stream()
                 .map(this::toDTO)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MensagemChatDTO> listarMensagensPaginado(Long propostaId, Long usuarioId, Pageable pageable) {
+        Proposta proposta = buscarPropostaValidada(propostaId);
+        validarParticipante(proposta, usuarioId);
+        return mensagemRepository.findByPropostaIdOrderByDataEnvioDesc(propostaId, pageable)
+                .map(this::toDTO);
     }
 
     public MensagemChatDTO enviarMensagem(Long propostaId, Long remetenteId, String texto) {

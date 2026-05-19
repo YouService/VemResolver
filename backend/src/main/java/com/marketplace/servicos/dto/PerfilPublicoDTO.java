@@ -12,6 +12,7 @@ import java.util.List;
 public class PerfilPublicoDTO {
 
     private Long id;
+    private Long usuarioId;
     private String nome;
     private String fotoPerfilUrl;
     private List<String> categorias;
@@ -30,9 +31,12 @@ public class PerfilPublicoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AvaliacaoResumo {
+        private Long avaliacaoId;
         private String nomeAvaliador;
         private Integer nota;
         private String comentario;
         private String dataCriacao;
+        private String respostaPrestador;
+        private String dataResposta;
     }
 }

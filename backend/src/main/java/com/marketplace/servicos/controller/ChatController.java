@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,6 +34,15 @@ public class ChatController {
             @PathVariable Long propostaId,
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(chatService.listarMensagens(propostaId, user.getId()));
+    }
+
+    @GetMapping("/proposta/{propostaId}/paginado")
+    @Operation(summary = "Listar mensagens paginadas (mais recentes primeiro)")
+    public ResponseEntity<Page<MensagemChatDTO>> listarPaginado(
+            @PathVariable Long propostaId,
+            @AuthenticationPrincipal User user,
+            Pageable pageable) {
+        return ResponseEntity.ok(chatService.listarMensagensPaginado(propostaId, user.getId(), pageable));
     }
 
     @PostMapping("/proposta/{propostaId}")

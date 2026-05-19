@@ -48,4 +48,7 @@ public class AvaliacaoDTO {
     @Min(value = 1, message = "Nota de comunicação mínima é 1")
     @Max(value = 5, message = "Nota de comunicação máxima é 5")
     private Integer notaComunicacao;
+
+    private String respostaPrestador;
+    private LocalDateTime dataResposta;
 }
