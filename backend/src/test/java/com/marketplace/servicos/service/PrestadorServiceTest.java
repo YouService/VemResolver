@@ -225,6 +225,42 @@ class PrestadorServiceTest {
     }
 
     @Test
+    @DisplayName("buscarPerfilPublico: médias dimensionais do prestador chegam no PerfilPublicoDTO")
+    void buscarPerfilPublico_ComMediasDimensionais_RetornaNoPerfil() {
+        prestador.setMediaPontualidade(4.8);
+        prestador.setMediaQualidade(4.5);
+        prestador.setMediaComunicacao(4.2);
+
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(fotoPrestadorRepository.findByPrestadorIdOrderByDataUploadAsc(10L)).thenReturn(List.of());
+        when(avaliacaoRepository.findTop5ByPrestadorIdAndTipoOrderByDataCriacaoDesc(10L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(List.of());
+
+        PerfilPublicoDTO dto = prestadorService.buscarPerfilPublico(10L);
+
+        assertEquals(4.8, dto.getMediaPontualidade());
+        assertEquals(4.5, dto.getMediaQualidade());
+        assertEquals(4.2, dto.getMediaComunicacao());
+    }
+
+    @Test
+    @DisplayName("buscarPerfilPublico: sem avaliações dimensionais → campos null no PerfilPublicoDTO")
+    void buscarPerfilPublico_SemMediasDimensionais_CamposNull() {
+        // mediaPontualidade/Qualidade/Comunicacao são null por default
+
+        when(prestadorRepository.findById(10L)).thenReturn(Optional.of(prestador));
+        when(fotoPrestadorRepository.findByPrestadorIdOrderByDataUploadAsc(10L)).thenReturn(List.of());
+        when(avaliacaoRepository.findTop5ByPrestadorIdAndTipoOrderByDataCriacaoDesc(10L, TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR))
+                .thenReturn(List.of());
+
+        PerfilPublicoDTO dto = prestadorService.buscarPerfilPublico(10L);
+
+        assertNull(dto.getMediaPontualidade());
+        assertNull(dto.getMediaQualidade());
+        assertNull(dto.getMediaComunicacao());
+    }
+
+    @Test
     @DisplayName("buscarPerfilPublico: prestador inativo lança ResourceNotFoundException")
     void buscarPerfilPublico_PrestadorInativo_LancaException() {
         usuarioPrestador.setAtivo(false);

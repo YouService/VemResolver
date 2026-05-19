@@ -73,6 +73,9 @@ public class AvaliacaoService {
         avaliacao.setTipo(TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR);
         avaliacao.setNota(dto.getNota());
         avaliacao.setComentario(dto.getComentario());
+        avaliacao.setNotaPontualidade(dto.getNotaPontualidade());
+        avaliacao.setNotaQualidade(dto.getNotaQualidade());
+        avaliacao.setNotaComunicacao(dto.getNotaComunicacao());
 
         avaliacao = avaliacaoRepository.save(avaliacao);
         atualizarMediaPrestador(prestador);
@@ -203,6 +206,9 @@ public class AvaliacaoService {
         dto.setNota(avaliacao.getNota());
         dto.setComentario(avaliacao.getComentario());
         dto.setDataCriacao(avaliacao.getDataCriacao());
+        dto.setNotaPontualidade(avaliacao.getNotaPontualidade());
+        dto.setNotaQualidade(avaliacao.getNotaQualidade());
+        dto.setNotaComunicacao(avaliacao.getNotaComunicacao());
 
         if (avaliacao.getTipo() == TipoAvaliacao.CLIENTE_AVALIA_PRESTADOR) {
             dto.setNomeAvaliador(avaliacao.getCliente().getNome());
