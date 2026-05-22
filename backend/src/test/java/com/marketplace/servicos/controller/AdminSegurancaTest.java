@@ -9,6 +9,7 @@ import com.marketplace.servicos.repository.UserRepository;
 import com.marketplace.servicos.security.CustomUserDetailsService;
 import com.marketplace.servicos.security.JwtAuthenticationFilter;
 import com.marketplace.servicos.service.AdminAuditService;
+import com.marketplace.servicos.service.DenunciaService;
 import com.marketplace.servicos.service.EmailConfigService;
 import com.marketplace.servicos.service.VerificacaoDocumentoService;
 import jakarta.servlet.FilterChain;
@@ -55,6 +56,7 @@ class AdminSegurancaTest {
     @MockBean private AdminAuditService adminAuditService;
     @MockBean private AdminAuditLogRepository adminAuditLogRepository;
     @MockBean private VerificacaoDocumentoService verificacaoDocumentoService;
+    @MockBean private DenunciaService denunciaService;
     @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockBean private CustomUserDetailsService customUserDetailsService;
 

@@ -5,11 +5,12 @@ import { of, throwError } from 'rxjs';
 import { AdminDashboardComponent } from './admin-dashboard.component';
 import { AdminService } from '../../services/admin.service';
 import { VerificacaoService } from '../../services/verificacao.service';
+import { DenunciaService } from '../../services/denuncia.service';
 import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, PageResponse, ConfiguracaoEmailDTO } from '../../models/models';
 
 const mockStats: AdminStats = {
   totalUsuarios: 25, totalPrestadores: 10, totalSolicitacoes: 43,
-  totalPropostas: 38, usuariosOnline: 3, verificacoesPendentes: 0
+  totalPropostas: 38, usuariosOnline: 3, verificacoesPendentes: 0, denunciasPendentes: 2
 };
 
 const mockUsuario: UserResumoDTO = {
@@ -42,6 +43,7 @@ describe('AdminDashboardComponent', () => {
   let fixture: ComponentFixture<AdminDashboardComponent>;
   let adminServiceSpy: jasmine.SpyObj<AdminService>;
   let verificacaoServiceSpy: jasmine.SpyObj<VerificacaoService>;
+  let denunciaServiceSpy: jasmine.SpyObj<DenunciaService>;
 
   beforeEach(async () => {
     adminServiceSpy = jasmine.createSpyObj('AdminService', [
@@ -52,6 +54,8 @@ describe('AdminDashboardComponent', () => {
     verificacaoServiceSpy = jasmine.createSpyObj('VerificacaoService', [
       'listar', 'aprovar', 'recusar', 'urlDocumento', 'urlSelfie'
     ]);
+    denunciaServiceSpy = jasmine.createSpyObj('DenunciaService', ['listar', 'atualizarStatus']);
+    denunciaServiceSpy.listar.and.returnValue(of(mockPage([])));
     verificacaoServiceSpy.listar.and.returnValue(of(mockPage([])));
 
     adminServiceSpy.buscarStats.and.returnValue(of(mockStats));
@@ -67,7 +71,8 @@ describe('AdminDashboardComponent', () => {
       providers: [
         provideRouter([]),
         { provide: AdminService, useValue: adminServiceSpy },
-        { provide: VerificacaoService, useValue: verificacaoServiceSpy }
+        { provide: VerificacaoService, useValue: verificacaoServiceSpy },
+        { provide: DenunciaService, useValue: denunciaServiceSpy }
       ]
     }).compileComponents();
 
@@ -113,6 +118,12 @@ describe('AdminDashboardComponent', () => {
     component.usuariosOnline = [mockUsuario];
     component.selecionarAba('online');
     expect(adminServiceSpy.listarOnline).not.toHaveBeenCalled();
+  });
+
+  it('selecionarAba("denuncias") deve carregar denuncias', () => {
+    component.selecionarAba('denuncias');
+    expect(denunciaServiceSpy.listar).toHaveBeenCalled();
+    expect(component.aba).toBe('denuncias');
   });
 
   it('selecionarAba("email") deve carregar config de email', () => {

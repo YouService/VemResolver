@@ -166,6 +166,7 @@ export interface AdminStats {
   totalPropostas: number;
   usuariosOnline: number;
   verificacoesPendentes: number;
+  denunciasPendentes: number;
 }
 
 export interface SolicitacaoServico {
@@ -312,4 +313,36 @@ export interface VerificacaoDocumentoDTO {
   dataEnvio?: string;
   dataRevisao?: string;
   observacaoAdmin?: string;
+}
+
+export enum TipoDenuncia {
+  PERFIL = 'PERFIL',
+  AVALIACAO = 'AVALIACAO',
+  COMPORTAMENTO = 'COMPORTAMENTO'
+}
+
+export enum StatusDenuncia {
+  PENDENTE = 'PENDENTE',
+  APROVADA = 'APROVADA',
+  REJEITADA = 'REJEITADA'
+}
+
+export interface DenunciaDTO {
+  id: number;
+  denuncianteId: number;
+  denuncianteNome: string;
+  denunciadoId: number;
+  denunciadoNome: string;
+  tipo: TipoDenuncia;
+  descricao: string;
+  status: StatusDenuncia;
+  dataCriacao?: string;
+  dataRevisao?: string;
+  observacaoAdmin?: string;
+}
+
+export interface CriarDenunciaRequest {
+  denunciadoId: number;
+  tipo: TipoDenuncia;
+  descricao: string;
 }
