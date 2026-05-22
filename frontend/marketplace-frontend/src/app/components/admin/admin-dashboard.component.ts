@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
-import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, ConfiguracaoEmailDTO } from '../../models/models';
+import { VerificacaoService } from '../../services/verificacao.service';
+import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, ConfiguracaoEmailDTO, StatusVerificacao, VerificacaoDocumentoDTO } from '../../models/models';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -12,12 +13,12 @@ import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, ConfiguracaoEmailDTO } 
   templateUrl: './admin-dashboard.component.html'
 })
 export class AdminDashboardComponent implements OnInit {
-  stats: AdminStats = { totalUsuarios: 0, totalPrestadores: 0, totalSolicitacoes: 0, totalPropostas: 0, usuariosOnline: 0 };
+  stats: AdminStats = { totalUsuarios: 0, totalPrestadores: 0, totalSolicitacoes: 0, totalPropostas: 0, usuariosOnline: 0, verificacoesPendentes: 0 };
   usuarios: UserResumoDTO[] = [];
   usuariosOnline: UserResumoDTO[] = [];
   solicitacoes: SolicitacaoAdminDTO[] = [];
 
-  aba: 'usuarios' | 'online' | 'solicitacoes' | 'email' = 'usuarios';
+  aba: 'usuarios' | 'online' | 'solicitacoes' | 'email' | 'verificacoes' = 'usuarios';
 
   paginaAtual = 0;
   totalPaginas = 0;
@@ -49,14 +50,34 @@ export class AdminDashboardComponent implements OnInit {
   emailError = '';
   mostrarApiKey = false;
 
-  constructor(private adminService: AdminService) {}
+  // Verificações
+  verificacoes: VerificacaoDocumentoDTO[] = [];
+  loadingVerif = false;
+  paginaVerif = 0;
+  totalPaginasVerif = 0;
+  itensPorPaginaVerif = 15;
+  filtroVerifStatus: StatusVerificacao | '' = StatusVerificacao.PENDENTE;
+  observacaoVerif: Record<number, string> = {};
+  processandoVerifId: number | null = null;
+  verificSucesso = '';
+  verificErro = '';
+
+  readonly StatusVerificacao = StatusVerificacao;
+  readonly statusVerifOpcoes = [
+    { valor: '', label: 'Todas' },
+    { valor: StatusVerificacao.PENDENTE, label: 'Pendentes' },
+    { valor: StatusVerificacao.APROVADO, label: 'Aprovadas' },
+    { valor: StatusVerificacao.RECUSADO, label: 'Recusadas' }
+  ];
+
+  constructor(private adminService: AdminService, private verificacaoService: VerificacaoService) {}
 
   ngOnInit(): void {
     this.carregarStats();
     this.carregarUsuarios(0);
   }
 
-  selecionarAba(aba: 'usuarios' | 'online' | 'solicitacoes' | 'email'): void {
+  selecionarAba(aba: 'usuarios' | 'online' | 'solicitacoes' | 'email' | 'verificacoes'): void {
     this.aba = aba;
     this.errorMessage = '';
     this.emailSucess = '';
@@ -64,6 +85,7 @@ export class AdminDashboardComponent implements OnInit {
     if (aba === 'online' && this.usuariosOnline.length === 0) this.carregarOnline();
     if (aba === 'solicitacoes' && this.solicitacoes.length === 0) this.carregarSolicitacoes(0);
     if (aba === 'email') this.carregarEmailConfig();
+    if (aba === 'verificacoes') this.carregarVerificacoes(0);
   }
 
   carregarStats(): void {
@@ -198,6 +220,71 @@ export class AdminDashboardComponent implements OnInit {
       next: () => { this.emailSucess = 'E-mail de teste enviado para ' + this.emailTesteDest; this.testingEmail = false; },
       error: () => { this.emailError = 'Erro ao enviar e-mail de teste. Verifique a configuração.'; this.testingEmail = false; }
     });
+  }
+
+  // ── Verificações ─────────────────────────────────────────────────
+
+  carregarVerificacoes(pagina: number): void {
+    this.loadingVerif = true;
+    this.verificSucesso = '';
+    this.verificErro = '';
+    const s = this.filtroVerifStatus || undefined;
+    this.verificacaoService.listar(s as StatusVerificacao | undefined, pagina, this.itensPorPaginaVerif).subscribe({
+      next: res => {
+        this.verificacoes = res.content;
+        this.totalPaginasVerif = res.totalPages;
+        this.paginaVerif = pagina;
+        this.loadingVerif = false;
+      },
+      error: () => { this.verificErro = 'Erro ao carregar verificações.'; this.loadingVerif = false; }
+    });
+  }
+
+  aplicarFiltroVerif(): void {
+    this.carregarVerificacoes(0);
+  }
+
+  irParaPaginaVerif(pagina: number): void {
+    if (pagina >= 0 && pagina < this.totalPaginasVerif) this.carregarVerificacoes(pagina);
+  }
+
+  aprovarVerificacao(v: VerificacaoDocumentoDTO): void {
+    this.processandoVerifId = v.id;
+    this.verificacaoService.aprovar(v.id, this.observacaoVerif[v.id]).subscribe({
+      next: atualizado => {
+        const idx = this.verificacoes.findIndex(x => x.id === v.id);
+        if (idx >= 0) this.verificacoes[idx] = atualizado;
+        this.verificSucesso = `Verificação de ${atualizado.prestadorNome} aprovada.`;
+        this.processandoVerifId = null;
+        this.carregarStats();
+      },
+      error: () => { this.verificErro = 'Erro ao aprovar verificação.'; this.processandoVerifId = null; }
+    });
+  }
+
+  recusarVerificacao(v: VerificacaoDocumentoDTO): void {
+    this.processandoVerifId = v.id;
+    this.verificacaoService.recusar(v.id, this.observacaoVerif[v.id]).subscribe({
+      next: atualizado => {
+        const idx = this.verificacoes.findIndex(x => x.id === v.id);
+        if (idx >= 0) this.verificacoes[idx] = atualizado;
+        this.verificSucesso = `Verificação de ${atualizado.prestadorNome} recusada.`;
+        this.processandoVerifId = null;
+      },
+      error: () => { this.verificErro = 'Erro ao recusar verificação.'; this.processandoVerifId = null; }
+    });
+  }
+
+  urlDocumento(id: number): string { return this.verificacaoService.urlDocumento(id); }
+  urlSelfie(id: number): string { return this.verificacaoService.urlSelfie(id); }
+
+  badgeVerif(status: string): string {
+    const map: Record<string, string> = {
+      PENDENTE: 'bg-yellow-100 text-yellow-800',
+      APROVADO: 'bg-green-100 text-green-800',
+      RECUSADO: 'bg-red-100 text-red-800'
+    };
+    return map[status] ?? 'bg-gray-100 text-gray-700';
   }
 
   // ── Helpers ─────────────────────────────────────────────────────

@@ -21,6 +21,7 @@ public class PerfilPublicoDTO {
     private Double avaliacaoMedia;
     private Integer totalAvaliacoes;
     private boolean verificado;
+    private boolean idVerificado;
     private Double mediaPontualidade;
     private Double mediaQualidade;
     private Double mediaComunicacao;

@@ -57,6 +57,9 @@ public class Prestador {
     @Column(nullable = false)
     private Boolean verificado = false;
 
+    @Column(name = "id_verificado", nullable = false)
+    private Boolean idVerificado = false;
+
     // Médias por dimensão — null quando nenhuma avaliação dimensional foi recebida ainda
     @Column(name = "media_pontualidade")
     private Double mediaPontualidade;
