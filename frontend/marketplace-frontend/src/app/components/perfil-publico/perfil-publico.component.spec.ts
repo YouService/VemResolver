@@ -8,10 +8,12 @@ import { PrestadorService } from '../../services/prestador.service';
 import { AvaliacaoService } from '../../services/avaliacao.service';
 import { FotoService } from '../../services/foto.service';
 import { AuthService } from '../../services/auth.service';
+import { DenunciaService } from '../../services/denuncia.service';
 import { PerfilPublico } from '../../models/models';
 
 const mockPerfil: PerfilPublico = {
   id: 10,
+  usuarioId: 20,
   nome: 'Ana Paula Costa',
   fotoPerfilUrl: undefined,
   categorias: ['Eletricista', 'Encanador'],
@@ -31,6 +33,7 @@ describe('PerfilPublicoComponent', () => {
   let avaliacaoServiceSpy: jasmine.SpyObj<AvaliacaoService>;
   let fotoServiceSpy: jasmine.SpyObj<FotoService>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let denunciaServiceSpy: jasmine.SpyObj<DenunciaService>;
   let routerSpy: jasmine.SpyObj<Router>;
 
   function createComponent(paramId = '10', isAutenticado = false, isCliente = false, isPrestador = false) {
@@ -38,6 +41,7 @@ describe('PerfilPublicoComponent', () => {
     avaliacaoServiceSpy = jasmine.createSpyObj('AvaliacaoService', ['listarPorPrestador', 'responder', 'editar']);
     fotoServiceSpy = jasmine.createSpyObj('FotoService', ['urlCompleta']);
     authServiceSpy = jasmine.createSpyObj('AuthService', ['isAuthenticated', 'isCliente', 'isPrestador', 'getCurrentUser']);
+    denunciaServiceSpy = jasmine.createSpyObj('DenunciaService', ['criar']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl'], { events: EMPTY, url: '/' });
     routerSpy.createUrlTree.and.returnValue(null as any);
     routerSpy.serializeUrl.and.returnValue('/');
@@ -60,7 +64,8 @@ describe('PerfilPublicoComponent', () => {
         { provide: PrestadorService, useValue: prestadorServiceSpy },
         { provide: AvaliacaoService, useValue: avaliacaoServiceSpy },
         { provide: FotoService, useValue: fotoServiceSpy },
-        { provide: AuthService, useValue: authServiceSpy }
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: DenunciaService, useValue: denunciaServiceSpy }
       ]
     }).compileComponents();
 

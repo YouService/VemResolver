@@ -5,6 +5,7 @@ import com.marketplace.servicos.dto.ConfiguracaoEmailDTO;
 import com.marketplace.servicos.dto.SolicitacaoAdminDTO;
 import com.marketplace.servicos.dto.TesteEmailDTO;
 import com.marketplace.servicos.dto.UserResumoDTO;
+import com.marketplace.servicos.service.DenunciaService;
 import com.marketplace.servicos.service.VerificacaoDocumentoService;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.SolicitacaoServico;
@@ -55,6 +56,7 @@ public class AdminController {
     private final AdminAuditService adminAuditService;
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final VerificacaoDocumentoService verificacaoDocumentoService;
+    private final DenunciaService denunciaService;
 
     public AdminController(UserRepository userRepository,
                            PrestadorRepository prestadorRepository,
@@ -63,7 +65,8 @@ public class AdminController {
                            EmailConfigService emailConfigService,
                            AdminAuditService adminAuditService,
                            AdminAuditLogRepository adminAuditLogRepository,
-                           VerificacaoDocumentoService verificacaoDocumentoService) {
+                           VerificacaoDocumentoService verificacaoDocumentoService,
+                           DenunciaService denunciaService) {
         this.userRepository = userRepository;
         this.prestadorRepository = prestadorRepository;
         this.solicitacaoServicoRepository = solicitacaoServicoRepository;
@@ -72,6 +75,7 @@ public class AdminController {
         this.adminAuditService = adminAuditService;
         this.adminAuditLogRepository = adminAuditLogRepository;
         this.verificacaoDocumentoService = verificacaoDocumentoService;
+        this.denunciaService = denunciaService;
     }
 
     @GetMapping("/stats")
@@ -84,7 +88,8 @@ public class AdminController {
             "totalSolicitacoes", solicitacaoServicoRepository.count(),
             "totalPropostas", propostaRepository.count(),
             "usuariosOnline", userRepository.countByUltimoAcessoAfterAndAtivoTrue(limiar),
-            "verificacoesPendentes", verificacaoDocumentoService.contarPendentes()
+            "verificacoesPendentes", verificacaoDocumentoService.contarPendentes(),
+            "denunciasPendentes", denunciaService.contarPendentes()
         ));
     }
 

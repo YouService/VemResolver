@@ -4,7 +4,8 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
 import { VerificacaoService } from '../../services/verificacao.service';
-import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, ConfiguracaoEmailDTO, StatusVerificacao, VerificacaoDocumentoDTO } from '../../models/models';
+import { DenunciaService } from '../../services/denuncia.service';
+import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, ConfiguracaoEmailDTO, StatusVerificacao, VerificacaoDocumentoDTO, DenunciaDTO, StatusDenuncia } from '../../models/models';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -13,12 +14,12 @@ import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, ConfiguracaoEmailDTO, S
   templateUrl: './admin-dashboard.component.html'
 })
 export class AdminDashboardComponent implements OnInit {
-  stats: AdminStats = { totalUsuarios: 0, totalPrestadores: 0, totalSolicitacoes: 0, totalPropostas: 0, usuariosOnline: 0, verificacoesPendentes: 0 };
+  stats: AdminStats = { totalUsuarios: 0, totalPrestadores: 0, totalSolicitacoes: 0, totalPropostas: 0, usuariosOnline: 0, verificacoesPendentes: 0, denunciasPendentes: 0 };
   usuarios: UserResumoDTO[] = [];
   usuariosOnline: UserResumoDTO[] = [];
   solicitacoes: SolicitacaoAdminDTO[] = [];
 
-  aba: 'usuarios' | 'online' | 'solicitacoes' | 'email' | 'verificacoes' = 'usuarios';
+  aba: 'usuarios' | 'online' | 'solicitacoes' | 'email' | 'verificacoes' | 'denuncias' = 'usuarios';
 
   paginaAtual = 0;
   totalPaginas = 0;
@@ -70,14 +71,38 @@ export class AdminDashboardComponent implements OnInit {
     { valor: StatusVerificacao.RECUSADO, label: 'Recusadas' }
   ];
 
-  constructor(private adminService: AdminService, private verificacaoService: VerificacaoService) {}
+  // Denúncias
+  denuncias: DenunciaDTO[] = [];
+  loadingDenuncias = false;
+  paginaDenuncias = 0;
+  totalPaginasDenuncias = 0;
+  itensPorPaginaDenuncias = 15;
+  filtroDenunciaStatus: StatusDenuncia | '' = StatusDenuncia.PENDENTE;
+  processandoDenunciaId: number | null = null;
+  observacaoDenuncia: Record<number, string> = {};
+  denunciaSucesso = '';
+  denunciaErro = '';
+
+  readonly StatusDenuncia = StatusDenuncia;
+  readonly statusDenunciaOpcoes = [
+    { valor: '', label: 'Todas' },
+    { valor: StatusDenuncia.PENDENTE, label: 'Pendentes' },
+    { valor: StatusDenuncia.APROVADA, label: 'Aprovadas' },
+    { valor: StatusDenuncia.REJEITADA, label: 'Rejeitadas' }
+  ];
+
+  constructor(
+    private adminService: AdminService,
+    private verificacaoService: VerificacaoService,
+    private denunciaService: DenunciaService
+  ) {}
 
   ngOnInit(): void {
     this.carregarStats();
     this.carregarUsuarios(0);
   }
 
-  selecionarAba(aba: 'usuarios' | 'online' | 'solicitacoes' | 'email' | 'verificacoes'): void {
+  selecionarAba(aba: 'usuarios' | 'online' | 'solicitacoes' | 'email' | 'verificacoes' | 'denuncias'): void {
     this.aba = aba;
     this.errorMessage = '';
     this.emailSucess = '';
@@ -86,6 +111,7 @@ export class AdminDashboardComponent implements OnInit {
     if (aba === 'solicitacoes' && this.solicitacoes.length === 0) this.carregarSolicitacoes(0);
     if (aba === 'email') this.carregarEmailConfig();
     if (aba === 'verificacoes') this.carregarVerificacoes(0);
+    if (aba === 'denuncias') this.carregarDenuncias(0);
   }
 
   carregarStats(): void {
@@ -277,6 +303,75 @@ export class AdminDashboardComponent implements OnInit {
 
   urlDocumento(id: number): string { return this.verificacaoService.urlDocumento(id); }
   urlSelfie(id: number): string { return this.verificacaoService.urlSelfie(id); }
+
+  // ── Denúncias ────────────────────────────────────────────────────
+
+  carregarDenuncias(pagina: number): void {
+    this.loadingDenuncias = true;
+    this.denunciaSucesso = '';
+    this.denunciaErro = '';
+    const s = this.filtroDenunciaStatus || undefined;
+    this.denunciaService.listar(s as StatusDenuncia | undefined, pagina, this.itensPorPaginaDenuncias).subscribe({
+      next: res => {
+        this.denuncias = res.content;
+        this.totalPaginasDenuncias = res.totalPages;
+        this.paginaDenuncias = pagina;
+        this.loadingDenuncias = false;
+      },
+      error: () => { this.denunciaErro = 'Erro ao carregar denúncias.'; this.loadingDenuncias = false; }
+    });
+  }
+
+  aplicarFiltroDenuncia(): void {
+    this.carregarDenuncias(0);
+  }
+
+  irParaPaginaDenuncia(pagina: number): void {
+    if (pagina >= 0 && pagina < this.totalPaginasDenuncias) this.carregarDenuncias(pagina);
+  }
+
+  aprovarDenuncia(d: DenunciaDTO): void {
+    this.processandoDenunciaId = d.id;
+    this.denunciaService.atualizarStatus(d.id, StatusDenuncia.APROVADA, this.observacaoDenuncia[d.id]).subscribe({
+      next: atualizado => {
+        const idx = this.denuncias.findIndex(x => x.id === d.id);
+        if (idx >= 0) this.denuncias[idx] = atualizado;
+        this.denunciaSucesso = `Denúncia contra ${atualizado.denunciadoNome} aprovada.`;
+        this.processandoDenunciaId = null;
+        this.carregarStats();
+      },
+      error: (err) => {
+        this.denunciaErro = err?.error?.message || 'Erro ao aprovar denúncia.';
+        this.processandoDenunciaId = null;
+      }
+    });
+  }
+
+  rejeitarDenuncia(d: DenunciaDTO): void {
+    this.processandoDenunciaId = d.id;
+    this.denunciaService.atualizarStatus(d.id, StatusDenuncia.REJEITADA, this.observacaoDenuncia[d.id]).subscribe({
+      next: atualizado => {
+        const idx = this.denuncias.findIndex(x => x.id === d.id);
+        if (idx >= 0) this.denuncias[idx] = atualizado;
+        this.denunciaSucesso = `Denúncia rejeitada.`;
+        this.processandoDenunciaId = null;
+        this.carregarStats();
+      },
+      error: (err) => {
+        this.denunciaErro = err?.error?.message || 'Erro ao rejeitar denúncia.';
+        this.processandoDenunciaId = null;
+      }
+    });
+  }
+
+  badgeDenuncia(status: string): string {
+    const map: Record<string, string> = {
+      PENDENTE: 'bg-yellow-100 text-yellow-800',
+      APROVADA: 'bg-red-100 text-red-800',
+      REJEITADA: 'bg-gray-100 text-gray-700'
+    };
+    return map[status] ?? 'bg-gray-100 text-gray-700';
+  }
 
   badgeVerif(status: string): string {
     const map: Record<string, string> = {

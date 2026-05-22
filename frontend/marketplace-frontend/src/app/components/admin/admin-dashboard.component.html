@@ -76,6 +76,16 @@
         }
         <p class="text-xs text-orange-600 mt-1">🪪 Pendentes</p>
       </div>
+      <div class="bg-white rounded-lg shadow-md p-5 border-l-4 border-red-500 cursor-pointer hover:shadow-lg transition"
+           (click)="selecionarAba('denuncias')">
+        <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">Denúncias</p>
+        @if (loadingStats) {
+          <div class="h-8 w-12 bg-gray-200 rounded animate-pulse mt-2"></div>
+        } @else {
+          <p class="text-3xl font-bold text-red-600 mt-1">{{ stats.denunciasPendentes ?? 0 }}</p>
+        }
+        <p class="text-xs text-red-600 mt-1">🚩 Pendentes</p>
+      </div>
     </div>
 
     <!-- Tabs -->
@@ -114,6 +124,15 @@
             🪪 Verificações
             @if ((stats.verificacoesPendentes ?? 0) > 0) {
               <span class="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ stats.verificacoesPendentes }}</span>
+            }
+          </button>
+          <button
+            (click)="selecionarAba('denuncias')"
+            class="px-6 py-4 text-sm font-medium border-b-2 transition flex items-center gap-2"
+            [class]="aba === 'denuncias' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
+            🚩 Denúncias
+            @if ((stats.denunciasPendentes ?? 0) > 0) {
+              <span class="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ stats.denunciasPendentes }}</span>
             }
           </button>
         </nav>
@@ -607,6 +626,95 @@
                         class="px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40">
                   Próxima →
                 </button>
+              </div>
+            }
+          }
+        }
+
+        <!-- ABA: DENÚNCIAS -->
+        @if (aba === 'denuncias') {
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <h2 class="text-lg font-bold text-gray-900">Denúncias de Usuários</h2>
+            <div class="flex items-center gap-2">
+              <select [(ngModel)]="filtroDenunciaStatus" (change)="aplicarFiltroDenuncia()"
+                class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-none">
+                @for (op of statusDenunciaOpcoes; track op.valor) {
+                  <option [value]="op.valor">{{ op.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          @if (denunciaSucesso) {
+            <div class="mb-4 p-3 bg-green-100 text-green-800 rounded-lg text-sm">{{ denunciaSucesso }}</div>
+          }
+          @if (denunciaErro) {
+            <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-lg text-sm">{{ denunciaErro }}</div>
+          }
+
+          @if (loadingDenuncias) {
+            <div class="text-center py-10 text-gray-500">Carregando denúncias...</div>
+          } @else if (denuncias.length === 0) {
+            <div class="text-center py-10 text-gray-400">Nenhuma denúncia encontrada.</div>
+          } @else {
+            <div class="space-y-4">
+              @for (d of denuncias; track d.id) {
+                <div class="border border-gray-200 rounded-lg p-4" [class.opacity-60]="d.status !== StatusDenuncia.PENDENTE">
+                  <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1 flex-wrap">
+                        <span class="font-semibold text-gray-800">{{ d.denuncianteNome }}</span>
+                        <span class="text-gray-400 text-sm">→</span>
+                        <span class="font-semibold text-gray-800">{{ d.denunciadoNome }}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full font-medium" [class]="badgeDenuncia(d.status)">
+                          {{ d.status }}
+                        </span>
+                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{{ d.tipo }}</span>
+                      </div>
+                      <p class="text-sm text-gray-600 mb-2">{{ d.descricao }}</p>
+                      @if (d.dataRevisao) {
+                        <p class="text-xs text-gray-400">Revisado em: {{ formatarData(d.dataRevisao) }}</p>
+                      }
+                      @if (d.observacaoAdmin) {
+                        <p class="text-xs text-gray-500 mt-1">Obs: {{ d.observacaoAdmin }}</p>
+                      }
+                    </div>
+                    @if (d.status === StatusDenuncia.PENDENTE) {
+                      <div class="flex flex-col gap-2 min-w-0 sm:min-w-48">
+                        <input [(ngModel)]="observacaoDenuncia[d.id]" placeholder="Observação (opcional)"
+                          class="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-400 outline-none w-full" />
+                        <div class="flex gap-2">
+                          <button (click)="aprovarDenuncia(d)"
+                            [disabled]="processandoDenunciaId === d.id"
+                            class="flex-1 px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50">
+                            {{ processandoDenunciaId === d.id ? '...' : 'Aprovar' }}
+                          </button>
+                          <button (click)="rejeitarDenuncia(d)"
+                            [disabled]="processandoDenunciaId === d.id"
+                            class="flex-1 px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 disabled:opacity-50">
+                            Rejeitar
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (totalPaginasDenuncias > 1) {
+              <div class="flex items-center justify-between mt-4">
+                <p class="text-sm text-gray-500">Página {{ paginaDenuncias + 1 }} de {{ totalPaginasDenuncias }}</p>
+                <div class="flex gap-2">
+                  <button (click)="irParaPaginaDenuncia(paginaDenuncias - 1)" [disabled]="paginaDenuncias === 0"
+                          class="px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40">
+                    ← Anterior
+                  </button>
+                  <button (click)="irParaPaginaDenuncia(paginaDenuncias + 1)" [disabled]="paginaDenuncias >= totalPaginasDenuncias - 1"
+                          class="px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40">
+                    Próxima →
+                  </button>
+                </div>
               </div>
             }
           }
