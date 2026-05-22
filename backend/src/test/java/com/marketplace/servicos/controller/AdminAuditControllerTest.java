@@ -49,6 +49,7 @@ class AdminAuditControllerTest {
     @MockBean private AdminAuditLogRepository adminAuditLogRepository;
     @MockBean private AdminAuditService adminAuditService;
     @MockBean private EmailConfigService emailConfigService;
+    @MockBean private com.marketplace.servicos.service.VerificacaoDocumentoService verificacaoDocumentoService;
     @MockBean private com.marketplace.servicos.repository.PrestadorRepository prestadorRepository;
     @MockBean private com.marketplace.servicos.repository.PropostaRepository propostaRepository;
     @MockBean private com.marketplace.servicos.repository.SolicitacaoServicoRepository solicitacaoServicoRepository;

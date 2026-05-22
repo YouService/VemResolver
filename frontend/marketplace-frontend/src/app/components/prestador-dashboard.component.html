@@ -67,6 +67,11 @@
           <app-onboarding-checklist></app-onboarding-checklist>
         }
 
+        <!-- Verificação de Identidade -->
+        @if (prestador) {
+          <app-verificacao-documento></app-verificacao-documento>
+        }
+
         <!-- Alert perfil incompleto -->
         @if (!prestador) {
           <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">

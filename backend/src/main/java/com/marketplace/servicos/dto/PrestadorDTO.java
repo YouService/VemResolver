@@ -35,6 +35,7 @@ public class PrestadorDTO {
     private String fotoPerfilUrl;
     private Integer percentualCompletude;
     private Boolean verificado;
+    private Boolean idVerificado;
     private Double mediaPontualidade;
     private Double mediaQualidade;
     private Double mediaComunicacao;

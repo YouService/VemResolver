@@ -4,11 +4,12 @@ import { of, throwError } from 'rxjs';
 
 import { AdminDashboardComponent } from './admin-dashboard.component';
 import { AdminService } from '../../services/admin.service';
+import { VerificacaoService } from '../../services/verificacao.service';
 import { AdminStats, UserResumoDTO, SolicitacaoAdminDTO, PageResponse, ConfiguracaoEmailDTO } from '../../models/models';
 
 const mockStats: AdminStats = {
   totalUsuarios: 25, totalPrestadores: 10, totalSolicitacoes: 43,
-  totalPropostas: 38, usuariosOnline: 3
+  totalPropostas: 38, usuariosOnline: 3, verificacoesPendentes: 0
 };
 
 const mockUsuario: UserResumoDTO = {
@@ -40,6 +41,7 @@ describe('AdminDashboardComponent', () => {
   let component: AdminDashboardComponent;
   let fixture: ComponentFixture<AdminDashboardComponent>;
   let adminServiceSpy: jasmine.SpyObj<AdminService>;
+  let verificacaoServiceSpy: jasmine.SpyObj<VerificacaoService>;
 
   beforeEach(async () => {
     adminServiceSpy = jasmine.createSpyObj('AdminService', [
@@ -47,6 +49,10 @@ describe('AdminDashboardComponent', () => {
       'listarSolicitacoes', 'alterarAtivacao', 'alterarStatusSolicitacao',
       'getEmailConfig', 'salvarEmailConfig', 'testarEmail'
     ]);
+    verificacaoServiceSpy = jasmine.createSpyObj('VerificacaoService', [
+      'listar', 'aprovar', 'recusar', 'urlDocumento', 'urlSelfie'
+    ]);
+    verificacaoServiceSpy.listar.and.returnValue(of(mockPage([])));
 
     adminServiceSpy.buscarStats.and.returnValue(of(mockStats));
     adminServiceSpy.listarUsuarios.and.returnValue(of(mockPage([mockUsuario])));
@@ -60,7 +66,8 @@ describe('AdminDashboardComponent', () => {
       imports: [AdminDashboardComponent],
       providers: [
         provideRouter([]),
-        { provide: AdminService, useValue: adminServiceSpy }
+        { provide: AdminService, useValue: adminServiceSpy },
+        { provide: VerificacaoService, useValue: verificacaoServiceSpy }
       ]
     }).compileComponents();
 

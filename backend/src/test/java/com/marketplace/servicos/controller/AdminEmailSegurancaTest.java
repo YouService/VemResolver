@@ -50,6 +50,7 @@ class AdminEmailSegurancaTest {
     @MockBean PropostaRepository propostaRepository;
     @MockBean EmailConfigService emailConfigService;
     @MockBean AdminAuditService adminAuditService;
+    @MockBean com.marketplace.servicos.service.VerificacaoDocumentoService verificacaoDocumentoService;
     @MockBean AdminAuditLogRepository adminAuditLogRepository;
     @MockBean JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockBean CustomUserDetailsService customUserDetailsService;
