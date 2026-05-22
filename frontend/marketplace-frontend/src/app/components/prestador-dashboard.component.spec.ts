@@ -1,12 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { PrestadorDashboardComponent } from './prestador-dashboard.component';
 import { SolicitacaoService } from '../services/solicitacao.service';
 import { PrestadorService } from '../services/prestador.service';
 import { PropostaService } from '../services/proposta.service';
 import { AuthService } from '../services/auth.service';
+import { VerificacaoService } from '../services/verificacao.service';
 import { Proposta, StatusProposta, StatusSolicitacao, Prestador, CompletudePrestador } from '../models/models';
 
 const mockPrestador: Prestador = {
@@ -30,12 +31,15 @@ describe('PrestadorDashboardComponent', () => {
   let prestadorServiceSpy: jasmine.SpyObj<PrestadorService>;
   let propostaServiceSpy: jasmine.SpyObj<PropostaService>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let verificacaoServiceSpy: jasmine.SpyObj<VerificacaoService>;
 
   beforeEach(async () => {
     solicitacaoServiceSpy = jasmine.createSpyObj('SolicitacaoService', ['buscarAbertas']);
     prestadorServiceSpy = jasmine.createSpyObj('PrestadorService', ['buscarMeuPerfil', 'getCompletude']);
     propostaServiceSpy = jasmine.createSpyObj('PropostaService', ['listarMinhas']);
     authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUserName', 'getCurrentUser']);
+    verificacaoServiceSpy = jasmine.createSpyObj('VerificacaoService', ['consultarStatus', 'enviarDocumentos']);
+    verificacaoServiceSpy.consultarStatus.and.returnValue(throwError(() => ({ status: 204 })));
 
     solicitacaoServiceSpy.buscarAbertas.and.returnValue(
       of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 10 })
@@ -54,7 +58,8 @@ describe('PrestadorDashboardComponent', () => {
         { provide: SolicitacaoService, useValue: solicitacaoServiceSpy },
         { provide: PrestadorService, useValue: prestadorServiceSpy },
         { provide: PropostaService, useValue: propostaServiceSpy },
-        { provide: AuthService, useValue: authServiceSpy }
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: VerificacaoService, useValue: verificacaoServiceSpy }
       ]
     }).compileComponents();
 

@@ -167,6 +167,7 @@ public class PrestadorService {
                 prestador.getAvaliacaoMedia(),
                 prestador.getTotalAvaliacoes(),
                 Boolean.TRUE.equals(prestador.getVerificado()),
+                Boolean.TRUE.equals(prestador.getIdVerificado()),
                 prestador.getMediaPontualidade(),
                 prestador.getMediaQualidade(),
                 prestador.getMediaComunicacao(),
@@ -264,6 +265,7 @@ public class PrestadorService {
         dto.setFotoPerfilUrl(prestador.getFotoPerfilUrl());
         dto.setPercentualCompletude(prestador.getPercentualCompletude());
         dto.setVerificado(Boolean.TRUE.equals(prestador.getVerificado()));
+        dto.setIdVerificado(Boolean.TRUE.equals(prestador.getIdVerificado()));
         dto.setMediaPontualidade(prestador.getMediaPontualidade());
         dto.setMediaQualidade(prestador.getMediaQualidade());
         dto.setMediaComunicacao(prestador.getMediaComunicacao());

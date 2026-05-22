@@ -52,6 +52,12 @@
                   ✔ Verificado
                 </span>
               }
+              @if (perfil.idVerificado) {
+                <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 text-sm font-semibold px-3 py-1 rounded-full"
+                      title="Identidade verificada manualmente pelo time VemResolver">
+                  🪪 ID Verificado
+                </span>
+              }
             </div>
 
             <p class="text-gray-500 mb-3">📍 {{ perfil.cidade }}, {{ perfil.estado }}</p>

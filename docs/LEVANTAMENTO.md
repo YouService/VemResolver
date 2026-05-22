@@ -1,8 +1,8 @@
 # Levantamento Técnico — VemResolver (YouService Marketplace)
 
-> **Última atualização:** 2026-05-19 (feature/p9-comunicacao-notificacoes: P9.1 Push Notifications + P9.2 Chat com Imagens + P9.3 E-mail Nova Solicitação)  
+> **Última atualização:** 2026-05-22 (feature/p8.1-verificacao-documento: P8.1 Verificação de Documento CPF + Selfie)  
 > **Analista:** Claude Sonnet 4.6  
-> **Branch analisada:** feature/p9-comunicacao-notificacoes → main / develop
+> **Branch analisada:** feature/p8.1-verificacao-documento → main / develop
 
 ---
 
@@ -737,6 +737,14 @@ Levantamento realizado comparando o VemResolver com [GetNinjas](https://www.getn
 | P9.2 Chat com Anexos de Imagem: `V17__add_url_anexo_mensagem_chat.sql` adiciona `url_anexo TEXT` em `mensagens_chat`; `MensagemChat.urlAnexo` e `MensagemChatDTO.urlAnexo`; `ChatService.uploadImagem()` valida tipo (JPEG/PNG/WEBP), tamanho (máx 5 MB), salva em `/uploads/chat/{propostaId}/`; endpoint `POST /api/chat/proposta/{id}/imagem` com `@RequestParam("file") MultipartFile`; Angular: `ChatService.uploadImagem()` com `FormData`; `ChatComponent.onFileSelected()` com validações idênticas; bloco `@if (msg.urlAnexo)` exibe imagem clicável; botão upload com ícone SVG + input file hidden; 5 novos testes em `chat.component.spec.ts` (tipo inválido, >5 MB, sucesso, falha, sem arquivo); `ChatAnexoTest.java` com 5 testes (CA-01 a CA-05) | `feature/p9-comunicacao-notificacoes` | 2026-05-19 |
 | P9.3 E-mail de Nova Solicitação para Prestadores: `V18__add_email_nova_solicitacao_config.sql` adiciona `email_nova_solicitacao_ativo BOOLEAN DEFAULT FALSE` em `configuracoes_email`; `EmailService.sendNovaSolicitacao()` implementado em `BrevoEmailService`, `ConsoleEmailService`, `SmtpEmailService`; `SolicitacaoServicoService.criar()` dispara e-mail para até 50 prestadores da mesma categoria via `PrestadorRepository.findByCategoria()` em try-catch; `NovaSolicitacaoEmailTest.java` com 3 testes (NS-01 a NS-03) | `feature/p9-comunicacao-notificacoes` | 2026-05-19 |
 | P9.1 Notificações Push (PWA): `V19__add_push_subscriptions.sql` cria tabelas `configuracoes_push` e `push_subscriptions`; `ConfiguracaoPush` e `PushSubscription` entities; `WebPushService` com `@PostConstruct` gera chaves VAPID EC P-256 via BouncyCastle (`ECNamedCurveTable`, `prime256v1`), persiste em DB, reutiliza entre reinicializações; `subscribe/unsubscribe/notificar()`; dependência `nl.martijndwars:web-push:5.1.1` + `bcprov-jdk18on:1.78.1` (excluindo `bcprov-jdk15on` conflitante); `PushNotificacaoController` com 3 endpoints; `PropostaService` dispara push ao criar/aceitar proposta; `SolicitacaoServicoService` dispara push ao concluir serviço; `PushService` Angular com `SwPush` + `getPublicKey()` + `subscribeIfEnabled()`; `PushNotificacaoSegurancaTest.java` com 5 testes (PN-01 a PN-05); `push.service.spec.ts` com 4 testes; **totais: 208 testes backend, 141/142 frontend** | `feature/p9-comunicacao-notificacoes` | 2026-05-19 |
+
+---
+
+### P8 — Identidade e Confiança
+
+| Item | Branch | Data |
+|------|--------|------|
+| P8.1 Verificação de Documento (CPF + Selfie): `V20__add_verificacao_documento.sql` adiciona `id_verificado BOOLEAN NOT NULL DEFAULT FALSE` em `prestadores` e cria tabela `verificacoes_documento` (id, prestador_id FK, caminho_doc TEXT, caminho_selfie TEXT, status CHECK PENDENTE/APROVADO/RECUSADO, data_envio, data_revisao, observacao_admin, 3 índices); `StatusVerificacao` enum; `VerificacaoDocumento` entity (@ManyToOne LAZY para Prestador); `VerificacaoDocumentoRepository` com `findTopByPrestadorIdOrderByDataEnvioDesc`, `findByStatusOrderByDataEnvioAsc`, `findAllByOrderByDataEnvioDesc`, `countByStatus`; `VerificacaoDocumentoDTO` (sem campos de caminho — segurança); `AvaliacaoVerificacaoRequestDTO`; `VerificacaoDocumentoService` — validação tipo (JPEG/PNG/WEBP) + tamanho (máx 10 MB), armazenamento em `/uploads/verificacoes/{prestadorId}/`, reenvio substitui registro existente se PENDENTE/RECUSADO, bloqueio se APROVADO, aprovar seta `idVerificado=true` no prestador, `servirArquivo()` retorna `InputStreamResource`; `VerificacaoDocumentoController` — prestador: POST/GET `/api/prestadores/me/verificacao`; admin: GET/PATCH/GET-arquivo `/api/admin/verificacoes/**`; `SecurityConfig` bloqueia `/uploads/verificacoes/**` para não-ADMIN; `Prestador.idVerificado` + `PrestadorDTO.idVerificado` + `PerfilPublicoDTO.idVerificado`; badge "🪪 ID Verificado" (roxo) no perfil público; aba "🪪 Verificações" + card de estatísticas no painel admin; `VerificacaoDocumentoComponent` Angular com upload dual, preview de imagens, status badge, envio via FormData; `VerificacaoService` Angular; 10 testes `VerificacaoDocumentoServiceTest` (VD-01 a VD-10) + 12 testes `VerificacaoDocumentoSegurancaTest` (VS-01 a VS-12, usa `.with(user(customUser))` para autenticação com tipo correto) + 8 testes Jasmine `verificacao-documento.component.spec.ts` (VDC-01 a VDC-08); **totais: 230 testes backend**, 149/150 frontend | `feature/p8.1-verificacao-documento` | 2026-05-22 |
 
 ---
 

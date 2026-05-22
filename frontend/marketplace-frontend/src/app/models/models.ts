@@ -118,6 +118,7 @@ export interface Prestador {
   fotoPerfilUrl?: string;
   percentualCompletude?: number;
   verificado?: boolean;
+  idVerificado?: boolean;
   mediaPontualidade?: number;
   mediaQualidade?: number;
   mediaComunicacao?: number;
@@ -164,6 +165,7 @@ export interface AdminStats {
   totalSolicitacoes: number;
   totalPropostas: number;
   usuariosOnline: number;
+  verificacoesPendentes: number;
 }
 
 export interface SolicitacaoServico {
@@ -255,6 +257,7 @@ export interface PerfilPublico {
   avaliacaoMedia: number;
   totalAvaliacoes: number;
   verificado: boolean;
+  idVerificado?: boolean;
   mediaPontualidade?: number;
   mediaQualidade?: number;
   mediaComunicacao?: number;
@@ -293,4 +296,20 @@ export interface ConfiguracaoEmailDTO {
   ativo?: boolean;
   atualizadoEm?: string;
   configurado?: boolean;
+}
+
+export enum StatusVerificacao {
+  PENDENTE = 'PENDENTE',
+  APROVADO = 'APROVADO',
+  RECUSADO = 'RECUSADO'
+}
+
+export interface VerificacaoDocumentoDTO {
+  id: number;
+  prestadorId: number;
+  prestadorNome: string;
+  status: StatusVerificacao;
+  dataEnvio?: string;
+  dataRevisao?: string;
+  observacaoAdmin?: string;
 }
