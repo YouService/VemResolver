@@ -6,7 +6,8 @@ import { PrestadorService } from '../../services/prestador.service';
 import { AvaliacaoService } from '../../services/avaliacao.service';
 import { FotoService } from '../../services/foto.service';
 import { AuthService } from '../../services/auth.service';
-import { AvaliacaoResumo, PerfilPublico } from '../../models/models';
+import { DenunciaService } from '../../services/denuncia.service';
+import { AvaliacaoResumo, CriarDenunciaRequest, PerfilPublico, TipoDenuncia } from '../../models/models';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -32,13 +33,23 @@ export class PerfilPublicoComponent implements OnInit {
   textoResposta: Record<number, string> = {};
   enviandoResposta: Record<number, boolean> = {};
 
+  // Denúncia
+  readonly TipoDenuncia = TipoDenuncia;
+  modalDenunciaAberto = false;
+  denunciaTipo: TipoDenuncia = TipoDenuncia.PERFIL;
+  denunciaDescricao = '';
+  enviandoDenuncia = false;
+  denunciaSucesso = false;
+  denunciaErro = '';
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private prestadorService: PrestadorService,
     private avaliacaoService: AvaliacaoService,
     private fotoService: FotoService,
-    public authService: AuthService
+    public authService: AuthService,
+    private denunciaService: DenunciaService
   ) {}
 
   ngOnInit(): void {
@@ -139,6 +150,47 @@ export class PerfilPublicoComponent implements OnInit {
 
   fecharFoto(): void {
     this.fotoAmpliada = undefined;
+  }
+
+  get podeDenunciar(): boolean {
+    if (!this.authService.isAuthenticated()) return false;
+    if (!this.perfil) return false;
+    const me = this.authService.getCurrentUser();
+    return me?.userId !== this.perfil.usuarioId;
+  }
+
+  abrirModalDenuncia(): void {
+    this.modalDenunciaAberto = true;
+    this.denunciaTipo = TipoDenuncia.PERFIL;
+    this.denunciaDescricao = '';
+    this.denunciaSucesso = false;
+    this.denunciaErro = '';
+  }
+
+  fecharModalDenuncia(): void {
+    this.modalDenunciaAberto = false;
+  }
+
+  enviarDenuncia(): void {
+    if (!this.perfil || !this.perfil.usuarioId || !this.denunciaDescricao.trim() || this.denunciaDescricao.trim().length < 10) return;
+    this.enviandoDenuncia = true;
+    this.denunciaErro = '';
+    const req: CriarDenunciaRequest = {
+      denunciadoId: this.perfil.usuarioId as number,
+      tipo: this.denunciaTipo,
+      descricao: this.denunciaDescricao.trim()
+    };
+    this.denunciaService.criar(req).subscribe({
+      next: () => {
+        this.enviandoDenuncia = false;
+        this.denunciaSucesso = true;
+        setTimeout(() => { this.fecharModalDenuncia(); }, 2500);
+      },
+      error: (err) => {
+        this.enviandoDenuncia = false;
+        this.denunciaErro = err?.error?.message || 'Não foi possível registrar a denúncia.';
+      }
+    });
   }
 
   get botaoSolicitar(): string {
