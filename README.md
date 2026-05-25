@@ -248,6 +248,12 @@ vemresolver/
 - ✅ **P9.3 — E-mail de Nova Solicitação para Prestadores** (`feature/p9-comunicacao-notificacoes`): `V18` adiciona `email_nova_solicitacao_ativo BOOLEAN DEFAULT FALSE` em `configuracoes_email`; `EmailService.sendNovaSolicitacao()` adicionado ao contrato; implementado em `BrevoEmailService` (verifica flag específica antes de enviar), `ConsoleEmailService` e `SmtpEmailService`; `SolicitacaoServicoService.criar()` busca até 50 prestadores da mesma categoria (via `PrestadorRepository.findByCategoria()`) e dispara o e-mail em loop com tratamento de erro individual; campo `emailNovaSolicitacaoAtivo` exposto no `ConfiguracaoEmailDTO` e persistido via `EmailConfigService.salvar()`; 3 testes em `NovaSolicitacaoEmailTest` (NS-01 a NS-03)
 - ✅ **P9.1 — Notificações Push (PWA)** (`feature/p9-comunicacao-notificacoes`): `V19` cria tabelas `configuracoes_push` (chaves VAPID geradas na primeira inicialização) e `push_subscriptions` (userId, endpoint, p256dh, auth, unique constraint); `nl.martijndwars:web-push:5.1.1` + `bcprov-jdk18on:1.78.1` adicionados ao `pom.xml`; `WebPushService` gera par de chaves EC P-256 com BouncyCastle na primeira execução, armazena no banco e expõe a chave pública; registra subscriptions sem duplicação; `notificar()` envia payload JSON no formato `{notification:{title,body,icon}}` compatível com Angular SwPush; `PushNotificacaoController` — `GET /api/notificacoes/push/public-key`, `POST .../subscribe`, `DELETE .../unsubscribe` (todos autenticados); triggers de push: nova proposta recebida → cliente, proposta aceita → prestador, serviço concluído → prestador (mesmos eventos que e-mail); `push.service.ts` Angular com `SwPush` para solicitar permissão e registrar subscription; 5 testes de segurança `PushNotificacaoSegurancaTest` (PN-01 a PN-05) + 4 testes `PushService.spec`; **totais: 208 testes backend**, 141/142 frontend
 
+### Prioridade 7 — Busca, Recomendação e Observabilidade (concluída)
+
+- ✅ **P7.3 — Score Composto de Recomendação** (`feature/p7-busca-observabilidade`): `GET /api/prestadores/recomendados/{solicitacaoId}?limite=5` retorna lista de prestadores ordenados por score composto (0–10, dois decimais); fórmula: (nota_média × 40%) + (contratos_concluídos cap. 10 × 30%) + (distância 0–50km × 20%) + (completude_perfil × 10%); `PrestadorRecomendadoDTO` estende `PrestadorDTO` com campos `score` e `justificativa` ("Nota X.X | Y contratos | Z% perfil completo"); `PrestadorRepository.findAtivosParaRecomendacao()` retorna prestadores da categoria que estão ativos; `PrestadorService.buscarRecomendados()` calcula score para cada prestador via `calcularScore()` e ordena descendente; 6 testes unitários `PrestadorRecomendacaoTest`
+- ✅ **P7.1 — Busca Textual Full-Text** (`feature/p7-busca-observabilidade`): `V22` adiciona colunas `ts_perfil` TSVECTOR em `prestadores` e `ts_descricao` TSVECTOR em `solicitacoes_servico`; triggers automáticos mantêm tsvector sincronizado; índices GIN para performance (`idx_prestadores_ts_perfil`, `idx_solicitacoes_ts_descricao`); `PrestadorRepository.buscarPorTexto()` e `SolicitacaoServicoRepository.buscarPorTexto()` usam `plainto_tsquery('portuguese', :q)` e `ts_rank()` para ranking de relevância; endpoints `GET /api/prestadores?q=termo` e `GET /api/solicitacoes/abertas?q=termo` adicionam parâmetro `q` opcional; ao preencher `q`, busca full-text é usada em vez de filtros tradicionais; 5 testes unitários `FullTextSearchTest`
+- ✅ **P5.4 — Observabilidade** (`feature/p7-busca-observabilidade`): dependências `spring-boot-starter-actuator`, `micrometer-registry-prometheus`, `logstash-logback-encoder`; `application.yml` expõe endpoints `/actuator/health`, `/actuator/metrics`, `/actuator/prometheus`; `application-prod.yml` restringe a apenas health e prometheus; `logback-spring.xml` com logs JSON estruturados em produção (custom fields `app=vemresolver`, `env=prod`); `MetricsService` com counters: `vemresolver.propostas.enviadas`, `vemresolver.contratos.finalizados`, `vemresolver.logins.falhos` (a serem integrados em `PropostaService`, `AuthService`); `SecurityConfig` libera `/actuator/health` e `/actuator/info` sem autenticação, prometheus restringe a `ROLE_ADMIN`; `prometheus.yml` e `docker-compose.yml` com perfil `observability` para stack Prometheus + Grafana; 4 testes unitários `ObservabilidadeTest`; **totais: 223 testes backend** (15 novos em P7), 141/142 frontend
+
 ### P11 — Mobile e PWA (concluída)
 
 - ✅ **P11.1 — Progressive Web App** (`feature/p11-mobile-pwa`): `@angular/service-worker@~19.2.0` instalado; `manifest.webmanifest` com nome, short_name, theme_color `#1a56db`, display `standalone`, start_url `/`, ícones 192×192 e 512×512 gerados a partir do logo existente; `ngsw-config.json` com cache de assets (`app-shell` prefetch + `assets` lazy) e cache da API de categorias (strategy performance, TTL 1h); `angular.json` com `serviceWorker: ngsw-config.json`; `index.html` com `<link rel="manifest">`, `<meta name="theme-color">`, `<meta name="description">`, `<link rel="apple-touch-icon">`; `app.config.ts` com `provideServiceWorker('ngsw-worker.js', { enabled: !isDevMode(), registrationStrategy: 'registerWhenStable:30000' })`; 6 testes em `pwa.spec.ts` (pacote instalado, factory exportada, configuração, campos manifest, ícones 192+512, display standalone)
@@ -288,16 +294,17 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 
 ## Próximos passos
 
-Todas as prioridades P1–P4 estão concluídas. O backlog completo de funcionalidades futuras está documentado em [`docs/BACKLOG.md`](docs/BACKLOG.md), organizado em fases:
+Prioridades P1–P4 e P8–P12 concluídas. P5.4, P7.1 e P7.3 entregues. O backlog completo de funcionalidades futuras está documentado em [`docs/BACKLOG.md`](docs/BACKLOG.md), organizado em fases:
 
 | Fase | Foco | Prioridade |
 |---|---|---|
-| Fase 1 | Deploy + CI/CD + Correção de vulnerabilidades (P5) | 🔴 Crítico |
-| Fase 2 | Monetização: créditos pré-pagos + gateway de pagamento (P6) | 🟠 Alta |
-| Fase 3 | Crescimento: busca full-text + categorias + mobile (P7, P11) | 🟠 Alta |
-| Fase 4 | Confiança: verificação de identidade + denúncias (P8, P10) | ✅ P8 entregue (P8.1 + P8.2) |
-| Fase 5 | Segurança avançada: refresh token rotation + auditoria (P12) | ✅ Entregue |
-| Fase 6 | Engajamento: push notifications + chat com imagens (P9) | 🟢 Normal |
+| Fase 1 | Deploy + CI/CD + Correção de vulnerabilidades (P5) | 🟠 Alta — P5.4 (observabilidade) entregue |
+| Fase 2 | Monetização: créditos pré-pagos + gateway de pagamento (P6) | 🟠 Alta — P6.1, P6.2, P6.3 próximos |
+| Fase 3 | Crescimento: busca full-text + recomendação + mobile (P7) | 🟢 Normal — P7.1 (full-text), P7.3 (recomendação) entregues; P7.2 pendente |
+| Fase 4 | Confiança: verificação de identidade + denúncias (P8, P10) | ✅ Entregue (P8.1 + P8.2, P10.1 + P10.2 + P10.3 + P10.4) |
+| Fase 5 | Segurança avançada: refresh token rotation + auditoria (P12) | ✅ Entregue (P12.1 + P12.2) |
+| Fase 6 | Engajamento: push notifications + chat com imagens (P9) | ✅ Entregue (P9.1 + P9.2 + P9.3) |
+| Fase 7 | Mobile e PWA (P11) | ✅ Entregue (P11.1 + P11.2) |
 
 ---
 
