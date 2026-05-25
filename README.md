@@ -252,7 +252,18 @@ vemresolver/
 
 - ✅ **P7.3 — Score Composto de Recomendação** (`feature/p7-busca-observabilidade`): `GET /api/prestadores/recomendados/{solicitacaoId}?limite=5` retorna lista de prestadores ordenados por score composto (0–10, dois decimais); fórmula: (nota_média × 40%) + (contratos_concluídos cap. 10 × 30%) + (distância 0–50km × 20%) + (completude_perfil × 10%); `PrestadorRecomendadoDTO` estende `PrestadorDTO` com campos `score` e `justificativa` ("Nota X.X | Y contratos | Z% perfil completo"); `PrestadorRepository.findAtivosParaRecomendacao()` retorna prestadores da categoria que estão ativos; `PrestadorService.buscarRecomendados()` calcula score para cada prestador via `calcularScore()` e ordena descendente; 6 testes unitários `PrestadorRecomendacaoTest`
 - ✅ **P7.1 — Busca Textual Full-Text** (`feature/p7-busca-observabilidade`): `V22` adiciona colunas `ts_perfil` TSVECTOR em `prestadores` e `ts_descricao` TSVECTOR em `solicitacoes_servico`; triggers automáticos mantêm tsvector sincronizado; índices GIN para performance (`idx_prestadores_ts_perfil`, `idx_solicitacoes_ts_descricao`); `PrestadorRepository.buscarPorTexto()` e `SolicitacaoServicoRepository.buscarPorTexto()` usam `plainto_tsquery('portuguese', :q)` e `ts_rank()` para ranking de relevância; endpoints `GET /api/prestadores?q=termo` e `GET /api/solicitacoes/abertas?q=termo` adicionam parâmetro `q` opcional; ao preencher `q`, busca full-text é usada em vez de filtros tradicionais; 5 testes unitários `FullTextSearchTest`
-- ✅ **P5.4 — Observabilidade** (`feature/p7-busca-observabilidade`): dependências `spring-boot-starter-actuator`, `micrometer-registry-prometheus`, `logstash-logback-encoder`; `application.yml` expõe endpoints `/actuator/health`, `/actuator/metrics`, `/actuator/prometheus`; `application-prod.yml` restringe a apenas health e prometheus; `logback-spring.xml` com logs JSON estruturados em produção (custom fields `app=vemresolver`, `env=prod`); `MetricsService` com counters: `vemresolver.propostas.enviadas`, `vemresolver.contratos.finalizados`, `vemresolver.logins.falhos` (a serem integrados em `PropostaService`, `AuthService`); `SecurityConfig` libera `/actuator/health` e `/actuator/info` sem autenticação, prometheus restringe a `ROLE_ADMIN`; `prometheus.yml` e `docker-compose.yml` com perfil `observability` para stack Prometheus + Grafana; 4 testes unitários `ObservabilidadeTest`; **totais: 223 testes backend** (15 novos em P7), 141/142 frontend
+- ✅ **P5.4 — Observabilidade** (`feature/p7-busca-observabilidade`): dependências `spring-boot-starter-actuator`, `micrometer-registry-prometheus`, `logstash-logback-encoder`; `application.yml` expõe endpoints `/actuator/health`, `/actuator/metrics`, `/actuator/prometheus`; `application-prod.yml` restringe a apenas health e prometheus; `logback-spring.xml` com logs JSON estruturados em produção (custom fields `app=vemresolver`, `env=prod`); `MetricsService` com counters: `vemresolver.propostas.enviadas`, `vemresolver.contratos.finalizados`, `vemresolver.logins.falhos` (integrados em `PropostaService` e `AuthService`); `SecurityConfig` libera `/actuator/health` e `/actuator/info` sem autenticação, prometheus restringe a `ROLE_ADMIN`; `prometheus.yml` e `docker-compose.yml` com perfil `observability` para stack Prometheus + Grafana; 4 testes unitários `ObservabilidadeTest` + 2 testes de segurança `ActuatorSecurityTest`; **totais: 230 testes backend** (20 novos em P7), 141/142 frontend
+
+## Novos endpoints (P7.1, P7.3, P5.4)
+
+| Método | Endpoint | Descrição | Auth |
+|--------|----------|-----------|------|
+| GET | `/api/prestadores?q=termo` | Busca full-text de prestadores | Público |
+| GET | `/api/solicitacoes/abertas?q=termo` | Busca full-text de solicitações abertas | Público |
+| GET | `/api/prestadores/recomendados/{solicitacaoId}` | Prestadores recomendados por score composto | JWT |
+| GET | `/actuator/health` | Health check (liveness e readiness) | Público |
+| GET | `/actuator/prometheus` | Métricas Prometheus | ADMIN |
+| GET | `/actuator/metrics` | Métricas detalhadas | ADMIN |
 
 ### P11 — Mobile e PWA (concluída)
 
@@ -294,13 +305,13 @@ Análise competitiva realizada em 2026-05-15 com base nos sites [GetNinjas](http
 
 ## Próximos passos
 
-Prioridades P1–P4 e P8–P12 concluídas. P5.4, P7.1 e P7.3 entregues. O backlog completo de funcionalidades futuras está documentado em [`docs/BACKLOG.md`](docs/BACKLOG.md), organizado em fases:
+Prioridades P1–P4 e P8–P12 concluídas. P5.4, P7.1 e P7.3 entregues em 2026-05-25. O backlog completo de funcionalidades futuras está documentado em [`docs/BACKLOG.md`](docs/BACKLOG.md), organizado em fases:
 
 | Fase | Foco | Prioridade |
 |---|---|---|
-| Fase 1 | Deploy + CI/CD + Correção de vulnerabilidades (P5) | 🟠 Alta — P5.4 (observabilidade) entregue |
+| Fase 1 | Deploy + CI/CD + Correção de vulnerabilidades (P5) | ✅ Entregue (P5.4 observabilidade) |
 | Fase 2 | Monetização: créditos pré-pagos + gateway de pagamento (P6) | 🟠 Alta — P6.1, P6.2, P6.3 próximos |
-| Fase 3 | Crescimento: busca full-text + recomendação + mobile (P7) | 🟢 Normal — P7.1 (full-text), P7.3 (recomendação) entregues; P7.2 pendente |
+| Fase 3 | Crescimento: busca full-text + recomendação + mobile (P7) | ✅ Entregue (P7.1 full-text, P7.3 recomendação) — P7.2 pendente |
 | Fase 4 | Confiança: verificação de identidade + denúncias (P8, P10) | ✅ Entregue (P8.1 + P8.2, P10.1 + P10.2 + P10.3 + P10.4) |
 | Fase 5 | Segurança avançada: refresh token rotation + auditoria (P12) | ✅ Entregue (P12.1 + P12.2) |
 | Fase 6 | Engajamento: push notifications + chat com imagens (P9) | ✅ Entregue (P9.1 + P9.2 + P9.3) |
