@@ -61,13 +61,14 @@ public class SolicitacaoServicoController {
     }
     
     @GetMapping("/abertas")
-    @Operation(summary = "Buscar solicitações abertas")
+    @Operation(summary = "Buscar solicitações abertas (suporta busca full-text com ?q=)")
     public ResponseEntity<Page<SolicitacaoServicoDTO>> buscarAbertas(
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) String cidade,
             @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String q,
             Pageable pageable) {
-        return ResponseEntity.ok(solicitacaoService.buscarAbertas(categoriaId, cidade, estado, pageable));
+        return ResponseEntity.ok(solicitacaoService.buscarAbertas(categoriaId, cidade, estado, q, pageable));
     }
     
     @PatchMapping("/{id}/status")

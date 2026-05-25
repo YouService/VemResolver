@@ -69,4 +69,7 @@ public class Prestador {
 
     @Column(name = "media_comunicacao")
     private Double mediaComunicacao;
+
+    @Column(name = "ts_perfil", columnDefinition = "tsvector", insertable = false, updatable = false)
+    private String tsPerfil;
 }

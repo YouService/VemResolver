@@ -3,6 +3,7 @@ package com.marketplace.servicos.controller;
 import com.marketplace.servicos.dto.CompletudePrestadorDTO;
 import com.marketplace.servicos.dto.PerfilPublicoDTO;
 import com.marketplace.servicos.dto.PrestadorDTO;
+import com.marketplace.servicos.dto.PrestadorRecomendadoDTO;
 import com.marketplace.servicos.model.User;
 import com.marketplace.servicos.service.PrestadorService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +17,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/prestadores")
 @Tag(name = "Prestadores", description = "Gerenciamento de prestadores de serviços")
@@ -28,14 +31,15 @@ public class PrestadorController {
     }
     
     @GetMapping
-    @Operation(summary = "Buscar prestadores com filtros")
+    @Operation(summary = "Buscar prestadores com filtros (suporta busca full-text com ?q=)")
     public ResponseEntity<Page<PrestadorDTO>> buscar(
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) String cidade,
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) Double minAvaliacao,
+            @RequestParam(required = false) String q,
             Pageable pageable) {
-        return ResponseEntity.ok(prestadorService.buscar(categoriaId, cidade, estado, minAvaliacao, pageable));
+        return ResponseEntity.ok(prestadorService.buscar(categoriaId, cidade, estado, minAvaliacao, q, pageable));
     }
     
     @GetMapping("/{id}")
@@ -84,5 +88,14 @@ public class PrestadorController {
             @RequestParam(required = false) Long categoriaId,
             Pageable pageable) {
         return ResponseEntity.ok(prestadorService.buscarProximos(lat, lng, raioKm, categoriaId, pageable));
+    }
+
+    @GetMapping("/recomendados/{solicitacaoId}")
+    @SecurityRequirement(name = "bearer-jwt")
+    @Operation(summary = "Prestadores recomendados para uma solicitação (score composto)")
+    public ResponseEntity<List<PrestadorRecomendadoDTO>> buscarRecomendados(
+            @PathVariable Long solicitacaoId,
+            @RequestParam(defaultValue = "5") int limite) {
+        return ResponseEntity.ok(prestadorService.buscarRecomendados(solicitacaoId, limite));
     }
 }

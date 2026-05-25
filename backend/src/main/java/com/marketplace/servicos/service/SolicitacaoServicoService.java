@@ -136,10 +136,12 @@ public class SolicitacaoServicoService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SolicitacaoServicoDTO> buscarAbertas(Long categoriaId, String cidade, String estado, Pageable pageable) {
+    public Page<SolicitacaoServicoDTO> buscarAbertas(Long categoriaId, String cidade, String estado, String q, Pageable pageable) {
         Page<SolicitacaoServico> solicitacoes;
-        
-        if (categoriaId != null && cidade != null && estado != null) {
+
+        if (q != null && !q.isBlank()) {
+            solicitacoes = solicitacaoRepository.buscarPorTexto(q, categoriaId, cidade, estado, pageable);
+        } else if (categoriaId != null && cidade != null && estado != null) {
             solicitacoes = solicitacaoRepository.findByCategoriaAndLocalizacaoAndStatus(
                     categoriaId, cidade, estado, StatusSolicitacao.ABERTA, pageable);
         } else if (categoriaId != null) {
@@ -148,7 +150,7 @@ public class SolicitacaoServicoService {
         } else {
             solicitacoes = solicitacaoRepository.findByStatus(StatusSolicitacao.ABERTA, pageable);
         }
-        
+
         return solicitacoes.map(this::toDTO);
     }
     
@@ -231,6 +233,7 @@ public class SolicitacaoServicoService {
         dto.setClienteNome(solicitacao.getCliente().getNome());
         dto.setCategoriaId(solicitacao.getCategoria().getId());
         dto.setCategoriaNome(solicitacao.getCategoria().getNome());
+        dto.setTitulo(solicitacao.getTitulo());
         dto.setDescricao(solicitacao.getDescricao());
         dto.setCidade(solicitacao.getCidade());
         dto.setEstado(solicitacao.getEstado());
