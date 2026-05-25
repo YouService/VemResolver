@@ -42,6 +42,12 @@ public class SolicitacaoServico {
     @Column(nullable = false)
     private LocalDateTime dataCriacao;
     
+    @Column(name = "titulo")
+    private String titulo;
+
+    @Column(name = "ts_descricao", columnDefinition = "tsvector", insertable = false, updatable = false)
+    private String tsDescricao;
+
     @PrePersist
     protected void onCreate() {
         dataCriacao = LocalDateTime.now();

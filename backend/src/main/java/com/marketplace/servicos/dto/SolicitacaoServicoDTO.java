@@ -21,7 +21,9 @@ public class SolicitacaoServicoDTO {
     @NotNull(message = "Categoria é obrigatória")
     private Long categoriaId;
     private String categoriaNome;
-    
+
+    private String titulo;
+
     @NotBlank(message = "Descrição é obrigatória")
     private String descricao;
     
