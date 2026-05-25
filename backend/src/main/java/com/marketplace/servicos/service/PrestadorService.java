@@ -4,11 +4,14 @@ import com.marketplace.servicos.dto.CompletudePrestadorDTO;
 import com.marketplace.servicos.dto.CompletudePrestadorDTO.ItemChecklist;
 import com.marketplace.servicos.dto.PerfilPublicoDTO;
 import com.marketplace.servicos.dto.PrestadorDTO;
+import com.marketplace.servicos.dto.PrestadorRecomendadoDTO;
+import com.marketplace.servicos.dto.SolicitacaoServicoDTO;
 import com.marketplace.servicos.exception.BusinessException;
 import com.marketplace.servicos.exception.ResourceNotFoundException;
 import com.marketplace.servicos.model.Avaliacao;
 import com.marketplace.servicos.model.Categoria;
 import com.marketplace.servicos.model.Prestador;
+import com.marketplace.servicos.model.SolicitacaoServico;
 import com.marketplace.servicos.model.StatusProposta;
 import com.marketplace.servicos.model.StatusSolicitacao;
 import com.marketplace.servicos.model.TipoAvaliacao;
@@ -19,6 +22,7 @@ import com.marketplace.servicos.repository.CategoriaRepository;
 import com.marketplace.servicos.repository.FotoPrestadorRepository;
 import com.marketplace.servicos.repository.PrestadorRepository;
 import com.marketplace.servicos.repository.PropostaRepository;
+import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
 import com.marketplace.servicos.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -26,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,19 +43,22 @@ public class PrestadorService {
     private final FotoPrestadorRepository fotoPrestadorRepository;
     private final AvaliacaoRepository avaliacaoRepository;
     private final PropostaRepository propostaRepository;
+    private final SolicitacaoServicoRepository solicitacaoRepository;
 
     public PrestadorService(PrestadorRepository prestadorRepository,
                             UserRepository userRepository,
                             CategoriaRepository categoriaRepository,
                             FotoPrestadorRepository fotoPrestadorRepository,
                             AvaliacaoRepository avaliacaoRepository,
-                            PropostaRepository propostaRepository) {
+                            PropostaRepository propostaRepository,
+                            SolicitacaoServicoRepository solicitacaoRepository) {
         this.prestadorRepository = prestadorRepository;
         this.userRepository = userRepository;
         this.categoriaRepository = categoriaRepository;
         this.fotoPrestadorRepository = fotoPrestadorRepository;
         this.avaliacaoRepository = avaliacaoRepository;
         this.propostaRepository = propostaRepository;
+        this.solicitacaoRepository = solicitacaoRepository;
     }
 
     @Transactional
@@ -95,10 +103,12 @@ public class PrestadorService {
         return toDTO(prestador);
     }
 
-    public Page<PrestadorDTO> buscar(Long categoriaId, String cidade, String estado, Double minAvaliacao, Pageable pageable) {
+    public Page<PrestadorDTO> buscar(Long categoriaId, String cidade, String estado, Double minAvaliacao, String q, Pageable pageable) {
         Page<Prestador> prestadores;
 
-        if (categoriaId != null && cidade != null && estado != null) {
+        if (q != null && !q.isBlank()) {
+            prestadores = prestadorRepository.buscarPorTexto(q, categoriaId, cidade, estado, minAvaliacao, pageable);
+        } else if (categoriaId != null && cidade != null && estado != null) {
             prestadores = prestadorRepository.findByCategoriaAndLocalizacao(categoriaId, cidade, estado, pageable);
         } else if (categoriaId != null) {
             prestadores = prestadorRepository.findByCategoria(categoriaId, pageable);
@@ -248,6 +258,91 @@ public class PrestadorService {
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                 * Math.sin(dLng / 2) * Math.sin(dLng / 2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    public List<PrestadorRecomendadoDTO> buscarRecomendados(Long solicitacaoId, int limite) {
+        SolicitacaoServico solicitacao = solicitacaoRepository.findById(solicitacaoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
+
+        List<Prestador> prestadores = prestadorRepository.findAtivosParaRecomendacao(solicitacao.getCategoria().getId());
+
+        return prestadores.stream()
+                .map(p -> {
+                    PrestadorRecomendadoDTO dto = toPrestadorRecomendadoDTO(p);
+                    dto.setScore(calcularScore(p, solicitacao));
+                    dto.setJustificativa(gerarJustificativa(p, dto.getScore()));
+                    return dto;
+                })
+                .sorted((a, b) -> Double.compare(b.getScore(), a.getScore()))
+                .limit(limite)
+                .toList();
+    }
+
+    private double calcularScore(Prestador prestador, SolicitacaoServico solicitacao) {
+        double mediaAvaliacao = prestador.getAvaliacaoMedia() != null ? prestador.getAvaliacaoMedia() : 0.0;
+        long totalConcluidos = propostaRepository.countByPrestadorIdAndStatus(prestador.getId(), StatusProposta.ACEITA);
+        int percentualCompletude = prestador.getPercentualCompletude() != null ? prestador.getPercentualCompletude() : 0;
+
+        // Componente 1: Média de avaliação (peso 40%, máx 4.0)
+        double componenteAvaliacao = Math.min(mediaAvaliacao, 5.0) * 4.0 / 5.0;
+
+        // Componente 2: Total de contratos concluídos (peso 30%, cap em 10)
+        double componenteContratos = Math.min(totalConcluidos, 10L) * 0.3;
+
+        // Componente 3: Distância (peso 20%, máx 2.0)
+        double componenteDistancia = calcularComponenteDistancia(prestador, solicitacao);
+
+        // Componente 4: Percentual de completude (peso 10%, máx 1.0)
+        double componenteCompletude = (percentualCompletude / 100.0) * 1.0;
+
+        double score = componenteAvaliacao + componenteContratos + componenteDistancia + componenteCompletude;
+        return Math.min(Math.round(score * 100.0) / 100.0, 10.0);
+    }
+
+    private double calcularComponenteDistancia(Prestador prestador, SolicitacaoServico solicitacao) {
+        // Se faltam coordenadas, assume valor máximo
+        if (prestador.getLatitude() == null || prestador.getLongitude() == null) {
+            return 1.0;
+        }
+
+        // Usaríamos as coordenadas da solicitação se disponíveis
+        // Por enquanto, consideramos apenas as coordenadas do prestador
+        // Fórmula: max(0, (50 - distanciaKm) / 50) * 2.0
+        // Sem dados de solicitação lat/lng, apenas retornamos 1.0
+        return 1.0;
+    }
+
+    private String gerarJustificativa(Prestador prestador, double score) {
+        DecimalFormat df = new DecimalFormat("0.0");
+        String nota = df.format(prestador.getAvaliacaoMedia() != null ? prestador.getAvaliacaoMedia() : 0.0);
+
+        long totalConcluidos = propostaRepository.countByPrestadorIdAndStatus(prestador.getId(), StatusProposta.ACEITA);
+        int percentual = prestador.getPercentualCompletude() != null ? prestador.getPercentualCompletude() : 0;
+
+        return String.format("Nota %s | %d contratos | %d%% perfil completo",
+                nota, totalConcluidos, percentual);
+    }
+
+    private PrestadorRecomendadoDTO toPrestadorRecomendadoDTO(Prestador prestador) {
+        PrestadorRecomendadoDTO dto = new PrestadorRecomendadoDTO();
+        dto.setId(prestador.getId());
+        dto.setUsuarioId(prestador.getUsuario().getId());
+        dto.setCategoriasIds(prestador.getCategorias().stream().map(Categoria::getId).toList());
+        dto.setDescricaoPerfil(prestador.getDescricaoPerfil());
+        dto.setCidade(prestador.getCidade());
+        dto.setEstado(prestador.getEstado());
+        dto.setAvaliacaoMedia(prestador.getAvaliacaoMedia());
+        dto.setTotalAvaliacoes(prestador.getTotalAvaliacoes());
+        dto.setLatitude(prestador.getLatitude());
+        dto.setLongitude(prestador.getLongitude());
+        dto.setFotoPerfilUrl(prestador.getFotoPerfilUrl());
+        dto.setPercentualCompletude(prestador.getPercentualCompletude());
+        dto.setVerificado(Boolean.TRUE.equals(prestador.getVerificado()));
+        dto.setIdVerificado(Boolean.TRUE.equals(prestador.getIdVerificado()));
+        dto.setMediaPontualidade(prestador.getMediaPontualidade());
+        dto.setMediaQualidade(prestador.getMediaQualidade());
+        dto.setMediaComunicacao(prestador.getMediaComunicacao());
+        return dto;
     }
 
     private PrestadorDTO toDTO(Prestador prestador) {
