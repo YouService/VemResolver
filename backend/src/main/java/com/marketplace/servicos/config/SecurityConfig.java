@@ -58,6 +58,9 @@ public class SecurityConfig {
                 .xssProtection(xss -> xss.disable()) // Desabilita header antigo em favor de padrões modernos
             )
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                .requestMatchers("/actuator/prometheus").hasRole("ADMIN")
+                .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/categorias/**").hasRole("ADMIN")
