@@ -466,21 +466,21 @@ Sem auditoria não é possível saber quem fez o quê no painel admin — proble
 | P5.3 | Correção Vulnerabilidades Dependabot | Alto | Médio | 🔴 Crítico |
 | P6.1 | Sistema de Créditos Pré-Pagos | Alto | Médio | 🟠 Alta |
 | P6.2 | Gateway de Pagamento (Mercado Pago) | Alto | Alto | 🟠 Alta |
-| P7.1 | Busca Textual Full-Text | Alto | Médio | 🟠 Alta |
-| P11.2 | Layout Otimizado para Mobile | Alto | Médio | 🟠 Alta |
-| P12.1 | Refresh Token Rotation | Alto | Médio | 🟠 Alta |
+| P11.2 | Layout Otimizado para Mobile | Alto | Médio | ✅ Entregue |
+| P12.1 | Refresh Token Rotation | Alto | Médio | ✅ Entregue |
 | P8.1 | Verificação de Documento (CPF + Selfie) | Alto | Alto | 🟡 Média |
 | P9.3 | E-mail: Nova Solicitação para Prestadores | Alto | Baixo | 🟡 Média |
 | P10.1 | Cancelamento de Proposta pelo Prestador | Médio | Baixo | 🟡 Média |
 | P7.2 | Hierarquia de Categorias | Médio | Médio | 🟡 Média |
 | P6.3 | Painel Financeiro do Prestador | Médio | Baixo | 🟡 Média |
 | P11.1 | Progressive Web App (PWA) | Médio | Baixo | 🟡 Média |
-| P5.4 | Observabilidade (Logs + Métricas) | Médio | Baixo | 🟡 Média |
-| P8.2 | Denúncia de Usuários e Conteúdo | Médio | Médio | 🟢 Normal |
-| P10.4 | Edição e Resposta a Avaliações | Médio | Médio | 🟢 Normal |
-| P9.1 | Notificações Push (PWA) | Médio | Alto | 🟢 Normal |
-| P9.2 | Chat com Anexos de Imagem | Médio | Baixo | 🟢 Normal |
-| P7.3 | Recomendação de Prestadores por IA | Médio | Baixo | 🟢 Normal |
+| P5.4 | Observabilidade (Logs + Métricas) | Médio | Baixo | ✅ Entregue |
+| P8.2 | Denúncia de Usuários e Conteúdo | Médio | Médio | ✅ Entregue |
+| P10.4 | Edição e Resposta a Avaliações | Médio | Médio | ✅ Entregue |
+| P9.1 | Notificações Push (PWA) | Médio | Alto | ✅ Entregue |
+| P9.2 | Chat com Anexos de Imagem | Médio | Baixo | ✅ Entregue |
+| P7.3 | Recomendação de Prestadores por Score Composto | Médio | Baixo | ✅ Entregue |
+| P7.1 | Busca Textual Full-Text | Alto | Médio | ✅ Entregue |
 | P12.2 | Auditoria de Ações Administrativas | Médio | Médio | 🟢 Normal |
 | P10.2 | Paginação no Chat | Baixo | Baixo | 🔵 Backlog |
 | P10.3 | Filtro de Avaliações por Nota | Baixo | Baixo | 🔵 Backlog |
