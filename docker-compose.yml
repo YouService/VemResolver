@@ -2,63 +2,37 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: marketplace-postgres
+    image: postgres:18
     environment:
-      POSTGRES_DB: marketplace_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DB_NAME:-vemresolver}
+      POSTGRES_USER: ${DB_USERNAME:-vemresolver}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-vemresolver123}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - marketplace-network
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: marketplace-backend
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
     depends_on:
-      - postgres
-    environment:
-      DB_URL: jdbc:postgresql://postgres:5432/marketplace_db
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      JWT_SECRET: bWFya2V0cGxhY2UtZGV2LXNlY3JldC1rZXktbWluaW11bS0yNTZiaXRzLWxlbmd0aC1vaw==
-      JWT_EXPIRATION: 86400000
-      MAIL_HOST: smtp.gmail.com
-      MAIL_PORT: 587
-      MAIL_USERNAME: dev@localhost
-      MAIL_PASSWORD: dev
-      FRONTEND_URL: http://localhost:4200
-      UPLOAD_DIR: /uploads
-    volumes:
-      - uploads_data:/uploads
-    ports:
-      - "8080:8080"
-    networks:
-      - marketplace-network
-    restart: unless-stopped
+      - backend
+    profiles:
+      - observability
 
-  frontend:
-    image: node:22-alpine
-    container_name: marketplace-frontend
-    working_dir: /app
-    volumes:
-      - ./frontend/marketplace-frontend:/app
-    command: sh -c "npm install --legacy-peer-deps && npm start"
+  grafana:
+    image: grafana/grafana:latest
     ports:
-      - "4200:4200"
-    networks:
-      - marketplace-network
-    restart: unless-stopped
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    profiles:
+      - observability
 
 volumes:
   postgres_data:
-  uploads_data:
-
-networks:
-  marketplace-network:
-    driver: bridge
