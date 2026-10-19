@@ -24,6 +24,7 @@ public class DataSeeder {
             PrestadorRepository prestadorRepository,
             SolicitacaoServicoRepository solicitacaoRepository,
             PropostaRepository propostaRepository,
+            PacoteCreditoRepository pacoteCreditoRepository,
             PasswordEncoder passwordEncoder) {
         return args -> {
             if (categoriaRepository.count() == 0) {
@@ -86,7 +87,32 @@ public class DataSeeder {
             }
 
             seedDadosChat(categoriaRepository, userRepository, prestadorRepository, solicitacaoRepository, propostaRepository);
+            seedPacotesCreditoFicticios(pacoteCreditoRepository);
         };
+    }
+
+    // Pacotes de exemplo para desenvolvimento. Em produção os pacotes reais
+    // são cadastrados pelo admin em /api/admin/pacotes.
+    private void seedPacotesCreditoFicticios(PacoteCreditoRepository pacoteCreditoRepository) {
+        if (pacoteCreditoRepository.count() > 0) {
+            return;
+        }
+        pacoteCreditoRepository.saveAll(List.of(
+                pacoteFicticio("Inicial", 5, 1990L),
+                pacoteFicticio("Profissional", 15, 4990L),
+                pacoteFicticio("Premium", 40, 11990L)
+        ));
+        System.out.println("✓ Pacotes de crédito fictícios criados");
+    }
+
+    private PacoteCredito pacoteFicticio(String nome, int creditos, long precoCentavos) {
+        PacoteCredito pacote = new PacoteCredito();
+        pacote.setNome(nome);
+        pacote.setDescricao("[FICTÍCIO] " + creditos + " créditos — valor de exemplo para desenvolvimento");
+        pacote.setQuantidadeCreditos(creditos);
+        pacote.setPrecoCentavos(precoCentavos);
+        pacote.setAtivo(true);
+        return pacote;
     }
 
     private void seedDadosChat(

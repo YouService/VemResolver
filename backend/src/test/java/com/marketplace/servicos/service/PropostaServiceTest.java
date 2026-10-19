@@ -30,6 +30,7 @@ class PropostaServiceTest {
     @Mock private NotificacaoService notificacaoService;
     @Mock private EmailService emailService;
     @Mock private WebPushService webPushService;
+    @Mock private CreditoService creditoService;
 
     @InjectMocks
     private PropostaService propostaService;
@@ -136,6 +137,25 @@ class PropostaServiceTest {
     }
 
     @Test
+    @DisplayName("criar: prestador sem créditos disponíveis — lança BusinessException e não persiste")
+    void criar_PrestadorSemCreditos_LancaException() {
+        PropostaDTO dto = new PropostaDTO();
+        dto.setSolicitacaoId(20L);
+        dto.setValor(BigDecimal.valueOf(200.0));
+
+        when(solicitacaoRepository.findById(20L)).thenReturn(Optional.of(solicitacao));
+        when(prestadorRepository.findByUsuarioId(2L)).thenReturn(Optional.of(prestador));
+        when(propostaRepository.existsBySolicitacaoIdAndPrestadorId(20L, 10L)).thenReturn(false);
+        doThrow(new BusinessException("Você não tem créditos disponíveis"))
+                .when(creditoService).validarCreditoParaProposta(prestador);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> propostaService.criar(dto, 2L));
+        assertTrue(ex.getMessage().contains("créditos"));
+        verify(propostaRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("criar: prestador não cadastrado lança ResourceNotFoundException")
     void criar_PrestadorNaoCadastrado_LancaException() {
         PropostaDTO dto = new PropostaDTO();
@@ -191,6 +211,34 @@ class PropostaServiceTest {
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> propostaService.aceitarProposta(100L, 1L));
         assertTrue(ex.getMessage().contains("processada"));
+    }
+
+    @Test
+    @DisplayName("aceitarProposta: debita crédito do prestador antes de aceitar")
+    void aceitarProposta_DebitaCreditoDoPrestador() {
+        Proposta proposta = buildProposta(StatusProposta.ENVIADA);
+
+        when(propostaRepository.findById(100L)).thenReturn(Optional.of(proposta));
+        when(avaliacaoRepository.existsBySolicitacaoIdAndTipo(any(), any())).thenReturn(false);
+        when(propostaRepository.save(any())).thenReturn(proposta);
+
+        propostaService.aceitarProposta(100L, 1L);
+
+        verify(creditoService).consumirPorAceite(proposta);
+    }
+
+    @Test
+    @DisplayName("aceitarProposta: prestador sem créditos — proposta continua ENVIADA")
+    void aceitarProposta_PrestadorSemCreditos_LancaException() {
+        Proposta proposta = buildProposta(StatusProposta.ENVIADA);
+
+        when(propostaRepository.findById(100L)).thenReturn(Optional.of(proposta));
+        doThrow(new BusinessException("Este prestador está sem créditos no momento"))
+                .when(creditoService).consumirPorAceite(proposta);
+
+        assertThrows(BusinessException.class, () -> propostaService.aceitarProposta(100L, 1L));
+        assertEquals(StatusProposta.ENVIADA, proposta.getStatus());
+        verify(propostaRepository, never()).save(any());
     }
 
     // ── recusarProposta ──────────────────────────────────────────────────────

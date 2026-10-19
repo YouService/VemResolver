@@ -50,6 +50,10 @@
                   👁 Ver perfil público
                 </a>
               }
+              <a routerLink="/prestador/financeiro"
+                class="px-4 py-2 border border-green-300 text-green-700 rounded-lg font-medium hover:bg-green-50 transition text-sm text-center">
+                💰 Financeiro
+              </a>
               <button
                 routerLink="/prestador/perfil"
                 class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
@@ -65,6 +69,33 @@
         <!-- Onboarding Checklist -->
         @if (prestador) {
           <app-onboarding-checklist></app-onboarding-checklist>
+        }
+
+        <!-- Créditos -->
+        @if (prestador && creditos) {
+          <div class="mb-6 bg-white rounded-lg shadow-sm border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+            [class.border-red-300]="creditos.saldoBaixo && creditos.gratuitosRestantes === 0">
+            <div class="flex items-center gap-4">
+              <span class="text-3xl">💰</span>
+              <div>
+                <p class="font-semibold text-gray-900">
+                  {{ creditos.saldo }} crédito{{ creditos.saldo !== 1 ? 's' : '' }}
+                  @if (creditos.gratuitosRestantes > 0) {
+                    <span class="font-normal text-gray-600">+ {{ creditos.gratuitosRestantes }} aceite{{ creditos.gratuitosRestantes !== 1 ? 's' : '' }} gratuito{{ creditos.gratuitosRestantes !== 1 ? 's' : '' }}</span>
+                  }
+                </p>
+                @if (creditos.saldoBaixo && creditos.gratuitosRestantes === 0) {
+                  <p class="text-sm text-red-600">⚠️ Saldo baixo — sem créditos você não consegue enviar novas propostas.</p>
+                } @else {
+                  <p class="text-sm text-gray-500">Cada proposta aceita usa 1 crédito.</p>
+                }
+              </div>
+            </div>
+            <a routerLink="/prestador/financeiro"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition text-sm text-center">
+              Comprar créditos
+            </a>
+          </div>
         }
 
         <!-- Verificação de Identidade -->

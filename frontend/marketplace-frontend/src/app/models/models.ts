@@ -346,3 +346,58 @@ export interface CriarDenunciaRequest {
   tipo: TipoDenuncia;
   descricao: string;
 }
+
+// ── Créditos (P6.1 / P6.3) ───────────────────────────────────────────────────
+
+export enum TipoTransacaoCredito {
+  COMPRA = 'COMPRA',
+  CONSUMO = 'CONSUMO',
+  CONSUMO_GRATUITO = 'CONSUMO_GRATUITO'
+}
+
+export enum StatusTransacaoCredito {
+  PENDENTE = 'PENDENTE',
+  APROVADA = 'APROVADA',
+  RECUSADA = 'RECUSADA'
+}
+
+export interface PacoteCredito {
+  id: number;
+  nome: string;
+  descricao?: string;
+  quantidadeCreditos: number;
+  precoCentavos: number;
+  ativo: boolean;
+}
+
+export interface TransacaoCredito {
+  id: number;
+  tipo: TipoTransacaoCredito;
+  status: StatusTransacaoCredito;
+  quantidade: number;
+  valorCentavos?: number;
+  saldoApos?: number;
+  descricao?: string;
+  pacoteNome?: string;
+  propostaId?: number;
+  gateway?: string;
+  dataCriacao: string;
+  dataConfirmacao?: string;
+}
+
+export interface ResumoCreditos {
+  saldo: number;
+  gratuitosRestantes: number;
+  gratuitosTotal: number;
+  totalGastoCentavos: number;
+  limiteAlertaSaldo: number;
+  saldoBaixo: boolean;
+  pagamentoFicticio: boolean;
+  transacoes: PageResponse<TransacaoCredito>;
+}
+
+export interface CompraCredito {
+  transacao: TransacaoCredito;
+  saldoAtual: number;
+  urlCheckout?: string;
+}
