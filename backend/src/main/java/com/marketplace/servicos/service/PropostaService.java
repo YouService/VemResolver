@@ -28,6 +28,7 @@ public class PropostaService {
     private final AvaliacaoRepository avaliacaoRepository;
     private final NotificacaoService notificacaoService;
     private final EmailService emailService;
+    private final CreditoService creditoService;
 
     @Autowired @Lazy
     private WebPushService webPushService;
@@ -37,13 +38,15 @@ public class PropostaService {
                            PrestadorRepository prestadorRepository,
                            AvaliacaoRepository avaliacaoRepository,
                            NotificacaoService notificacaoService,
-                           EmailService emailService) {
+                           EmailService emailService,
+                           CreditoService creditoService) {
         this.propostaRepository = propostaRepository;
         this.solicitacaoRepository = solicitacaoRepository;
         this.prestadorRepository = prestadorRepository;
         this.avaliacaoRepository = avaliacaoRepository;
         this.notificacaoService = notificacaoService;
         this.emailService = emailService;
+        this.creditoService = creditoService;
     }
     
     @Transactional
@@ -61,6 +64,8 @@ public class PropostaService {
         if (propostaRepository.existsBySolicitacaoIdAndPrestadorId(solicitacao.getId(), prestador.getId())) {
             throw new BusinessException("Você já enviou uma proposta para esta solicitação");
         }
+
+        creditoService.validarCreditoParaProposta(prestador);
         
         Proposta proposta = new Proposta();
         proposta.setSolicitacao(solicitacao);
@@ -137,6 +142,8 @@ public class PropostaService {
         if (proposta.getStatus() != StatusProposta.ENVIADA) {
             throw new BusinessException("Esta proposta já foi processada");
         }
+
+        creditoService.consumirPorAceite(proposta);
 
         proposta.setStatus(StatusProposta.ACEITA);
         proposta.getSolicitacao().setStatus(StatusSolicitacao.EM_ANDAMENTO);

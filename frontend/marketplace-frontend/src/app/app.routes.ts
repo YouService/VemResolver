@@ -10,6 +10,7 @@ import { PoliticaPrivacidadeComponent } from './components/politica-privacidade.
 import { PrestadorDashboardComponent } from './components/prestador-dashboard.component';
 import { PrestadorEnviarPropostaComponent } from './components/prestador-enviar-proposta.component';
 import { PrestadorPerfilComponent } from './components/prestador-perfil/prestador-perfil.component';
+import { PrestadorFinanceiroComponent } from './components/prestador-financeiro/prestador-financeiro.component';
 import { ClienteAvaliacaoComponent } from './components/cliente-avaliacao.component';
 import { ClientePropostasRecebidasComponent } from './components/cliente-propostas-recebidas.component';
 import { PrestadorAvaliacaoComponent } from './components/prestador-avaliacao.component';
@@ -64,6 +65,11 @@ export const routes: Routes = [
   {
     path: 'prestador/perfil',
     component: PrestadorPerfilComponent,
+    canActivate: [prestadorGuard]
+  },
+  {
+    path: 'prestador/financeiro',
+    component: PrestadorFinanceiroComponent,
     canActivate: [prestadorGuard]
   },
   {

@@ -8,6 +8,7 @@ import { PrestadorService } from '../services/prestador.service';
 import { PropostaService } from '../services/proposta.service';
 import { AuthService } from '../services/auth.service';
 import { VerificacaoService } from '../services/verificacao.service';
+import { CreditoService } from '../services/credito.service';
 import { Proposta, StatusProposta, StatusSolicitacao, Prestador, CompletudePrestador } from '../models/models';
 
 const mockPrestador: Prestador = {
@@ -32,6 +33,7 @@ describe('PrestadorDashboardComponent', () => {
   let propostaServiceSpy: jasmine.SpyObj<PropostaService>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let verificacaoServiceSpy: jasmine.SpyObj<VerificacaoService>;
+  let creditoServiceSpy: jasmine.SpyObj<CreditoService>;
 
   beforeEach(async () => {
     solicitacaoServiceSpy = jasmine.createSpyObj('SolicitacaoService', ['buscarAbertas']);
@@ -40,6 +42,8 @@ describe('PrestadorDashboardComponent', () => {
     authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUserName', 'getCurrentUser']);
     verificacaoServiceSpy = jasmine.createSpyObj('VerificacaoService', ['consultarStatus', 'enviarDocumentos']);
     verificacaoServiceSpy.consultarStatus.and.returnValue(throwError(() => ({ status: 204 })));
+    creditoServiceSpy = jasmine.createSpyObj('CreditoService', ['resumo']);
+    creditoServiceSpy.resumo.and.returnValue(throwError(() => ({ status: 500 })));
 
     solicitacaoServiceSpy.buscarAbertas.and.returnValue(
       of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 10 })
@@ -58,6 +62,7 @@ describe('PrestadorDashboardComponent', () => {
         { provide: SolicitacaoService, useValue: solicitacaoServiceSpy },
         { provide: PrestadorService, useValue: prestadorServiceSpy },
         { provide: PropostaService, useValue: propostaServiceSpy },
+        { provide: CreditoService, useValue: creditoServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
         { provide: VerificacaoService, useValue: verificacaoServiceSpy }
       ]

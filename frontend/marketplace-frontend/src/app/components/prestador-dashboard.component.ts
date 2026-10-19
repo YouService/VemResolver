@@ -6,7 +6,8 @@ import { SolicitacaoService } from '../services/solicitacao.service';
 import { PrestadorService } from '../services/prestador.service';
 import { PropostaService } from '../services/proposta.service';
 import { AuthService } from '../services/auth.service';
-import { SolicitacaoServico, Prestador, Proposta, StatusProposta, StatusSolicitacao } from '../models/models';
+import { CreditoService } from '../services/credito.service';
+import { SolicitacaoServico, Prestador, Proposta, ResumoCreditos, StatusProposta, StatusSolicitacao } from '../models/models';
 import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-checklist.component';
 import { VerificacaoDocumentoComponent } from './verificacao-documento/verificacao-documento.component';
 
@@ -21,6 +22,7 @@ export class PrestadorDashboardComponent implements OnInit {
   solicitacoesFiltradas: SolicitacaoServico[] = [];
   minhasPropostas: Proposta[] = [];
   prestador?: Prestador;
+  creditos?: ResumoCreditos;
   userName = '';
   loading = false;
   errorMessage = '';
@@ -35,7 +37,8 @@ export class PrestadorDashboardComponent implements OnInit {
     private solicitacaoService: SolicitacaoService,
     private prestadorService: PrestadorService,
     private propostaService: PropostaService,
-    private authService: AuthService
+    private authService: AuthService,
+    private creditoService: CreditoService
   ) {}
 
   ngOnInit(): void {
@@ -43,6 +46,14 @@ export class PrestadorDashboardComponent implements OnInit {
     this.carregarPerfil();
     this.carregarSolicitacoes();
     this.carregarPropostas();
+    this.carregarCreditos();
+  }
+
+  carregarCreditos() {
+    this.creditoService.resumo(0, 1).subscribe({
+      next: (resumo: ResumoCreditos) => { this.creditos = resumo; },
+      error: () => {}
+    });
   }
 
   get contratosAndamento(): Proposta[] {
