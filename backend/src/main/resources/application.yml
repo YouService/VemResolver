@@ -41,6 +41,15 @@ app:
   frontend:
     url: ${FRONTEND_URL}
 
+# Créditos pré-pagos (P6.1)
+creditos:
+  gratuitos: ${CREDITOS_GRATUITOS:3}
+  alerta-saldo-baixo: ${CREDITOS_ALERTA_SALDO_BAIXO:3}
+
+# Gateway de pagamento: "ficticio" (aprova na hora, só fora de prod) ou futura integração real
+pagamento:
+  gateway: ${PAGAMENTO_GATEWAY:ficticio}
+
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}

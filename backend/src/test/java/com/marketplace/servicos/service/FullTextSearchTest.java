@@ -7,9 +7,13 @@ import com.marketplace.servicos.model.Prestador;
 import com.marketplace.servicos.model.SolicitacaoServico;
 import com.marketplace.servicos.model.StatusSolicitacao;
 import com.marketplace.servicos.model.User;
+import com.marketplace.servicos.repository.AvaliacaoRepository;
 import com.marketplace.servicos.repository.CategoriaRepository;
+import com.marketplace.servicos.repository.FotoPrestadorRepository;
 import com.marketplace.servicos.repository.PrestadorRepository;
+import com.marketplace.servicos.repository.PropostaRepository;
 import com.marketplace.servicos.repository.SolicitacaoServicoRepository;
+import com.marketplace.servicos.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,7 +62,6 @@ class FullTextSearchTest {
         prestador.setId(2L);
         prestador.setNome("Prestador Test");
         prestador.setAtivo(true);
-        prestador.setSuspenso(false);
 
         categoria = new Categoria();
         categoria.setId(100L);

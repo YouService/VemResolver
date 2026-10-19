@@ -118,6 +118,12 @@ O modelo de monetização já está definido. Sem ele o produto não gera receit
 
 **Impacto:** Alto | **Esforço:** Médio | **Dependência:** P6.2
 
+**Status:** ✅ Entregue com gateway de pagamento **fictício** (aprova na hora, nunca carrega com o profile `prod`).
+- Migração `V23__add_creditos_prestador.sql`: `pacotes_credito`, `contas_credito`, `transacoes_credito` (valores em centavos)
+- O envio de proposta também é bloqueado sem créditos, para o cliente não esbarrar em aceite recusado
+- Configuração: `CREDITOS_GRATUITOS` (padrão 3), `CREDITOS_ALERTA_SALDO_BAIXO` (padrão 3), `PAGAMENTO_GATEWAY` (padrão `ficticio`)
+- Pacotes de exemplo (`[FICTÍCIO]`) criados pelo `DataSeeder` só fora de `prod`; pacotes reais via `POST/PUT /api/admin/pacotes`
+
 ---
 
 ### P6.2 — Integração com Gateway de Pagamento
@@ -135,6 +141,11 @@ Sem gateway de pagamento o sistema de créditos (P6.1) não tem como receber din
 - Tabela `pagamentos`: id, prestadorId, valor, status, gateway_id, dataCriacao
 - Frontend: página "Comprar Créditos" com listagem de pacotes e botão de compra
 - Testes: mock do webhook para simular pagamento aprovado/recusado
+
+**Como plugar (deixado pronto pelo P6.1):** criar `GatewayPagamentoMercadoPago implements GatewayPagamento`
+anotado com `@ConditionalOnProperty(name = "pagamento.gateway", havingValue = "mercadopago")`, retornando
+`PENDENTE` + `urlCheckout` em `criarCobranca`; o webhook chama `CreditoService.confirmarPagamento(referencia, aprovado)`
+(idempotente). A tabela `transacoes_credito` já guarda `gateway`, `referencia_externa` e `status`, dispensando a tabela `pagamentos`.
 
 **Impacto:** Alto | **Esforço:** Alto | **Dependência:** P6.1, P5.2
 
@@ -154,6 +165,8 @@ O prestador precisa ter visibilidade do seu saldo para tomar decisões de compra
 - Alerta visual quando saldo < 3 créditos
 
 **Impacto:** Médio | **Esforço:** Baixo | **Dependência:** P6.1
+
+**Status:** ✅ Entregue — página `/prestador/financeiro` + card de saldo no painel do prestador.
 
 ---
 
@@ -464,7 +477,7 @@ Sem auditoria não é possível saber quem fez o quê no painel admin — proble
 | P5.2 | Ambiente de Produção (VPS / PaaS) | Alto | Médio | 🔴 Crítico |
 | P5.1 | CI/CD com GitHub Actions | Alto | Médio | 🔴 Crítico |
 | P5.3 | Correção Vulnerabilidades Dependabot | Alto | Médio | 🔴 Crítico |
-| P6.1 | Sistema de Créditos Pré-Pagos | Alto | Médio | 🟠 Alta |
+| P6.1 | Sistema de Créditos Pré-Pagos | Alto | Médio | ✅ Entregue (pagamento fictício) |
 | P6.2 | Gateway de Pagamento (Mercado Pago) | Alto | Alto | 🟠 Alta |
 | P11.2 | Layout Otimizado para Mobile | Alto | Médio | ✅ Entregue |
 | P12.1 | Refresh Token Rotation | Alto | Médio | ✅ Entregue |
@@ -472,7 +485,7 @@ Sem auditoria não é possível saber quem fez o quê no painel admin — proble
 | P9.3 | E-mail: Nova Solicitação para Prestadores | Alto | Baixo | 🟡 Média |
 | P10.1 | Cancelamento de Proposta pelo Prestador | Médio | Baixo | 🟡 Média |
 | P7.2 | Hierarquia de Categorias | Médio | Médio | 🟡 Média |
-| P6.3 | Painel Financeiro do Prestador | Médio | Baixo | 🟡 Média |
+| P6.3 | Painel Financeiro do Prestador | Médio | Baixo | ✅ Entregue |
 | P11.1 | Progressive Web App (PWA) | Médio | Baixo | 🟡 Média |
 | P5.4 | Observabilidade (Logs + Métricas) | Médio | Baixo | ✅ Entregue |
 | P8.2 | Denúncia de Usuários e Conteúdo | Médio | Médio | ✅ Entregue |
